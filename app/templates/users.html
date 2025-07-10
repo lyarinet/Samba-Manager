@@ -1,118 +1,263 @@
 {% extends 'layout.html' %}
 {% block content %}
-<h2>Manage Samba Users</h2>
+<div class="page-header">
+  <h2>Samba Users</h2>
+  <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
+    <i class="bi bi-person-plus me-1"></i> Add User
+  </button>
+</div>
 
 {% if not has_sudo %}
 <div class="alert alert-warning mb-4">
+  <i class="bi bi-shield-exclamation me-2"></i>
   <strong>Warning:</strong> Sudo access is required to manage Samba users.
   Run this application with sudo privileges to enable full functionality.
 </div>
 {% endif %}
 
-<div class="card bg-dark border-secondary mb-4">
-  <div class="card-header">Add New User</div>
-  <div class="card-body">
-    <form method="POST" action="/users/add">
-      <div class="row g-3">
-        <div class="col-md-4">
-          <label class="form-label">Username</label>
-          <input name="username" class="form-control" required {% if not has_sudo %}disabled{% endif %}>
-        </div>
-        <div class="col-md-4">
-          <label class="form-label">Password</label>
-          <input type="password" name="password" class="form-control" required {% if not has_sudo %}disabled{% endif %}>
-        </div>
-        <div class="col-md-4 d-flex align-items-end">
-          <div class="form-check">
-            <input class="form-check-input" type="checkbox" name="create_system_user" id="createSystemUser" {% if not has_sudo %}disabled{% endif %}>
-            <label class="form-check-label" for="createSystemUser">
-              Create system user if not exists
-            </label>
-          </div>
-        </div>
+<div class="row">
+  <div class="col-lg-8">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">User Management</h5>
       </div>
-      <button class="btn btn-primary mt-3" {% if not has_sudo %}disabled{% endif %}>Add User</button>
-    </form>
+      <div class="card-body p-0">
+        {% if users %}
+        <div class="table-responsive">
+          <table class="table table-hover mb-0">
+            <thead>
+              <tr>
+                <th>Username</th>
+                <th>Status</th>
+                <th>Last Modified</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for user in users %}
+              <tr>
+                <td class="align-middle">
+                  <div class="d-flex align-items-center">
+                    <div class="avatar bg-primary bg-opacity-10 rounded-circle p-2 me-3">
+                      <i class="bi bi-person text-primary"></i>
+                    </div>
+                    {{ user.username }}
+                  </div>
+                </td>
+                <td class="align-middle">
+                  {% if user.enabled %}
+                  <span class="badge bg-success">Enabled</span>
+                  {% else %}
+                  <span class="badge bg-danger">Disabled</span>
+                  {% endif %}
+                </td>
+                <td class="align-middle text-muted">
+                  {% if user.last_changed %}
+                  {{ user.last_changed.strftime('%Y-%m-%d') }}
+                  {% else %}
+                  Unknown
+                  {% endif %}
+                </td>
+                <td class="align-middle">
+                  <div class="btn-group">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#resetPasswordModal{{ user.username }}">
+                      <i class="bi bi-key"></i>
+                    </button>
+                    {% if user.enabled %}
+                    <button type="button" class="btn btn-sm btn-outline-warning" data-bs-toggle="modal" data-bs-target="#disableUserModal{{ user.username }}">
+                      <i class="bi bi-person-lock"></i>
+                    </button>
+                    {% else %}
+                    <button type="button" class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#enableUserModal{{ user.username }}">
+                      <i class="bi bi-person-check"></i>
+                    </button>
+                    {% endif %}
+                    <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteUserModal{{ user.username }}">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+          <i class="bi bi-people display-4 text-muted mb-3"></i>
+          <h4>No Samba Users Found</h4>
+          <p class="text-muted">You haven't added any users to Samba yet.</p>
+          <button type="button" class="btn btn-primary mt-2" data-bs-toggle="modal" data-bs-target="#addUserModal">
+            <i class="bi bi-person-plus me-1"></i> Add First User
+          </button>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-lg-4">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0">User Groups</h5>
+      </div>
+      <div class="card-body">
+        {% if groups %}
+        <div class="list-group list-group-flush">
+          {% for group in groups %}
+          <div class="list-group-item bg-transparent d-flex justify-content-between align-items-center px-0 py-2 border-bottom">
+            <div class="d-flex align-items-center">
+              <div class="avatar bg-secondary bg-opacity-10 rounded-circle p-2 me-3">
+                <i class="bi bi-people text-secondary"></i>
+              </div>
+              <span>{{ group }}</span>
+            </div>
+            <span class="badge bg-secondary">Group</span>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-4">
+          <i class="bi bi-people display-4 text-muted"></i>
+          <p class="mt-3">No groups detected.</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
   </div>
 </div>
 
-<div class="card bg-dark border-secondary">
-  <div class="card-header">Existing Samba Users</div>
-  <div class="card-body">
-    {% if samba_users %}
-    <div class="table-responsive">
-      <table class="table table-dark table-bordered table-hover">
-        <thead class="bg-primary text-white">
-          <tr>
-            <th>Username</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for user in samba_users %}
-          <tr>
-            <td>{{ user.username }}</td>
-            <td>
-              <span class="badge {% if user.enabled %}bg-success{% else %}bg-danger{% endif %}">
-                {{ 'Enabled' if user.enabled else 'Disabled' }}
-              </span>
-            </td>
-            <td>
-              <div class="btn-group">
-                {% if user.enabled %}
-                <form method="POST" action="/users/disable/{{ user.username }}" style="display:inline">
-                  <button class="btn btn-sm btn-warning" {% if not has_sudo %}disabled{% endif %}>Disable</button>
-                </form>
-                {% else %}
-                <form method="POST" action="/users/enable/{{ user.username }}" style="display:inline">
-                  <button class="btn btn-sm btn-success" {% if not has_sudo %}disabled{% endif %}>Enable</button>
-                </form>
-                {% endif %}
-                
-                <button type="button" class="btn btn-sm btn-info" data-bs-toggle="modal" data-bs-target="#resetPasswordModal{{ user.username }}" {% if not has_sudo %}disabled{% endif %}>
-                  Reset Password
-                </button>
-                
-                <form method="POST" action="/users/delete/{{ user.username }}" style="display:inline" onsubmit="return confirm('Are you sure you want to delete this user?');">
-                  <button class="btn btn-sm btn-danger" {% if not has_sudo %}disabled{% endif %}>Delete</button>
-                </form>
-              </div>
-              
-              <!-- Reset Password Modal -->
-              <div class="modal fade" id="resetPasswordModal{{ user.username }}" tabindex="-1" aria-labelledby="resetPasswordModalLabel" aria-hidden="true">
-                <div class="modal-dialog">
-                  <div class="modal-content bg-dark text-white">
-                    <div class="modal-header border-secondary">
-                      <h5 class="modal-title" id="resetPasswordModalLabel">Reset Password for {{ user.username }}</h5>
-                      <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <form method="POST" action="/users/reset-password/{{ user.username }}">
-                      <div class="modal-body">
-                        <div class="mb-3">
-                          <label for="password" class="form-label">New Password</label>
-                          <input type="password" class="form-control" id="password" name="password" required>
-                        </div>
-                      </div>
-                      <div class="modal-footer border-secondary">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="submit" class="btn btn-primary">Reset Password</button>
-                      </div>
-                    </form>
-                  </div>
-                </div>
-              </div>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+<!-- Add User Modal -->
+<div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addUserModalLabel">Add New Samba User</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form action="/add-user" method="post">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="username" class="form-label">Username</label>
+            <input type="text" class="form-control" id="username" name="username" required {% if not has_sudo %}disabled{% endif %}>
+          </div>
+          <div class="mb-3">
+            <label for="password" class="form-label">Password</label>
+            <input type="password" class="form-control" id="password" name="password" required {% if not has_sudo %}disabled{% endif %}>
+          </div>
+          <div class="mb-3">
+            <label for="confirm_password" class="form-label">Confirm Password</label>
+            <input type="password" class="form-control" id="confirm_password" name="confirm_password" required {% if not has_sudo %}disabled{% endif %}>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary" {% if not has_sudo %}disabled{% endif %}>Add User</button>
+        </div>
+      </form>
     </div>
-    {% else %}
-    <div class="alert alert-info">No Samba users configured yet.</div>
-    {% endif %}
   </div>
 </div>
+
+<!-- Reset Password Modals -->
+{% for user in users %}
+<div class="modal fade" id="resetPasswordModal{{ user.username }}" tabindex="-1" aria-labelledby="resetPasswordModalLabel{{ user.username }}" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="resetPasswordModalLabel{{ user.username }}">Reset Password: {{ user.username }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form action="/reset-password" method="post">
+        <div class="modal-body">
+          <input type="hidden" name="username" value="{{ user.username }}">
+          <div class="mb-3">
+            <label for="password{{ user.username }}" class="form-label">New Password</label>
+            <input type="password" class="form-control" id="password{{ user.username }}" name="password" required {% if not has_sudo %}disabled{% endif %}>
+          </div>
+          <div class="mb-3">
+            <label for="confirm_password{{ user.username }}" class="form-label">Confirm Password</label>
+            <input type="password" class="form-control" id="confirm_password{{ user.username }}" name="confirm_password" required {% if not has_sudo %}disabled{% endif %}>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary" {% if not has_sudo %}disabled{% endif %}>Reset Password</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Disable User Modal -->
+<div class="modal fade" id="disableUserModal{{ user.username }}" tabindex="-1" aria-labelledby="disableUserModalLabel{{ user.username }}" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="disableUserModalLabel{{ user.username }}">Disable User</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to disable the user <strong>{{ user.username }}</strong>?</p>
+        <p>The user will not be able to access any Samba shares until re-enabled.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+        <form action="/disable-user" method="post" class="d-inline">
+          <input type="hidden" name="username" value="{{ user.username }}">
+          <button type="submit" class="btn btn-warning" {% if not has_sudo %}disabled{% endif %}>Disable User</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Enable User Modal -->
+<div class="modal fade" id="enableUserModal{{ user.username }}" tabindex="-1" aria-labelledby="enableUserModalLabel{{ user.username }}" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="enableUserModalLabel{{ user.username }}">Enable User</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to enable the user <strong>{{ user.username }}</strong>?</p>
+        <p>The user will be able to access Samba shares according to their permissions.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+        <form action="/enable-user" method="post" class="d-inline">
+          <input type="hidden" name="username" value="{{ user.username }}">
+          <button type="submit" class="btn btn-success" {% if not has_sudo %}disabled{% endif %}>Enable User</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete User Modal -->
+<div class="modal fade" id="deleteUserModal{{ user.username }}" tabindex="-1" aria-labelledby="deleteUserModalLabel{{ user.username }}" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="deleteUserModalLabel{{ user.username }}">Delete User</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete the user <strong>{{ user.username }}</strong>?</p>
+        <p class="text-danger"><i class="bi bi-exclamation-triangle me-2"></i>This action cannot be undone.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+        <form action="/delete-user" method="post" class="d-inline">
+          <input type="hidden" name="username" value="{{ user.username }}">
+          <button type="submit" class="btn btn-danger" {% if not has_sudo %}disabled{% endif %}>Delete User</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %}
 {% endblock %}
 
 {% block extra_js %}

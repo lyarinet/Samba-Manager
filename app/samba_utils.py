@@ -18,6 +18,34 @@ else:
     SHARE_CONF = '/etc/samba/shares.conf'
     ACTUAL_SMB_CONF = SMB_CONF
 
+def parse_share_section(content):
+    """Parse share sections from a Samba configuration file content"""
+    shares = []
+    lines = content.split('\n')
+    
+    current_share = None
+    for line in lines:
+        line = line.strip()
+        if not line or line.startswith('#') or line.startswith(';'):
+            continue
+            
+        # Check for share section
+        if line.startswith('[') and line.endswith(']') and not line == '[global]' and not line == '[printers]' and not line == '[print$]':
+            if current_share:
+                shares.append(current_share)
+            share_name = line[1:-1]
+            current_share = {'name': share_name}
+        # Check for parameters within a share
+        elif current_share and '=' in line:
+            key, value = [x.strip() for x in line.split('=', 1)]
+            current_share[key] = value
+            
+    # Add the last share if exists
+    if current_share:
+        shares.append(current_share)
+        
+    return shares
+
 # Function to auto-detect share directories
 def detect_share_directories():
     """Auto-detect existing share directories on the system"""
@@ -215,34 +243,6 @@ def write_global_settings(settings):
     except Exception as e:
         print("Error:", e)
         return False
-
-def parse_share_section(content):
-    """Parse share sections from a Samba configuration file content"""
-    shares = []
-    lines = content.split('\n')
-    
-    current_share = None
-    for line in lines:
-        line = line.strip()
-        if not line or line.startswith('#') or line.startswith(';'):
-            continue
-            
-        # Check for share section
-        if line.startswith('[') and line.endswith(']') and not line == '[global]' and not line == '[printers]' and not line == '[print$]':
-            if current_share:
-                shares.append(current_share)
-            share_name = line[1:-1]
-            current_share = {'name': share_name}
-        # Check for parameters within a share
-        elif current_share and '=' in line:
-            key, value = [x.strip() for x in line.split('=', 1)]
-            current_share[key] = value
-            
-    # Add the last share if exists
-    if current_share:
-        shares.append(current_share)
-        
-    return shares
 
 def load_shares():
     """Load shares from both development and actual Samba configuration files"""

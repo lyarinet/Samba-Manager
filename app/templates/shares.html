@@ -1,119 +1,266 @@
 {% extends 'layout.html' %}
 {% block content %}
-<h2>Manage Shares</h2>
-
-{% if not has_sudo %}
-<div class="alert alert-warning mb-4">
-  <strong>Warning:</strong> Sudo access is required to modify Samba shares.
-  Run this application with sudo privileges to enable full functionality.
-</div>
-{% endif %}
-
-<div class="card bg-dark border-secondary mb-4">
-  <div class="card-header">Add or Update Share</div>
-  <div class="card-body">
-    <form method="POST">
-      <div class="row g-2">
-        <div class="col-md-2">
-          <label class="form-label">Share Name</label>
-          <input name="name" placeholder="Share Name" class="form-control" required {% if not has_sudo %}disabled{% endif %}>
-        </div>
-        <div class="col-md-4">
-          <label class="form-label">Path</label>
-          <input name="path" placeholder="/srv/share" class="form-control" required {% if not has_sudo %}disabled{% endif %}>
-        </div>
-        <div class="col-md-3">
-          <label class="form-label">Valid Users/Groups</label>
-          <select name="valid_users" class="form-control" {% if not has_sudo %}disabled{% endif %}>
-            <option value="">-- Select user or group --</option>
-            {% for user in users %}<option value="{{ user }}">User: {{ user }}</option>{% endfor %}
-            {% for group in groups %}<option value="@{{ group }}">Group: {{ group }}</option>{% endfor %}
-          </select>
-        </div>
-        <div class="col-md-1">
-          <label class="form-label">Access</label>
-          <select name="readonly" class="form-control" {% if not has_sudo %}disabled{% endif %}>
-            <option value="yes">Read Only</option>
-            <option value="no" selected>Read/Write</option>
-          </select>
-        </div>
-        <div class="col-md-2">
-          <label class="form-label">VFS Objects</label>
-          <select name="vfs" class="form-control" {% if not has_sudo %}disabled{% endif %}>
-            <option value="">None</option>
-            <option value="shadow_copy2">Shadow Copy</option>
-            <option value="audit">Audit</option>
-            <option value="acl_xattr">ACL</option>
-          </select>
-        </div>
-      </div>
-      <button class="btn btn-primary mt-3" {% if not has_sudo %}disabled{% endif %}>Add / Update Share</button>
-    </form>
-  </div>
+<div class="page-header">
+  <h2>Samba Shares</h2>
+  <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addShareModal">
+    <i class="bi bi-plus-lg me-1"></i> Add Share
+  </button>
 </div>
 
-<div class="card bg-dark border-secondary">
-  <div class="card-header">Existing Shares</div>
-  <div class="card-body">
-    {% if shares %}
+{% if shares %}
+<div class="card">
+  <div class="card-body p-0">
     <div class="table-responsive">
-      <table class="table table-dark table-bordered table-hover">
-        <thead class="bg-primary text-white">
+      <table class="table table-hover mb-0">
+        <thead>
           <tr>
             <th>Name</th>
             <th>Path</th>
-            <th>Users</th>
-            <th>Access</th>
-            <th>VFS</th>
-            <th>Source</th>
-            <th>Action</th>
+            <th>Guest OK</th>
+            <th>Browseable</th>
+            <th>Read Only</th>
+            <th>Actions</th>
           </tr>
         </thead>
         <tbody>
-          {% for s in shares %}
+          {% for share in shares %}
           <tr>
-            <td>{{ s.name }}</td>
-            <td>{{ s.path }}</td>
-            <td>{{ s['valid users'] if 'valid users' in s else '' }}</td>
-            <td>
-              {% if 'read only' in s %}
-              <span class="badge {% if s['read only']=='yes' %}bg-warning{% else %}bg-success{% endif %}">
-                {{ 'Read Only' if s['read only']=='yes' else 'Read/Write' }}
-              </span>
-              {% elif 'writable' in s %}
-              <span class="badge {% if s['writable']=='no' %}bg-warning{% else %}bg-success{% endif %}">
-                {{ 'Read Only' if s['writable']=='no' else 'Read/Write' }}
-              </span>
+            <td class="align-middle">{{ share.name }}</td>
+            <td class="align-middle">{{ share.path }}</td>
+            <td class="align-middle">
+              {% if share.guest_ok == 'yes' %}
+              <span class="badge bg-success">Yes</span>
               {% else %}
-              <span class="badge bg-secondary">Unknown</span>
+              <span class="badge bg-danger">No</span>
               {% endif %}
             </td>
-            <td>{{ s['vfs objects'] if 'vfs objects' in s else '' }}</td>
-            <td>
-              {% if s.name in ['secure-share', 'share'] %}
-              <span class="badge bg-info">System</span>
+            <td class="align-middle">
+              {% if share.browseable == 'yes' %}
+              <span class="badge bg-success">Yes</span>
               {% else %}
-              <span class="badge bg-secondary">Local</span>
+              <span class="badge bg-danger">No</span>
               {% endif %}
             </td>
-            <td>
-              <form method="POST" style="display:inline">
-                <input type="hidden" name="name" value="{{ s.name }}">
-                <input type="hidden" name="delete" value="1">
-                <button class="btn btn-sm btn-danger" {% if not has_sudo or s.name in ['secure-share', 'share'] %}disabled{% endif %} 
-                  title="{% if s.name in ['secure-share', 'share'] %}System shares can only be edited in /etc/samba/smb.conf{% endif %}">
-                  Delete
+            <td class="align-middle">
+              {% if share.read_only == 'yes' %}
+              <span class="badge bg-warning">Yes</span>
+              {% else %}
+              <span class="badge bg-success">No</span>
+              {% endif %}
+            </td>
+            <td class="align-middle">
+              <div class="btn-group">
+                <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editShareModal{{ share.name }}">
+                  <i class="bi bi-pencil"></i>
                 </button>
-              </form>
+                <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteShareModal{{ share.name }}">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
             </td>
           </tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
-    {% else %}
-    <div class="alert alert-info">No shares configured yet.</div>
-    {% endif %}
+  </div>
+</div>
+
+<!-- Edit Share Modals -->
+{% for share in shares %}
+<div class="modal fade" id="editShareModal{{ share.name }}" tabindex="-1" aria-labelledby="editShareModalLabel{{ share.name }}" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editShareModalLabel{{ share.name }}">Edit Share: {{ share.name }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form action="/edit-share" method="post">
+        <div class="modal-body">
+          <input type="hidden" name="original_name" value="{{ share.name }}">
+          
+          <div class="mb-3">
+            <label for="name{{ share.name }}" class="form-label">Share Name</label>
+            <input type="text" class="form-control" id="name{{ share.name }}" name="name" value="{{ share.name }}" required>
+          </div>
+          
+          <div class="mb-3">
+            <label for="path{{ share.name }}" class="form-label">Path</label>
+            <input type="text" class="form-control" id="path{{ share.name }}" name="path" value="{{ share.path }}" required>
+          </div>
+          
+          <div class="mb-3">
+            <label for="comment{{ share.name }}" class="form-label">Comment</label>
+            <input type="text" class="form-control" id="comment{{ share.name }}" name="comment" value="{{ share.comment }}">
+          </div>
+          
+          <div class="row g-3 mb-3">
+            <div class="col-md-4">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="browseable{{ share.name }}" name="browseable" {% if share.browseable == 'yes' %}checked{% endif %}>
+                <label class="form-check-label" for="browseable{{ share.name }}">Browseable</label>
+              </div>
+            </div>
+            
+            <div class="col-md-4">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="read_only{{ share.name }}" name="read_only" {% if share.read_only == 'yes' %}checked{% endif %}>
+                <label class="form-check-label" for="read_only{{ share.name }}">Read Only</label>
+              </div>
+            </div>
+            
+            <div class="col-md-4">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="guest_ok{{ share.name }}" name="guest_ok" {% if share.guest_ok == 'yes' %}checked{% endif %}>
+                <label class="form-check-label" for="guest_ok{{ share.name }}">Guest OK</label>
+              </div>
+            </div>
+          </div>
+          
+          <div class="mb-3">
+            <label for="valid_users{{ share.name }}" class="form-label">Valid Users</label>
+            <input type="text" class="form-control" id="valid_users{{ share.name }}" name="valid_users" value="{{ share.valid_users }}">
+            <div class="form-text">Comma-separated list of users</div>
+          </div>
+          
+          <div class="mb-3">
+            <label for="write_list{{ share.name }}" class="form-label">Write List</label>
+            <input type="text" class="form-control" id="write_list{{ share.name }}" name="write_list" value="{{ share.write_list }}">
+            <div class="form-text">Comma-separated list of users with write access</div>
+          </div>
+          
+          <div class="mb-3">
+            <label for="create_mask{{ share.name }}" class="form-label">Create Mask</label>
+            <input type="text" class="form-control" id="create_mask{{ share.name }}" name="create_mask" value="{{ share.create_mask }}">
+          </div>
+          
+          <div class="mb-3">
+            <label for="directory_mask{{ share.name }}" class="form-label">Directory Mask</label>
+            <input type="text" class="form-control" id="directory_mask{{ share.name }}" name="directory_mask" value="{{ share.directory_mask }}">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Share Modals -->
+<div class="modal fade" id="deleteShareModal{{ share.name }}" tabindex="-1" aria-labelledby="deleteShareModalLabel{{ share.name }}" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="deleteShareModalLabel{{ share.name }}">Delete Share</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete the share <strong>{{ share.name }}</strong>?</p>
+        <p class="text-danger"><i class="bi bi-exclamation-triangle me-2"></i>This action cannot be undone.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+        <form action="/delete-share" method="post" class="d-inline">
+          <input type="hidden" name="name" value="{{ share.name }}">
+          <button type="submit" class="btn btn-danger">Delete Share</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %}
+
+{% else %}
+<div class="card">
+  <div class="card-body text-center py-5">
+    <i class="bi bi-folder-x display-4 text-muted mb-3"></i>
+    <h4>No Shares Found</h4>
+    <p class="text-muted">You haven't configured any Samba shares yet.</p>
+    <button type="button" class="btn btn-primary mt-2" data-bs-toggle="modal" data-bs-target="#addShareModal">
+      <i class="bi bi-plus-lg me-1"></i> Add First Share
+    </button>
+  </div>
+</div>
+{% endif %}
+
+<!-- Add Share Modal -->
+<div class="modal fade" id="addShareModal" tabindex="-1" aria-labelledby="addShareModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addShareModalLabel">Add New Share</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form action="/add-share" method="post">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="name" class="form-label">Share Name</label>
+            <input type="text" class="form-control" id="name" name="name" required>
+          </div>
+          
+          <div class="mb-3">
+            <label for="path" class="form-label">Path</label>
+            <input type="text" class="form-control" id="path" name="path" required>
+          </div>
+          
+          <div class="mb-3">
+            <label for="comment" class="form-label">Comment</label>
+            <input type="text" class="form-control" id="comment" name="comment">
+          </div>
+          
+          <div class="row g-3 mb-3">
+            <div class="col-md-4">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="browseable" name="browseable" checked>
+                <label class="form-check-label" for="browseable">Browseable</label>
+              </div>
+            </div>
+            
+            <div class="col-md-4">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="read_only" name="read_only">
+                <label class="form-check-label" for="read_only">Read Only</label>
+              </div>
+            </div>
+            
+            <div class="col-md-4">
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="guest_ok" name="guest_ok">
+                <label class="form-check-label" for="guest_ok">Guest OK</label>
+              </div>
+            </div>
+          </div>
+          
+          <div class="mb-3">
+            <label for="valid_users" class="form-label">Valid Users</label>
+            <input type="text" class="form-control" id="valid_users" name="valid_users">
+            <div class="form-text">Comma-separated list of users</div>
+          </div>
+          
+          <div class="mb-3">
+            <label for="write_list" class="form-label">Write List</label>
+            <input type="text" class="form-control" id="write_list" name="write_list">
+            <div class="form-text">Comma-separated list of users with write access</div>
+          </div>
+          
+          <div class="mb-3">
+            <label for="create_mask" class="form-label">Create Mask</label>
+            <input type="text" class="form-control" id="create_mask" name="create_mask" value="0744">
+          </div>
+          
+          <div class="mb-3">
+            <label for="directory_mask" class="form-label">Directory Mask</label>
+            <input type="text" class="form-control" id="directory_mask" name="directory_mask" value="0755">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Add Share</button>
+        </div>
+      </form>
+    </div>
   </div>
 </div>
 {% endblock %}

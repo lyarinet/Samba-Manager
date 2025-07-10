@@ -15,7 +15,11 @@ def index():
     # Get Samba installation status
     installation_status = get_samba_installation_status()
     
-    return render_template('index.html', status=status, has_sudo=has_sudo, installation_status=installation_status)
+    # Add datetime for the template
+    from datetime import datetime
+    now = datetime.now()
+    
+    return render_template('index.html', status=status, has_sudo=has_sudo, installation_status=installation_status, now=now)
 
 @bp.route('/global-settings', methods=['GET', 'POST'])
 def global_settings():
@@ -37,9 +41,16 @@ def global_settings():
             
         return redirect('/global-settings')
         
-    settings = read_global_settings()
+    global_settings = read_global_settings()
     has_sudo = check_sudo_access()
-    return render_template('global_settings.html', settings=settings, has_sudo=has_sudo)
+    
+    # Get Samba service status
+    status = get_samba_status()
+    
+    return render_template('global_settings.html', 
+                          global_settings=global_settings, 
+                          status=status,
+                          has_sudo=has_sudo)
 
 @bp.route('/shares', methods=['GET', 'POST'])
 def shares():
@@ -120,14 +131,14 @@ def users():
         flash('Error: Sudo access is required to manage Samba users', 'error')
         return redirect('/')
         
-    samba_users = get_samba_users()
+    users = get_samba_users()
     system_users = list_system_users()
     system_groups = list_system_groups()
     
     return render_template('users.html', 
-                          samba_users=samba_users, 
+                          users=users, 
                           system_users=system_users,
-                          system_groups=system_groups,
+                          groups=system_groups,
                           has_sudo=check_sudo_access())
 
 @bp.route('/users/add', methods=['POST'])
@@ -287,8 +298,12 @@ def setup():
     # Get current installation status
     installation_status = get_samba_installation_status()
     
+    # Get Samba service status
+    status = get_samba_status()
+    
     return render_template('setup.html', 
                           installation_status=installation_status,
+                          status=status,
                           has_sudo=check_sudo_access())
 
 @bp.route('/fix-permissions', methods=['POST'])
@@ -316,8 +331,16 @@ def maintenance():
     # Get current installation status
     installation_status = get_samba_installation_status()
     
+    # Get Samba service status
+    status = get_samba_status()
+    
+    # Get shares for permission management
+    shares = load_shares()
+    
     return render_template('maintenance.html', 
                           installation_status=installation_status,
+                          status=status,
+                          shares=shares,
                           has_sudo=check_sudo_access())
 
 @bp.route('/install-samba', methods=['POST'])

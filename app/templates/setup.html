@@ -1,126 +1,183 @@
 {% extends 'layout.html' %}
 {% block content %}
-<h3>Samba Setup</h3>
+<div class="page-header">
+  <h2>Samba Setup</h2>
+  <div>
+    <span class="badge bg-secondary">{{ status.smbd }}</span>
+    <span class="badge bg-secondary">{{ status.nmbd }}</span>
+  </div>
+</div>
 
-<div class="card bg-dark border-secondary mb-4">
-  <div class="card-header">Installation Status</div>
-  <div class="card-body">
-    <div class="row">
-      <div class="col-md-4">
-        <p><strong>Samba Installed:</strong> 
-          <span class="badge {% if installation_status.installed %}bg-success{% else %}bg-danger{% endif %}">
-            {{ 'Yes' if installation_status.installed else 'No' }}
-          </span>
-        </p>
+{% if not has_sudo %}
+<div class="alert alert-warning mb-4">
+  <i class="bi bi-shield-exclamation me-2"></i>
+  <strong>Warning:</strong> Sudo access is required to perform setup operations.
+  Run this application with sudo privileges to enable full functionality.
+</div>
+{% endif %}
+
+<div class="row">
+  <div class="col-lg-6">
+    <div class="card mb-4">
+      <div class="card-header">
+        <h5 class="mb-0">Installation Status</h5>
       </div>
-      <div class="col-md-4">
-        <p><strong>Samba Running:</strong>
-          <span class="badge {% if installation_status.running %}bg-success{% else %}bg-danger{% endif %}">
-            {{ 'Yes' if installation_status.running else 'No' }}
-          </span>
-        </p>
+      <div class="card-body">
+        <ul class="list-group list-group-flush bg-transparent">
+          <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent px-0 py-3 border-bottom">
+            <div>
+              <h6 class="mb-1">Samba Package</h6>
+              <p class="text-muted small mb-0">Core Samba functionality</p>
+            </div>
+            <div>
+              {% if installation_status.installed %}
+              <span class="badge bg-success">Installed</span>
+              {% else %}
+              <span class="badge bg-danger">Not Installed</span>
+              {% endif %}
+            </div>
+          </li>
+          
+          <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent px-0 py-3 border-bottom">
+            <div>
+              <h6 class="mb-1">Configuration File</h6>
+              <p class="text-muted small mb-0">smb.conf</p>
+            </div>
+            <div>
+              {% if installation_status.config_exists %}
+              <span class="badge bg-success">Present</span>
+              {% else %}
+              <span class="badge bg-danger">Missing</span>
+              {% endif %}
+            </div>
+          </li>
+          
+          <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent px-0 py-3">
+            <div>
+              <h6 class="mb-1">Shares Configured</h6>
+              <p class="text-muted small mb-0">Number of shares defined</p>
+            </div>
+            <div>
+              <span class="badge bg-primary">{{ installation_status.shares|length }}</span>
+            </div>
+          </li>
+        </ul>
+        
+        {% if not installation_status.installed %}
+        <div class="d-grid mt-4">
+          <form method="POST" action="/install">
+            <button type="submit" class="btn btn-primary w-100" {% if not has_sudo %}disabled{% endif %}>
+              <i class="bi bi-download me-2"></i> Install Samba
+            </button>
+          </form>
+        </div>
+        {% endif %}
       </div>
-      <div class="col-md-4">
-        <p><strong>Samba Configured:</strong>
-          <span class="badge {% if installation_status.configured %}bg-success{% else %}bg-danger{% endif %}">
-            {{ 'Yes' if installation_status.configured else 'No' }}
-          </span>
-        </p>
+    </div>
+    
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0">Service Management</h5>
+      </div>
+      <div class="card-body">
+        <div class="d-grid gap-3">
+          <div class="row g-2">
+            <div class="col-6">
+              <form method="POST" action="/start">
+                <button type="submit" class="btn btn-success w-100" {% if not has_sudo %}disabled{% endif %}>
+                  <i class="bi bi-play-fill me-2"></i> Start Services
+                </button>
+              </form>
+            </div>
+            <div class="col-6">
+              <form method="POST" action="/stop">
+                <button type="submit" class="btn btn-danger w-100" {% if not has_sudo %}disabled{% endif %}>
+                  <i class="bi bi-stop-fill me-2"></i> Stop Services
+                </button>
+              </form>
+            </div>
+          </div>
+          
+          <form method="POST" action="/restart">
+            <button type="submit" class="btn btn-warning w-100" {% if not has_sudo %}disabled{% endif %}>
+              <i class="bi bi-arrow-repeat me-2"></i> Restart Services
+            </button>
+          </form>
+          
+          <form method="POST" action="/enable">
+            <button type="submit" class="btn btn-info w-100" {% if not has_sudo %}disabled{% endif %}>
+              <i class="bi bi-lightning-charge me-2"></i> Enable on Boot
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   </div>
-</div>
-
-<div class="card bg-dark border-secondary mb-4">
-  <div class="card-header">Detected Share Directories</div>
-  <div class="card-body">
-    {% if installation_status.shares %}
-      <div class="table-responsive">
-        <table class="table table-dark table-striped">
-          <thead class="bg-primary text-white">
-            <tr>
-              <th>Share Name</th>
-              <th>Path</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for share in installation_status.shares %}
-              <tr>
-                <td>{{ share.name }}</td>
-                <td>{{ share.path }}</td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+  
+  <div class="col-lg-6">
+    <div class="card mb-4">
+      <div class="card-header">
+        <h5 class="mb-0">Quick Setup</h5>
       </div>
-    {% else %}
-      <p>No shares detected. Setup will create default shares.</p>
-    {% endif %}
-  </div>
-</div>
-
-<div class="card bg-dark border-secondary mb-4">
-  <div class="card-header">Detected Samba Users</div>
-  <div class="card-body">
-    {% if installation_status.users %}
-      <div class="table-responsive">
-        <table class="table table-dark table-striped">
-          <thead class="bg-primary text-white">
-            <tr>
-              <th>Username</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for user in installation_status.users %}
-              <tr>
-                <td>{{ user.username }}</td>
-                <td>
-                  <span class="badge {% if user.enabled %}bg-success{% else %}bg-danger{% endif %}">
-                    {{ 'Enabled' if user.enabled else 'Disabled' }}
-                  </span>
-                </td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    {% else %}
-      <p>No Samba users detected.</p>
-    {% endif %}
-  </div>
-</div>
-
-<div class="card bg-dark border-secondary">
-  <div class="card-header">Setup Actions</div>
-  <div class="card-body">
-    <div class="row">
-      <div class="col-md-6">
-        <h5>Complete Setup</h5>
-        <p>This will:</p>
-        <ul>
-          <li>Install Samba if not already installed</li>
-          <li>Create a smbusers group</li>
-          <li>Add system users to smbusers group</li>
-          <li>Create share directories with proper permissions</li>
-          <li>Configure global settings</li>
-          <li>Create shares based on detected directories</li>
-          <li>Enable and restart Samba services</li>
-        </ul>
-        <form action="/setup" method="POST">
-          <button type="submit" class="btn btn-primary">Run Complete Setup</button>
-        </form>
-      </div>
-      <div class="col-md-6">
-        <h5>Fix Permissions</h5>
-        <p>Fix permissions on share directories only:</p>
-        <form action="/fix-permissions" method="POST">
-          <button type="submit" class="btn btn-warning">Fix Share Permissions</button>
-        </form>
+      <div class="card-body">
+        <p class="text-muted mb-4">Configure a basic Samba setup with common settings. This will create a simple configuration with one share.</p>
         
-        <h5 class="mt-4">Maintenance</h5>
-        <p>Access additional maintenance options:</p>
-        <a href="/maintenance" class="btn btn-info">Maintenance Page</a>
+        <form method="POST" action="/quick-setup">
+          <div class="mb-3">
+            <label for="share_name" class="form-label">Share Name</label>
+            <input type="text" class="form-control" id="share_name" name="share_name" value="share" required {% if not has_sudo %}disabled{% endif %}>
+          </div>
+          
+          <div class="mb-3">
+            <label for="share_path" class="form-label">Share Path</label>
+            <input type="text" class="form-control" id="share_path" name="share_path" value="/srv/samba/share" required {% if not has_sudo %}disabled{% endif %}>
+          </div>
+          
+          <div class="mb-3">
+            <label for="workgroup" class="form-label">Workgroup</label>
+            <input type="text" class="form-control" id="workgroup" name="workgroup" value="WORKGROUP" required {% if not has_sudo %}disabled{% endif %}>
+          </div>
+          
+          <div class="mb-3">
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" id="guest_access" name="guest_access" {% if not has_sudo %}disabled{% endif %}>
+              <label class="form-check-label" for="guest_access">Allow Guest Access</label>
+            </div>
+          </div>
+          
+          <div class="d-grid">
+            <button type="submit" class="btn btn-primary" {% if not has_sudo %}disabled{% endif %}>
+              <i class="bi bi-magic me-2"></i> Create Basic Setup
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0">Advanced Setup</h5>
+      </div>
+      <div class="card-body">
+        <p class="text-muted mb-3">Advanced configuration options for experienced users.</p>
+        
+        <div class="d-grid gap-3">
+          <a href="/global-settings" class="btn btn-outline-primary">
+            <i class="bi bi-gear me-2"></i> Global Settings
+          </a>
+          
+          <a href="/shares" class="btn btn-outline-primary">
+            <i class="bi bi-folder-symlink me-2"></i> Configure Shares
+          </a>
+          
+          <a href="/users" class="btn btn-outline-primary">
+            <i class="bi bi-people me-2"></i> Manage Users
+          </a>
+          
+          <a href="/edit-config" class="btn btn-outline-secondary">
+            <i class="bi bi-file-earmark-code me-2"></i> Edit smb.conf Directly
+          </a>
+        </div>
       </div>
     </div>
   </div>
