@@ -132,9 +132,29 @@
           </div>
           
           <div class="mb-3">
+            <label for="valid_groups{{ share.name }}" class="form-label">Valid Groups</label>
+            <select class="form-select" id="valid_groups{{ share.name }}" name="valid_groups" multiple size="3">
+              {% for group in groups %}
+              <option value="@{{ group }}" {% if '@' + group in share.valid_users %}selected{% endif %}>{{ group }}</option>
+              {% endfor %}
+            </select>
+            <div class="form-text help-text">Hold Ctrl to select multiple groups</div>
+          </div>
+          
+          <div class="mb-3">
             <label for="write_list{{ share.name }}" class="form-label">Write List</label>
             <input type="text" class="form-control" id="write_list{{ share.name }}" name="write_list" value="{{ share.write_list }}">
             <div class="form-text help-text">Comma-separated list of users with write access</div>
+          </div>
+          
+          <div class="mb-3">
+            <label for="write_groups{{ share.name }}" class="form-label">Write Groups</label>
+            <select class="form-select" id="write_groups{{ share.name }}" name="write_groups" multiple size="3">
+              {% for group in groups %}
+              <option value="@{{ group }}" {% if '@' + group in share.write_list %}selected{% endif %}>{{ group }}</option>
+              {% endfor %}
+            </select>
+            <div class="form-text help-text">Hold Ctrl to select multiple groups</div>
           </div>
           
           <div class="mb-3">
@@ -248,9 +268,29 @@
           </div>
           
           <div class="mb-3">
+            <label for="valid_groups" class="form-label">Valid Groups</label>
+            <select class="form-select" id="valid_groups" name="valid_groups" multiple size="3">
+              {% for group in groups %}
+              <option value="@{{ group }}">{{ group }}</option>
+              {% endfor %}
+            </select>
+            <div class="form-text help-text">Hold Ctrl to select multiple groups</div>
+          </div>
+          
+          <div class="mb-3">
             <label for="write_list" class="form-label">Write List</label>
             <input type="text" class="form-control" id="write_list" name="write_list">
             <div class="form-text help-text">Comma-separated list of users with write access</div>
+          </div>
+          
+          <div class="mb-3">
+            <label for="write_groups" class="form-label">Write Groups</label>
+            <select class="form-select" id="write_groups" name="write_groups" multiple size="3">
+              {% for group in groups %}
+              <option value="@{{ group }}">{{ group }}</option>
+              {% endfor %}
+            </select>
+            <div class="form-text help-text">Hold Ctrl to select multiple groups</div>
           </div>
           
           <div class="mb-3">

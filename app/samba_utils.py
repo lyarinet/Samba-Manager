@@ -318,6 +318,35 @@ def write_global_settings(settings):
         print(f"Exception in write_global_settings: {str(e)}")
         return False
 
+def parse_user_group_list(value):
+    """Parse a list of users and groups from a Samba config value.
+    Returns a tuple of (users_list, groups_list)."""
+    if not value:
+        return [], []
+    
+    items = [item.strip() for item in value.split(',') if item.strip()]
+    users = [item for item in items if not item.startswith('@')]
+    groups = [item for item in items if item.startswith('@')]
+    
+    return users, groups
+
+def format_user_group_list(users, groups):
+    """Format users and groups into a single comma-separated string."""
+    all_items = []
+    if users:
+        if isinstance(users, list):
+            all_items.extend(users)
+        else:
+            all_items.append(users)
+    
+    if groups:
+        if isinstance(groups, list):
+            all_items.extend(groups)
+        else:
+            all_items.append(groups)
+    
+    return ','.join(all_items) if all_items else ''
+
 def load_shares():
     """Load Samba shares from the configuration files"""
     shares = []
@@ -509,6 +538,17 @@ def load_shares():
                 else:
                     share['valid_users'] = ','.join(missing_users)
                 print(f"Added missing write_list users to valid_users for share {share['name']}: {missing_users}")
+        
+        # Parse and store user and group lists separately for UI display
+        if 'valid_users' in share:
+            users, groups = parse_user_group_list(share['valid_users'])
+            share['valid_users_list'] = users
+            share['valid_groups_list'] = groups
+        
+        if 'write_list' in share:
+            users, groups = parse_user_group_list(share['write_list'])
+            share['write_users_list'] = users
+            share['write_groups_list'] = groups
     
     # Print final share information for debugging
     print(f"Loaded {len(shares)} shares from configuration")

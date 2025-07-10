@@ -113,6 +113,28 @@ def add_share():
     else:
         print(f"Path validation successful: {message}")
     
+    # Process users and groups
+    valid_users = request.form.get('valid_users', '')
+    valid_groups = request.form.getlist('valid_groups')
+    
+    # Combine users and groups for valid_users field
+    if valid_groups:
+        if valid_users:
+            valid_users = valid_users + ',' + ','.join(valid_groups)
+        else:
+            valid_users = ','.join(valid_groups)
+    
+    # Process write list users and groups
+    write_list = request.form.get('write_list', '')
+    write_groups = request.form.getlist('write_groups')
+    
+    # Combine users and groups for write_list field
+    if write_groups:
+        if write_list:
+            write_list = write_list + ',' + ','.join(write_groups)
+        else:
+            write_list = ','.join(write_groups)
+    
     # Create new share with normalized key names
     share = {
         'name': name,
@@ -121,8 +143,8 @@ def add_share():
         'browseable': 'yes' if request.form.get('browseable') else 'no',
         'read_only': 'yes' if request.form.get('read_only') else 'no',
         'guest_ok': 'yes' if request.form.get('guest_ok') else 'no',
-        'valid_users': request.form.get('valid_users', ''),
-        'write_list': request.form.get('write_list', ''),
+        'valid_users': valid_users,
+        'write_list': write_list,
         'create_mask': request.form.get('create_mask', '0744'),
         'directory_mask': request.form.get('directory_mask', '0755'),
         'force_group': 'smbusers'
@@ -173,6 +195,28 @@ def edit_share():
     else:
         print(f"Path validation successful: {message}")
     
+    # Process users and groups
+    valid_users = request.form.get('valid_users', '')
+    valid_groups = request.form.getlist('valid_groups')
+    
+    # Combine users and groups for valid_users field
+    if valid_groups:
+        if valid_users:
+            valid_users = valid_users + ',' + ','.join(valid_groups)
+        else:
+            valid_users = ','.join(valid_groups)
+    
+    # Process write list users and groups
+    write_list = request.form.get('write_list', '')
+    write_groups = request.form.getlist('write_groups')
+    
+    # Combine users and groups for write_list field
+    if write_groups:
+        if write_list:
+            write_list = write_list + ',' + ','.join(write_groups)
+        else:
+            write_list = ','.join(write_groups)
+    
     # Update share with normalized key names
     share = {
         'name': name,
@@ -181,8 +225,8 @@ def edit_share():
         'browseable': 'yes' if request.form.get('browseable') else 'no',
         'read_only': 'yes' if request.form.get('read_only') else 'no',
         'guest_ok': 'yes' if request.form.get('guest_ok') else 'no',
-        'valid_users': request.form.get('valid_users', ''),
-        'write_list': request.form.get('write_list', ''),
+        'valid_users': valid_users,
+        'write_list': write_list,
         'create_mask': request.form.get('create_mask', '0744'),
         'directory_mask': request.form.get('directory_mask', '0755'),
         'force_group': 'smbusers'
