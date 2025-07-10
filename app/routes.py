@@ -397,3 +397,61 @@ def stop_service():
         flash(f'Failed to stop Samba service: {str(e)}', 'error')
     
     return redirect('/maintenance')
+
+@bp.route('/edit-config', methods=['GET', 'POST'])
+def edit_config():
+    """Edit Samba configuration file directly"""
+    if not check_sudo_access():
+        flash('Error: Sudo access is required to edit Samba configuration', 'error')
+        return redirect('/')
+    
+    config_file = SMB_CONF
+    share_file = SHARE_CONF
+    
+    if request.method == 'POST':
+        if 'main_config' in request.form:
+            try:
+                with open(config_file, 'w') as f:
+                    f.write(request.form['main_config'])
+                flash('Main configuration file updated successfully', 'success')
+            except Exception as e:
+                flash(f'Error updating main configuration: {str(e)}', 'error')
+        
+        if 'share_config' in request.form:
+            try:
+                with open(share_file, 'w') as f:
+                    f.write(request.form['share_config'])
+                flash('Share configuration file updated successfully', 'success')
+            except Exception as e:
+                flash(f'Error updating share configuration: {str(e)}', 'error')
+        
+        # Restart Samba service after config changes
+        if restart_samba_service():
+            flash('Samba service restarted successfully', 'success')
+        else:
+            flash('Failed to restart Samba service', 'error')
+        
+        return redirect('/edit-config')
+    
+    # Read configuration files
+    main_config = ""
+    share_config = ""
+    
+    try:
+        if os.path.exists(config_file):
+            with open(config_file, 'r') as f:
+                main_config = f.read()
+    except Exception as e:
+        flash(f'Error reading main configuration: {str(e)}', 'error')
+    
+    try:
+        if os.path.exists(share_file):
+            with open(share_file, 'r') as f:
+                share_config = f.read()
+    except Exception as e:
+        flash(f'Error reading share configuration: {str(e)}', 'error')
+    
+    return render_template('edit_config.html', 
+                          main_config=main_config,
+                          share_config=share_config,
+                          has_sudo=check_sudo_access())

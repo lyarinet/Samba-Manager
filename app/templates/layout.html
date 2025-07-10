@@ -354,6 +354,10 @@
       margin-right: 0.5rem;
     }
     
+    .mb-1 {
+      color: peachpuff !important;
+    }
+
     .status-active {
       background-color: var(--success);
       box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.3);
@@ -490,6 +494,10 @@
         <a href="/maintenance" class="nav-link {% if request.path == '/maintenance' %}active{% endif %}">
           <i class="bi bi-wrench"></i>
           <span class="nav-link-text">Maintenance</span>
+        </a>
+        <a href="/edit-config" class="nav-link {% if request.path == '/edit-config' %}active{% endif %}">
+          <i class="bi bi-file-earmark-code"></i>
+          <span class="nav-link-text">Edit Config</span>
         </a>
       </nav>
     </div>
