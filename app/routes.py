@@ -6,6 +6,7 @@ import subprocess
 import tempfile
 import datetime
 from .samba_utils import *
+import json
 
 bp = Blueprint('main', __name__)
 
@@ -358,27 +359,76 @@ def export():
 @login_required
 def import_conf():
     if not check_sudo_access():
-        flash('Error: Sudo access is required to import Samba configuration', 'error')
-        return redirect('/')
-        
-    if 'file' not in request.files:
-        flash('No file part', 'error')
-        return redirect('/')
-        
-    file = request.files['file']
-    if file.filename == '':
-        flash('No selected file', 'error')
-        return redirect('/')
-        
-    content = file.read().decode()
-    result = import_config(content)
+        flash('Error: Sudo access is required to import configuration', 'error')
+        return redirect('/maintenance')
     
-    if result:
-        flash('Configuration imported successfully and Samba service restarted', 'success')
-    else:
-        flash('Import failed. Check logs for details', 'error')
-        
-    return redirect('/')
+    if 'config_file' not in request.files:
+        flash('No file part in the request', 'error')
+        return redirect('/maintenance')
+    
+    file = request.files['config_file']
+    
+    if file.filename == '':
+        flash('No file selected', 'error')
+        return redirect('/maintenance')
+    
+    # Check file extension
+    allowed_extensions = ['.json', '.conf']
+    file_ext = os.path.splitext(file.filename)[1].lower()
+    
+    if file_ext not in allowed_extensions:
+        flash(f'File must be one of these types: {", ".join(allowed_extensions)}', 'error')
+        return redirect('/maintenance')
+    
+    try:
+        # Create a temporary file to store the uploaded content
+        with tempfile.NamedTemporaryFile(delete=False) as temp_file:
+            file.save(temp_file.name)
+            
+            if file_ext == '.json':
+                # Handle JSON import
+                with open(temp_file.name, 'r') as f:
+                    config_data = json.load(f)
+                
+                # Process the imported JSON data
+                result = import_config(config_data)
+                
+                if result:
+                    flash('Configuration imported successfully', 'success')
+                else:
+                    flash('Failed to import configuration', 'error')
+            
+            elif file_ext == '.conf':
+                # Handle direct .conf file import
+                # Copy the uploaded file to the Samba configuration
+                backup_path = '/etc/samba/smb_backup.conf'
+                
+                # Create a backup of the current config
+                subprocess.run(['sudo', 'cp', '/etc/samba/smb.conf', backup_path], check=False)
+                
+                # Copy the uploaded file to smb.conf
+                subprocess.run(['sudo', 'cp', temp_file.name, '/etc/samba/smb.conf'], check=False)
+                
+                # Validate the configuration
+                validate_cmd = subprocess.run(['sudo', 'testparm', '-s', '/etc/samba/smb.conf'], 
+                                             capture_output=True, text=True, check=False)
+                
+                if validate_cmd.returncode != 0:
+                    # If validation fails, restore the backup
+                    subprocess.run(['sudo', 'cp', backup_path, '/etc/samba/smb.conf'], check=False)
+                    flash(f'Invalid configuration file: {validate_cmd.stderr}', 'error')
+                else:
+                    # Restart Samba services
+                    subprocess.run(['sudo', 'systemctl', 'restart', 'smbd', 'nmbd'], check=False)
+                    flash('Configuration file imported successfully', 'success')
+            
+            # Clean up the temporary file
+            os.unlink(temp_file.name)
+    
+    except Exception as e:
+        flash(f'Error importing configuration: {str(e)}', 'error')
+    
+    return redirect('/maintenance')
 
 @bp.route('/restart')
 @login_required

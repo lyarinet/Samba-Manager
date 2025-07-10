@@ -73,14 +73,15 @@
         <h5 class="mb-0">Import Configuration</h5>
       </div>
       <div class="card-body">
-        <p>Restore a previously exported configuration</p>
+        <p>Restore a previously exported configuration or upload a Samba config file</p>
         <form action="{{ url_for('main.import_conf') }}" method="post" enctype="multipart/form-data">
           <div class="input-group">
-            <input type="file" class="form-control" name="config_file" accept=".json">
+            <input type="file" class="form-control" name="config_file" accept=".json,.conf">
             <button type="submit" class="btn btn-primary">
               <i class="bi bi-upload me-1"></i> Import
             </button>
           </div>
+          <small class="text-muted mt-2 d-block">Supported formats: .json (exported config), .conf (Samba config)</small>
         </form>
       </div>
     </div>
