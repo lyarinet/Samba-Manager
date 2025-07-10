@@ -377,6 +377,11 @@ def load_shares():
                     if key not in share:
                         share[key] = value
                 
+                # If valid_users is empty but write_list has values, use write_list for valid_users
+                if not share.get('valid_users') and share.get('write_list'):
+                    share['valid_users'] = share['write_list']
+                    print(f"Using write_list as valid_users for share {name}: {share['valid_users']}")
+                
                 # Debug output for valid_users and write_list
                 print(f"Share {name} from main config - valid_users: '{share.get('valid_users', '')}', write_list: '{share.get('write_list', '')}'")
                 
@@ -423,6 +428,11 @@ def load_shares():
                         if samba_key in section:
                             existing_share[our_key] = section[samba_key]
                     
+                    # If valid_users is empty but write_list has values, use write_list for valid_users
+                    if not existing_share.get('valid_users') and existing_share.get('write_list'):
+                        existing_share['valid_users'] = existing_share['write_list']
+                        print(f"Using write_list as valid_users for existing share {name}: {existing_share['valid_users']}")
+                    
                     # Debug output for valid_users and write_list
                     print(f"Updated share {name} - valid_users: '{existing_share.get('valid_users', '')}', write_list: '{existing_share.get('write_list', '')}'")
                 else:
@@ -467,6 +477,11 @@ def load_shares():
                         if key not in share:
                             share[key] = value
                     
+                    # If valid_users is empty but write_list has values, use write_list for valid_users
+                    if not share.get('valid_users') and share.get('write_list'):
+                        share['valid_users'] = share['write_list']
+                        print(f"Using write_list as valid_users for new share {name}: {share['valid_users']}")
+                    
                     # Debug output for valid_users and write_list
                     print(f"Share {name} from shares config - valid_users: '{share.get('valid_users', '')}', write_list: '{share.get('write_list', '')}'")
                     
@@ -475,6 +490,33 @@ def load_shares():
             print(f"Error reading shares from shares config: {e}")
     
     print(f"Total shares loaded: {len(shares)}")
+    
+    # Final check for all shares: ensure valid_users includes write_list users
+    for share in shares:
+        if share.get('write_list') and not share.get('valid_users'):
+            share['valid_users'] = share['write_list']
+            print(f"Final check: Using write_list as valid_users for share {share['name']}: {share['valid_users']}")
+        elif share.get('write_list') and share.get('valid_users'):
+            # Make sure all write_list users are in valid_users
+            valid_users_set = set(user.strip() for user in share['valid_users'].split(',') if user.strip())
+            write_list_set = set(user.strip() for user in share['write_list'].split(',') if user.strip())
+            
+            # If there are users in write_list not in valid_users, add them
+            missing_users = write_list_set - valid_users_set
+            if missing_users:
+                if share['valid_users']:
+                    share['valid_users'] += ',' + ','.join(missing_users)
+                else:
+                    share['valid_users'] = ','.join(missing_users)
+                print(f"Added missing write_list users to valid_users for share {share['name']}: {missing_users}")
+    
+    # Print final share information for debugging
+    print(f"Loaded {len(shares)} shares from configuration")
+    for share in shares:
+        print(f"Share: {share['name']} - Path: {share['path']}")
+        print(f"  valid_users: '{share.get('valid_users', '')}', write_list: '{share.get('write_list', '')}'")
+        print(f"  create_mask: '{share.get('create_mask', '')}', directory_mask: '{share.get('directory_mask', '')}'")
+    
     return shares
 
 def save_shares(shares):
@@ -486,13 +528,13 @@ def save_shares(shares):
             'path': 'path',
             'comment': 'comment',
             'browseable': 'browseable',
-            'read only': 'read only',
-            'guest ok': 'guest ok',
-            'valid users': 'valid users',
-            'write list': 'write list',
-            'create mask': 'create mask',
-            'directory mask': 'directory mask',
-            'force group': 'force group'
+            'read_only': 'read only',
+            'guest_ok': 'guest ok',
+            'valid_users': 'valid users',
+            'write_list': 'write list',
+            'create_mask': 'create mask',
+            'directory_mask': 'directory mask',
+            'force_group': 'force group'
         }
         
         # These fields should always be included in the config, even if empty
@@ -747,6 +789,48 @@ def validate_share_path(path):
     If the path doesn't exist, attempt to create it."""
     try:
         print(f"Validating share path: {path}")
+        
+        # Special handling for home directories
+        if path.startswith('/home/'):
+            parts = path.split('/')
+            if len(parts) >= 3:
+                username = parts[2]
+                print(f"Path is in home directory of user: {username}")
+                
+                # Check if the user exists
+                try:
+                    import pwd
+                    pwd.getpwnam(username)
+                    print(f"User {username} exists")
+                    
+                    # If the path doesn't exist but the user does, we can create it
+                    if not os.path.exists(path):
+                        print(f"Creating directory in user's home: {path}")
+                        # Create the directory with the user as owner
+                        mkdir_result = subprocess.run(['sudo', 'mkdir', '-p', path], 
+                                                    capture_output=True, text=True, check=False)
+                        if mkdir_result.returncode != 0:
+                            error_msg = f"Could not create directory: {mkdir_result.stderr}"
+                            print(error_msg)
+                            return False, error_msg
+                        
+                        # Set ownership to the user
+                        chown_result = subprocess.run(['sudo', 'chown', '-R', f"{username}:{username}", path], 
+                                                    capture_output=True, text=True, check=False)
+                        if chown_result.returncode != 0:
+                            print(f"Warning: Could not set ownership to {username}: {chown_result.stderr}")
+                        
+                        # Set permissions
+                        chmod_result = subprocess.run(['sudo', 'chmod', '-R', '0755', path], 
+                                                    capture_output=True, text=True, check=False)
+                        if chmod_result.returncode != 0:
+                            print(f"Warning: Could not set permissions: {chmod_result.stderr}")
+                        
+                        print(f"Successfully created directory in user's home: {path}")
+                        return True, "Path created successfully in user's home directory"
+                except KeyError:
+                    print(f"User {username} does not exist")
+                    return False, f"User {username} does not exist"
         
         # Check if path exists
         if not os.path.exists(path):
