@@ -53,6 +53,33 @@ def parse_share_section(content):
     print(f"Parsed {len(shares)} shares from content")
     return shares
 
+def parse_config_content(content):
+    """Parse Samba configuration content into sections"""
+    sections = {}
+    current_section = None
+    
+    for line in content.split('\n'):
+        line = line.strip()
+        
+        # Skip empty lines and comments
+        if not line or line.startswith('#') or line.startswith(';'):
+            continue
+        
+        # Check for section headers
+        if line.startswith('[') and line.endswith(']'):
+            section_name = line[1:-1].strip()
+            current_section = {}
+            sections[section_name] = current_section
+        
+        # Check for parameters
+        elif '=' in line and current_section is not None:
+            parts = line.split('=', 1)
+            param_name = parts[0].strip()
+            param_value = parts[1].strip()
+            current_section[param_name] = param_value
+    
+    return sections
+
 # Function to auto-detect share directories
 def detect_share_directories():
     """Auto-detect existing share directories on the system"""
@@ -188,67 +215,77 @@ def read_global_settings():
         return {'error': str(e), 'server_string': 'Samba Server', 'workgroup': 'WORKGROUP', 'log_level': '1'}
 
 def write_global_settings(settings):
+    """Write global settings to the Samba configuration file"""
     try:
-        # Backup original config
-        if os.path.exists(SMB_CONF):
-            with open(f"{SMB_CONF}.bak", 'w') as f_bak:
-                with open(SMB_CONF, 'r') as f_orig:
-                    f_bak.write(f_orig.read())
+        # Get the current configuration
+        config_content = read_samba_config()
         
-        # Check if file exists, if not create it with default template
-        if not os.path.exists(SMB_CONF):
-            with open(SMB_CONF, 'w') as f:
-                f.write(f"""[global]
-   server string = {settings.get('server string', 'Samba Server')}
-   workgroup = {settings.get('workgroup', 'WORKGROUP')}
-   log level = {settings.get('log level', '1')}
-   security = user
-   passdb backend = tdbsam
-   map to guest = bad user
-   dns proxy = no
-   usershare allow guests = yes
-   include = {SHARE_CONF}
-
-[printers]
-   comment = All Printers
-   browseable = no
-   path = /var/tmp
-   printable = yes
-   guest ok = no
-   read only = yes
-   create mask = 0700
-
-[print$]
-   comment = Printer Drivers
-   path = /var/lib/samba/printers
-   browseable = yes
-   read only = yes
-   guest ok = no
-""")
-            return restart_samba_service()
+        # Create a backup of the current config
+        backup_path = '/etc/samba/smb.conf.bak'
+        with open(backup_path, 'w') as f:
+            f.write(config_content)
         
-        # Update existing file
-        with open(SMB_CONF, 'r') as f:
-            data = f.read()
+        # Parse the configuration into sections
+        sections = parse_config_content(config_content)
         
-        # Update settings
-        for key, val in settings.items():
-            data = re.sub(rf'{key}\s*=.*', f'{key} = {val}', data)
-        
-        # Ensure include directive exists
-        if 'include' not in data:
-            data = data.replace('[global]', f'[global]\n   include = {SHARE_CONF}')
+        # Update the global section
+        if 'global' in sections:
+            global_section = sections['global']
+            
+            # Update the settings
+            for key, value in settings.items():
+                if value:  # Only update if value is not empty
+                    global_section[key] = value
         else:
-            data = re.sub(r'include\s*=.*', f'include = {SHARE_CONF}', data)
+            # Create a new global section if it doesn't exist
+            sections['global'] = settings
         
-        # Write updated config
-        with open(SMB_CONF, 'w') as f:
-            f.write(data)
+        # Convert the sections back to a configuration string
+        new_config = ''
+        for section_name, section_params in sections.items():
+            new_config += f'[{section_name}]\n'
+            for param_name, param_value in section_params.items():
+                new_config += f'    {param_name} = {param_value}\n'
+            new_config += '\n'
         
-        # Restart Samba service
-        return restart_samba_service()
+        # Write the configuration to a temporary file
+        with tempfile.NamedTemporaryFile(mode='w', delete=False) as temp_file:
+            temp_file.write(new_config)
+            temp_path = temp_file.name
+        
+        # Copy the temporary file to the Samba configuration file using sudo
+        result = subprocess.run(['sudo', 'cp', temp_path, '/etc/samba/smb.conf'], 
+                              capture_output=True, text=True, check=False)
+        
+        # Clean up the temporary file
+        os.unlink(temp_path)
+        
+        if result.returncode != 0:
+            print(f"Error writing config: {result.stderr}")
+            return False
+        
+        # Validate the configuration
+        validate_cmd = subprocess.run(['sudo', 'testparm', '-s', '/etc/samba/smb.conf'], 
+                                     capture_output=True, text=True, check=False)
+        
+        if validate_cmd.returncode != 0:
+            # If validation fails, restore the backup
+            subprocess.run(['sudo', 'cp', backup_path, '/etc/samba/smb.conf'], check=False)
+            print(f"Invalid configuration: {validate_cmd.stderr}")
+            return False
+        
+        # Restart Samba services
+        restart_cmd = subprocess.run(['sudo', 'systemctl', 'restart', 'smbd', 'nmbd'], 
+                                    capture_output=True, text=True, check=False)
+        
+        if restart_cmd.returncode != 0:
+            print(f"Error restarting services: {restart_cmd.stderr}")
+            return False
+        
+        return True
+    
     except Exception as e:
-        print("Error:", e)
+        print(f"Exception in write_global_settings: {str(e)}")
         return False
 
 def load_shares():
@@ -590,36 +627,71 @@ def add_samba_user(username, password, create_system_user=False):
     
     try:
         # Check if system user exists
-        success, _ = run_command(['id', username])
+        check_user = subprocess.run(['id', username], capture_output=True, text=True, check=False)
+        user_exists = check_user.returncode == 0
         
         # Create system user if requested and doesn't exist
-        if not success and create_system_user:
-            success, _ = run_command(['sudo', 'useradd', '-m', '-s', '/bin/bash', username])
-            if not success:
+        if not user_exists and create_system_user:
+            print(f"Creating system user: {username}")
+            create_user = subprocess.run(['sudo', 'useradd', '-m', '-s', '/bin/bash', username], 
+                                        capture_output=True, text=True, check=False)
+            if create_user.returncode != 0:
+                print(f"Failed to create system user: {create_user.stderr}")
                 return False
                 
             # Set system password
-            success, _ = run_command(['sudo', 'chpasswd'], f"{username}:{password}")
-            if not success:
+            set_pass = subprocess.Popen(['sudo', 'chpasswd'], 
+                                       stdin=subprocess.PIPE,
+                                       stdout=subprocess.PIPE,
+                                       stderr=subprocess.PIPE,
+                                       text=True)
+            stdout, stderr = set_pass.communicate(input=f"{username}:{password}")
+            if set_pass.returncode != 0:
+                print(f"Failed to set system password: {stderr}")
                 return False
         
         # Create smbusers group if it doesn't exist
-        try:
-            grp.getgrnam('smbusers')
-        except KeyError:
-            run_command(['sudo', 'groupadd', 'smbusers'])
+        check_group = subprocess.run(['getent', 'group', 'smbusers'], 
+                                    capture_output=True, text=True, check=False)
+        if check_group.returncode != 0:
+            print("Creating smbusers group")
+            create_group = subprocess.run(['sudo', 'groupadd', 'smbusers'], 
+                                        capture_output=True, text=True, check=False)
+            if create_group.returncode != 0:
+                print(f"Failed to create smbusers group: {create_group.stderr}")
         
-        # Add user to smbusers group
-        run_command(['sudo', 'usermod', '-aG', 'smbusers', username])
+        # If the user exists, add them to smbusers group
+        if user_exists or create_system_user:
+            print(f"Adding {username} to smbusers group")
+            add_to_group = subprocess.run(['sudo', 'usermod', '-aG', 'smbusers', username], 
+                                        capture_output=True, text=True, check=False)
+            if add_to_group.returncode != 0:
+                print(f"Failed to add user to smbusers group: {add_to_group.stderr}")
         
         # Add Samba user
-        success, _ = run_command(['sudo', 'smbpasswd', '-s', '-a', username], f"{password}\n{password}\n")
-        if not success:
+        print(f"Creating Samba user: {username}")
+        process = subprocess.Popen(['sudo', 'smbpasswd', '-s', '-a', username],
+                                  stdin=subprocess.PIPE,
+                                  stdout=subprocess.PIPE,
+                                  stderr=subprocess.PIPE,
+                                  text=True)
+        
+        stdout, stderr = process.communicate(input=f"{password}\n{password}\n")
+        
+        if process.returncode != 0:
+            print(f"Failed to create Samba user: {stderr}")
+            return False
+        
+        # Enable the Samba user
+        print("Enabling Samba user")
+        enable = subprocess.run(['sudo', 'smbpasswd', '-e', username], 
+                               capture_output=True, text=True, check=False)
+        
+        if enable.returncode != 0:
+            print(f"Failed to enable Samba user: {enable.stderr}")
             return False
             
-        # Enable the Samba user
-        success, _ = run_command(['sudo', 'smbpasswd', '-e', username])
-        return success
+        return True
     except Exception as e:
         print(f"Error adding Samba user: {e}")
         return False

@@ -274,76 +274,107 @@ def add_user():
         
     return redirect('/users')
 
-@bp.route('/users/delete/<username>', methods=['POST'])
+@bp.route('/users/reset-password/<username>', methods=['POST'])
 @login_required
-def delete_user(username):
+def reset_samba_password(username):
+    """Reset a Samba user's password"""
     if not check_sudo_access():
-        flash('Error: Sudo access is required to manage Samba users', 'error')
+        flash('Error: Sudo access is required to reset passwords', 'error')
         return redirect('/users')
-        
-    delete_system_user = request.form.get('delete_system_user') == 'on'
     
-    result = remove_samba_user(username, delete_system_user)
-    
-    if result:
-        flash(f'User {username} deleted successfully', 'success')
-    else:
-        flash(f'Failed to delete user {username}', 'error')
-        
-    return redirect('/users')
-
-@bp.route('/users/enable/<username>', methods=['POST'])
-@login_required
-def enable_user(username):
-    if not check_sudo_access():
-        flash('Error: Sudo access is required to manage Samba users', 'error')
+    password = request.form.get('password')
+    if not password:
+        flash('Password is required', 'error')
         return redirect('/users')
-        
-    result = enable_samba_user(username)
     
-    if result:
-        flash(f'User {username} enabled successfully', 'success')
-    else:
-        flash(f'Failed to enable user {username}', 'error')
+    try:
+        # Use smbpasswd to reset the password
+        process = subprocess.Popen(['sudo', 'smbpasswd', '-s', username],
+                                   stdin=subprocess.PIPE,
+                                   stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE,
+                                   text=True)
         
+        # Send the password twice (for confirmation)
+        stdout, stderr = process.communicate(input=f"{password}\n{password}\n")
+        
+        if process.returncode != 0:
+            flash(f'Failed to reset password: {stderr}', 'error')
+        else:
+            flash(f'Password for {username} reset successfully', 'success')
+    
+    except Exception as e:
+        flash(f'Error: {str(e)}', 'error')
+    
     return redirect('/users')
 
 @bp.route('/users/disable/<username>', methods=['POST'])
 @login_required
-def disable_user(username):
+def disable_samba_user(username):
+    """Disable a Samba user"""
     if not check_sudo_access():
-        flash('Error: Sudo access is required to manage Samba users', 'error')
+        flash('Error: Sudo access is required to disable users', 'error')
         return redirect('/users')
-        
-    result = disable_samba_user(username)
     
-    if result:
-        flash(f'User {username} disabled successfully', 'success')
-    else:
-        flash(f'Failed to disable user {username}', 'error')
+    try:
+        # Use smbpasswd to disable the user
+        result = subprocess.run(['sudo', 'smbpasswd', '-d', username],
+                               capture_output=True, text=True, check=False)
         
+        if result.returncode != 0:
+            flash(f'Failed to disable user: {result.stderr}', 'error')
+        else:
+            flash(f'User {username} disabled successfully', 'success')
+    
+    except Exception as e:
+        flash(f'Error: {str(e)}', 'error')
+    
     return redirect('/users')
 
-@bp.route('/users/reset-password/<username>', methods=['POST'])
+@bp.route('/users/enable/<username>', methods=['POST'])
 @login_required
-def reset_password(username):
+def enable_samba_user(username):
+    """Enable a Samba user"""
     if not check_sudo_access():
-        flash('Error: Sudo access is required to manage Samba users', 'error')
+        flash('Error: Sudo access is required to enable users', 'error')
         return redirect('/users')
-        
-    password = request.form.get('password')
     
-    if not password:
-        flash('Password is required', 'error')
+    try:
+        # Use smbpasswd to enable the user
+        result = subprocess.run(['sudo', 'smbpasswd', '-e', username],
+                               capture_output=True, text=True, check=False)
+        
+        if result.returncode != 0:
+            flash(f'Failed to enable user: {result.stderr}', 'error')
+        else:
+            flash(f'User {username} enabled successfully', 'success')
+    
+    except Exception as e:
+        flash(f'Error: {str(e)}', 'error')
+    
+    return redirect('/users')
+
+@bp.route('/users/delete/<username>', methods=['POST'])
+@login_required
+def delete_samba_user(username):
+    """Delete a Samba user"""
+    if not check_sudo_access():
+        flash('Error: Sudo access is required to delete users', 'error')
         return redirect('/users')
-        
-    result = reset_samba_password(username, password)
     
-    if result:
-        flash(f'Password for {username} reset successfully', 'success')
-    else:
-        flash(f'Failed to reset password for {username}', 'error')
+    try:
+        # Use smbpasswd to delete the user
+        result = subprocess.run(['sudo', 'smbpasswd', '-x', username],
+                               capture_output=True, text=True, check=False)
         
+        if result.returncode != 0:
+            flash(f'Failed to delete user: {result.stderr}', 'error')
+        else:
+            flash(f'User {username} deleted successfully', 'success')
+    
+    except Exception as e:
+        flash(f'Error: {str(e)}', 'error')
+    
     return redirect('/users')
 
 @bp.route('/export')
