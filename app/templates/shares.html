@@ -1,0 +1,54 @@
+{% extends 'layout.html' %}
+{% block content %}
+<h2>Manage Shares</h2>
+<form method="POST" class="border p-3 mb-4">
+  <div class="row g-2">
+    <div class="col-md-2"><input name="name" placeholder="Share Name" class="form-control" required></div>
+    <div class="col-md-4"><input name="path" placeholder="Path (/srv/share)" class="form-control" required></div>
+    <div class="col-md-3">
+      <select name="valid_users" class="form-control">
+        <option value="">-- Select user or group --</option>
+        {% for user in users %}<option value="{{ user }}">{{ user }}</option>{% endfor %}
+        {% for group in groups %}<option value="@{{ group }}">@{{ group }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="col-md-1">
+      <select name="readonly" class="form-control">
+        <option value="yes">RO</option>
+        <option value="no" selected>RW</option>
+      </select>
+    </div>
+    <div class="col-md-2">
+      <select name="vfs" class="form-control">
+        <option value="">None</option>
+        <option value="shadow_copy2">Shadow Copy</option>
+        <option value="audit">Audit</option>
+        <option value="acl_xattr">ACL</option>
+      </select>
+    </div>
+  </div>
+  <button class="btn btn-primary mt-2">Add / Update</button>
+</form>
+
+<table class="table table-dark table-bordered">
+  <thead><tr><th>Name</th><th>Path</th><th>Users</th><th>Access</th><th>VFS</th><th>Action</th></tr></thead>
+  <tbody>
+    {% for s in shares %}
+    <tr>
+      <td>{{ s.name }}</td>
+      <td>{{ s.path }}</td>
+      <td>{{ s['valid users'] }}</td>
+      <td>{{ 'RO' if s['read only']=='yes' else 'RW' }}</td>
+      <td>{{ s['vfs objects'] }}</td>
+      <td>
+        <form method="POST" style="display:inline">
+          <input type="hidden" name="name" value="{{ s.name }}">
+          <input type="hidden" name="delete" value="1">
+          <button class="btn btn-sm btn-danger">Delete</button>
+        </form>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}
