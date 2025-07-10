@@ -1,0 +1,121 @@
+{% extends 'layout.html' %}
+{% block content %}
+<h3>Samba Maintenance</h3>
+
+<div class="card bg-dark border-secondary mb-4">
+  <div class="card-header">Installation Status</div>
+  <div class="card-body">
+    <div class="row">
+      <div class="col-md-4">
+        <p><strong>Samba Installed:</strong> 
+          <span class="badge {% if installation_status.installed %}bg-success{% else %}bg-danger{% endif %}">
+            {{ 'Yes' if installation_status.installed else 'No' }}
+          </span>
+        </p>
+      </div>
+      <div class="col-md-4">
+        <p><strong>Samba Running:</strong>
+          <span class="badge {% if installation_status.running %}bg-success{% else %}bg-danger{% endif %}">
+            {{ 'Yes' if installation_status.running else 'No' }}
+          </span>
+        </p>
+      </div>
+      <div class="col-md-4">
+        <p><strong>Samba Configured:</strong>
+          <span class="badge {% if installation_status.configured %}bg-success{% else %}bg-danger{% endif %}">
+            {{ 'Yes' if installation_status.configured else 'No' }}
+          </span>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+  <div class="col-md-6">
+    <div class="card bg-dark border-secondary mb-4">
+      <div class="card-header">Installation</div>
+      <div class="card-body">
+        {% if not installation_status.installed %}
+          <p>Samba is not installed on this system.</p>
+          <form action="/install-samba" method="POST">
+            <button type="submit" class="btn btn-primary">Install Samba</button>
+          </form>
+        {% else %}
+          <p>Samba is already installed on this system.</p>
+          <div class="alert alert-info">
+            If you need to reinstall Samba, you can do so from the command line using:
+            <code>sudo apt-get install --reinstall samba samba-common-bin</code>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-md-6">
+    <div class="card bg-dark border-secondary mb-4">
+      <div class="card-header">Service Management</div>
+      <div class="card-body">
+        <div class="d-grid gap-2">
+          <a href="/restart" class="btn btn-warning">Restart Samba Service</a>
+          
+          {% if installation_status.running %}
+            <form action="/stop-service" method="POST">
+              <button type="submit" class="btn btn-danger w-100">Stop Samba Service</button>
+            </form>
+          {% else %}
+            <form action="/start-service" method="POST">
+              <button type="submit" class="btn btn-success w-100">Start Samba Service</button>
+            </form>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card bg-dark border-secondary mb-4">
+  <div class="card-header">Share Directory Maintenance</div>
+  <div class="card-body">
+    <div class="row">
+      <div class="col-md-6">
+        <h5>Fix Permissions</h5>
+        <p>Fix permissions on all share directories:</p>
+        <form action="/fix-permissions" method="POST">
+          <button type="submit" class="btn btn-warning">Fix Share Permissions</button>
+        </form>
+      </div>
+      <div class="col-md-6">
+        <h5>Complete Setup</h5>
+        <p>Run the complete setup process:</p>
+        <form action="/setup" method="POST">
+          <button type="submit" class="btn btn-primary">Run Complete Setup</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card bg-dark border-secondary">
+  <div class="card-header">Configuration Management</div>
+  <div class="card-body">
+    <div class="row">
+      <div class="col-md-6">
+        <h5>Export Configuration</h5>
+        <p>Download your current Samba configuration as a backup file</p>
+        <a href="/export" class="btn btn-primary">Export Config</a>
+      </div>
+      <div class="col-md-6">
+        <h5>Import Configuration</h5>
+        <p>Upload a previously exported configuration file</p>
+        <form action="/import" method="POST" enctype="multipart/form-data">
+          <div class="input-group">
+            <input type="file" name="file" class="form-control" required>
+            <button type="submit" class="btn btn-primary">Import</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} 

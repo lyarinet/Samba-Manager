@@ -1,6 +1,7 @@
-from flask import Blueprint, render_template, request, redirect, flash, send_file
+from flask import Blueprint, render_template, request, redirect, flash, send_file, url_for
 import io
 import os
+import subprocess
 from .samba_utils import *
 
 bp = Blueprint('main', __name__)
@@ -10,7 +11,11 @@ def index():
     # Get Samba service status
     status = get_samba_status()
     has_sudo = check_sudo_access()
-    return render_template('index.html', status=status, has_sudo=has_sudo)
+    
+    # Get Samba installation status
+    installation_status = get_samba_installation_status()
+    
+    return render_template('index.html', status=status, has_sudo=has_sudo, installation_status=installation_status)
 
 @bp.route('/global-settings', methods=['GET', 'POST'])
 def global_settings():
@@ -109,6 +114,113 @@ def shares():
                           groups=list_system_groups(),
                           has_sudo=has_sudo)
 
+@bp.route('/users', methods=['GET'])
+def users():
+    if not check_sudo_access():
+        flash('Error: Sudo access is required to manage Samba users', 'error')
+        return redirect('/')
+        
+    samba_users = get_samba_users()
+    system_users = list_system_users()
+    system_groups = list_system_groups()
+    
+    return render_template('users.html', 
+                          samba_users=samba_users, 
+                          system_users=system_users,
+                          system_groups=system_groups,
+                          has_sudo=check_sudo_access())
+
+@bp.route('/users/add', methods=['POST'])
+def add_user():
+    if not check_sudo_access():
+        flash('Error: Sudo access is required to manage Samba users', 'error')
+        return redirect('/users')
+        
+    username = request.form.get('username')
+    password = request.form.get('password')
+    create_system_user = request.form.get('create_system_user') == 'on'
+    
+    if not username or not password:
+        flash('Username and password are required', 'error')
+        return redirect('/users')
+        
+    result = add_samba_user(username, password, create_system_user)
+    
+    if result:
+        flash(f'User {username} added successfully', 'success')
+    else:
+        flash(f'Failed to add user {username}', 'error')
+        
+    return redirect('/users')
+
+@bp.route('/users/delete/<username>', methods=['POST'])
+def delete_user(username):
+    if not check_sudo_access():
+        flash('Error: Sudo access is required to manage Samba users', 'error')
+        return redirect('/users')
+        
+    delete_system_user = request.form.get('delete_system_user') == 'on'
+    
+    result = remove_samba_user(username, delete_system_user)
+    
+    if result:
+        flash(f'User {username} deleted successfully', 'success')
+    else:
+        flash(f'Failed to delete user {username}', 'error')
+        
+    return redirect('/users')
+
+@bp.route('/users/enable/<username>', methods=['POST'])
+def enable_user(username):
+    if not check_sudo_access():
+        flash('Error: Sudo access is required to manage Samba users', 'error')
+        return redirect('/users')
+        
+    result = enable_samba_user(username)
+    
+    if result:
+        flash(f'User {username} enabled successfully', 'success')
+    else:
+        flash(f'Failed to enable user {username}', 'error')
+        
+    return redirect('/users')
+
+@bp.route('/users/disable/<username>', methods=['POST'])
+def disable_user(username):
+    if not check_sudo_access():
+        flash('Error: Sudo access is required to manage Samba users', 'error')
+        return redirect('/users')
+        
+    result = disable_samba_user(username)
+    
+    if result:
+        flash(f'User {username} disabled successfully', 'success')
+    else:
+        flash(f'Failed to disable user {username}', 'error')
+        
+    return redirect('/users')
+
+@bp.route('/users/reset-password/<username>', methods=['POST'])
+def reset_password(username):
+    if not check_sudo_access():
+        flash('Error: Sudo access is required to manage Samba users', 'error')
+        return redirect('/users')
+        
+    password = request.form.get('password')
+    
+    if not password:
+        flash('Password is required', 'error')
+        return redirect('/users')
+        
+    result = reset_samba_password(username, password)
+    
+    if result:
+        flash(f'Password for {username} reset successfully', 'success')
+    else:
+        flash(f'Failed to reset password for {username}', 'error')
+        
+    return redirect('/users')
+
 @bp.route('/export')
 def export():
     data = export_config()
@@ -156,3 +268,109 @@ def restart_service():
         flash('Failed to restart Samba service', 'error')
         
     return redirect('/')
+
+@bp.route('/setup', methods=['GET', 'POST'])
+def setup():
+    """Setup Samba from the web interface"""
+    if not check_sudo_access():
+        flash('Error: Sudo access is required to set up Samba', 'error')
+        return redirect('/')
+    
+    if request.method == 'POST':
+        result = setup_samba()
+        if result:
+            flash('Samba has been set up successfully', 'success')
+        else:
+            flash('Failed to set up Samba. Check logs for details', 'error')
+        return redirect('/')
+    
+    # Get current installation status
+    installation_status = get_samba_installation_status()
+    
+    return render_template('setup.html', 
+                          installation_status=installation_status,
+                          has_sudo=check_sudo_access())
+
+@bp.route('/fix-permissions', methods=['POST'])
+def fix_permissions():
+    """Fix permissions on share directories"""
+    if not check_sudo_access():
+        flash('Error: Sudo access is required to fix permissions', 'error')
+        return redirect('/')
+    
+    result = fix_share_permissions()
+    if result:
+        flash('Share permissions have been fixed successfully', 'success')
+    else:
+        flash('Failed to fix share permissions. Check logs for details', 'error')
+    
+    return redirect('/')
+
+@bp.route('/maintenance')
+def maintenance():
+    """Maintenance page for Samba"""
+    if not check_sudo_access():
+        flash('Error: Sudo access is required to access maintenance functions', 'error')
+        return redirect('/')
+    
+    # Get current installation status
+    installation_status = get_samba_installation_status()
+    
+    return render_template('maintenance.html', 
+                          installation_status=installation_status,
+                          has_sudo=check_sudo_access())
+
+@bp.route('/install-samba', methods=['POST'])
+def install_samba():
+    """Install Samba if not already installed"""
+    if not check_sudo_access():
+        flash('Error: Sudo access is required to install Samba', 'error')
+        return redirect('/')
+    
+    result = ensure_samba_installed()
+    if result:
+        flash('Samba has been installed successfully', 'success')
+    else:
+        flash('Failed to install Samba. Check logs for details', 'error')
+    
+    return redirect('/maintenance')
+
+@bp.route('/start-service', methods=['POST'])
+def start_service():
+    """Start the Samba service"""
+    if not check_sudo_access():
+        flash('Error: Sudo access is required to start Samba service', 'error')
+        return redirect('/maintenance')
+    
+    try:
+        if DEV_MODE:
+            flash('[DEV MODE] Would start Samba service in production', 'info')
+            return redirect('/maintenance')
+            
+        subprocess.run(['sudo', 'systemctl', 'start', 'smbd'], check=True)
+        subprocess.run(['sudo', 'systemctl', 'start', 'nmbd'], check=True)
+        flash('Samba service started successfully', 'success')
+    except Exception as e:
+        flash(f'Failed to start Samba service: {str(e)}', 'error')
+    
+    return redirect('/maintenance')
+
+@bp.route('/stop-service', methods=['POST'])
+def stop_service():
+    """Stop the Samba service"""
+    if not check_sudo_access():
+        flash('Error: Sudo access is required to stop Samba service', 'error')
+        return redirect('/maintenance')
+    
+    try:
+        if DEV_MODE:
+            flash('[DEV MODE] Would stop Samba service in production', 'info')
+            return redirect('/maintenance')
+            
+        subprocess.run(['sudo', 'systemctl', 'stop', 'smbd'], check=True)
+        subprocess.run(['sudo', 'systemctl', 'stop', 'nmbd'], check=True)
+        flash('Samba service stopped successfully', 'success')
+    except Exception as e:
+        flash(f'Failed to stop Samba service: {str(e)}', 'error')
+    
+    return redirect('/maintenance')

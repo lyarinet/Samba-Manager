@@ -1,0 +1,128 @@
+{% extends 'layout.html' %}
+{% block content %}
+<h3>Samba Setup</h3>
+
+<div class="card bg-dark border-secondary mb-4">
+  <div class="card-header">Installation Status</div>
+  <div class="card-body">
+    <div class="row">
+      <div class="col-md-4">
+        <p><strong>Samba Installed:</strong> 
+          <span class="badge {% if installation_status.installed %}bg-success{% else %}bg-danger{% endif %}">
+            {{ 'Yes' if installation_status.installed else 'No' }}
+          </span>
+        </p>
+      </div>
+      <div class="col-md-4">
+        <p><strong>Samba Running:</strong>
+          <span class="badge {% if installation_status.running %}bg-success{% else %}bg-danger{% endif %}">
+            {{ 'Yes' if installation_status.running else 'No' }}
+          </span>
+        </p>
+      </div>
+      <div class="col-md-4">
+        <p><strong>Samba Configured:</strong>
+          <span class="badge {% if installation_status.configured %}bg-success{% else %}bg-danger{% endif %}">
+            {{ 'Yes' if installation_status.configured else 'No' }}
+          </span>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card bg-dark border-secondary mb-4">
+  <div class="card-header">Detected Share Directories</div>
+  <div class="card-body">
+    {% if installation_status.shares %}
+      <div class="table-responsive">
+        <table class="table table-dark table-striped">
+          <thead class="bg-primary text-white">
+            <tr>
+              <th>Share Name</th>
+              <th>Path</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for share in installation_status.shares %}
+              <tr>
+                <td>{{ share.name }}</td>
+                <td>{{ share.path }}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p>No shares detected. Setup will create default shares.</p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card bg-dark border-secondary mb-4">
+  <div class="card-header">Detected Samba Users</div>
+  <div class="card-body">
+    {% if installation_status.users %}
+      <div class="table-responsive">
+        <table class="table table-dark table-striped">
+          <thead class="bg-primary text-white">
+            <tr>
+              <th>Username</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for user in installation_status.users %}
+              <tr>
+                <td>{{ user.username }}</td>
+                <td>
+                  <span class="badge {% if user.enabled %}bg-success{% else %}bg-danger{% endif %}">
+                    {{ 'Enabled' if user.enabled else 'Disabled' }}
+                  </span>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p>No Samba users detected.</p>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card bg-dark border-secondary">
+  <div class="card-header">Setup Actions</div>
+  <div class="card-body">
+    <div class="row">
+      <div class="col-md-6">
+        <h5>Complete Setup</h5>
+        <p>This will:</p>
+        <ul>
+          <li>Install Samba if not already installed</li>
+          <li>Create a smbusers group</li>
+          <li>Add system users to smbusers group</li>
+          <li>Create share directories with proper permissions</li>
+          <li>Configure global settings</li>
+          <li>Create shares based on detected directories</li>
+          <li>Enable and restart Samba services</li>
+        </ul>
+        <form action="/setup" method="POST">
+          <button type="submit" class="btn btn-primary">Run Complete Setup</button>
+        </form>
+      </div>
+      <div class="col-md-6">
+        <h5>Fix Permissions</h5>
+        <p>Fix permissions on share directories only:</p>
+        <form action="/fix-permissions" method="POST">
+          <button type="submit" class="btn btn-warning">Fix Share Permissions</button>
+        </form>
+        
+        <h5 class="mt-4">Maintenance</h5>
+        <p>Access additional maintenance options:</p>
+        <a href="/maintenance" class="btn btn-info">Maintenance Page</a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} 
