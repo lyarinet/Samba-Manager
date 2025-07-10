@@ -7,6 +7,8 @@ import tempfile
 import datetime
 from .samba_utils import *
 import json
+import re
+import pwd, grp
 
 bp = Blueprint('main', __name__)
 
@@ -808,3 +810,86 @@ def service_action(action):
     except Exception as e:
         flash(f'Error: {str(e)}', 'error')
         return redirect('/')
+
+@bp.route('/groups', methods=['GET'])
+@login_required
+def groups():
+    if not check_sudo_access():
+        flash('Error: Sudo access is required to manage system groups', 'error')
+        return redirect('/')
+        
+    system_groups = list_system_groups()
+    
+    return render_template('groups.html', 
+                          groups=system_groups,
+                          has_sudo=check_sudo_access())
+
+@bp.route('/groups/add', methods=['POST'])
+@login_required
+def add_group():
+    if not check_sudo_access():
+        flash('Error: Sudo access is required to manage system groups', 'error')
+        return redirect('/groups')
+        
+    group_name = request.form.get('group_name')
+    
+    if not group_name:
+        flash('Group name is required', 'error')
+        return redirect('/groups')
+    
+    # Check if the group already exists
+    existing_groups = list_system_groups()
+    if group_name in existing_groups:
+        flash(f'Group {group_name} already exists', 'error')
+        return redirect('/groups')
+    
+    # Validate group name format
+    if not re.match(r'^[a-z][\w-]*$', group_name):
+        flash(f'Invalid group name: {group_name} - Group names must start with a letter and contain only letters, numbers, hyphens, and underscores', 'error')
+        return redirect('/groups')
+    
+    # Create the group
+    result = create_system_group(group_name)
+    
+    if result:
+        flash(f'Group {group_name} created successfully', 'success')
+    else:
+        flash(f'Failed to create group {group_name}. Check server logs for details.', 'error')
+        
+    return redirect('/groups')
+
+@bp.route('/groups/delete/<group_name>', methods=['POST'])
+@login_required
+def delete_group(group_name):
+    if not check_sudo_access():
+        flash('Error: Sudo access is required to manage system groups', 'error')
+        return redirect('/groups')
+    
+    # Check if the group exists
+    existing_groups = list_system_groups()
+    if group_name not in existing_groups:
+        flash(f'Group {group_name} does not exist', 'error')
+        return redirect('/groups')
+    
+    # Check if it's a primary group before attempting deletion
+    try:
+        primary_users = []
+        for user in pwd.getpwall():
+            if user.pw_gid == grp.getgrnam(group_name).gr_gid:
+                primary_users.append(user.pw_name)
+        
+        if primary_users:
+            flash(f'Cannot delete group {group_name}: It is the primary group for user(s): {", ".join(primary_users)}', 'error')
+            return redirect('/groups')
+    except Exception as e:
+        print(f"Error checking primary group: {e}")
+    
+    # Delete the group
+    result = delete_system_group(group_name)
+    
+    if result:
+        flash(f'Group {group_name} deleted successfully', 'success')
+    else:
+        flash(f'Failed to delete group {group_name}. Check server logs for details.', 'error')
+        
+    return redirect('/groups')

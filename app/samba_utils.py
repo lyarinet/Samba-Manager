@@ -569,7 +569,7 @@ def save_shares(shares):
             'comment': 'comment',
             'browseable': 'browseable',
             'read_only': 'read only',
-            'guest_ok': 'guest ok',
+            'guest ok': 'guest ok',
             'valid_users': 'valid users',
             'write_list': 'write list',
             'create_mask': 'create mask',
@@ -1444,3 +1444,79 @@ def get_samba_installation_status():
     except Exception as e:
         print(f"Error getting Samba installation status: {e}")
         return status
+
+def create_system_group(group_name):
+    """Create a system group"""
+    if DEV_MODE:
+        print(f"[DEV MODE] Would create system group: {group_name}")
+        return True
+        
+    try:
+        # Validate group name - must start with a letter and contain only letters, numbers, and underscore
+        import re
+        if not re.match(r'^[a-z][\w-]*$', group_name):
+            print(f"Invalid group name: {group_name} - Group names must start with a letter and contain only letters, numbers, hyphens, and underscores")
+            return False
+            
+        # Check if the group already exists
+        try:
+            grp.getgrnam(group_name)
+            print(f"Group {group_name} already exists")
+            return True
+        except KeyError:
+            pass  # Group doesn't exist, continue
+        
+        # Create the group
+        print(f"Creating system group: {group_name}")
+        result = subprocess.run(['sudo', 'groupadd', group_name], 
+                               capture_output=True, text=True, check=False)
+        
+        if result.returncode != 0:
+            print(f"Error creating group: {result.stderr}")
+            return False
+        
+        print(f"Successfully created group: {group_name}")
+        return True
+    except Exception as e:
+        print(f"Error creating system group: {e}")
+        return False
+
+def delete_system_group(group_name):
+    """Delete a system group"""
+    if DEV_MODE:
+        print(f"[DEV MODE] Would delete system group: {group_name}")
+        return True
+        
+    try:
+        # Check if the group exists
+        try:
+            grp.getgrnam(group_name)
+        except KeyError:
+            print(f"Group {group_name} does not exist")
+            return False
+        
+        # Check if the group is a primary group for any user
+        import pwd
+        primary_users = []
+        for user in pwd.getpwall():
+            if user.pw_gid == grp.getgrnam(group_name).gr_gid:
+                primary_users.append(user.pw_name)
+        
+        if primary_users:
+            print(f"Cannot delete group {group_name}: It is the primary group for user(s): {', '.join(primary_users)}")
+            return False
+        
+        # Delete the group
+        print(f"Deleting system group: {group_name}")
+        result = subprocess.run(['sudo', 'groupdel', group_name], 
+                               capture_output=True, text=True, check=False)
+        
+        if result.returncode != 0:
+            print(f"Error deleting group: {result.stderr}")
+            return False
+        
+        print(f"Successfully deleted group: {group_name}")
+        return True
+    except Exception as e:
+        print(f"Error deleting system group: {e}")
+        return False
