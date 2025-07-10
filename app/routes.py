@@ -3,8 +3,9 @@ from flask_login import login_required, current_user
 import io
 import os
 import subprocess
-from .samba_utils import *
 import tempfile
+import datetime
+from .samba_utils import *
 
 bp = Blueprint('main', __name__)
 
@@ -19,8 +20,7 @@ def index():
     installation_status = get_samba_installation_status()
     
     # Add datetime for the template
-    from datetime import datetime
-    now = datetime.now()
+    now = datetime.datetime.now()
     
     return render_template('index.html', status=status, has_sudo=has_sudo, installation_status=installation_status, now=now)
 
@@ -610,3 +610,80 @@ def edit_config():
                           main_config=main_config,
                           share_config=share_config,
                           has_sudo=check_sudo_access())
+
+@bp.route('/view-logs/<log_type>')
+@login_required
+def view_logs(log_type):
+    """View Samba service logs"""
+    if not check_sudo_access():
+        flash('Error: Sudo access is required to view logs', 'error')
+        return redirect('/maintenance')
+    
+    log_file = None
+    log_title = None
+    
+    if log_type == 'smbd':
+        log_file = '/var/log/samba/log.smbd'
+        log_title = 'Samba Server (smbd) Logs'
+    elif log_type == 'nmbd':
+        log_file = '/var/log/samba/log.nmbd'
+        log_title = 'Samba NetBIOS (nmbd) Logs'
+    else:
+        flash(f'Unknown log type: {log_type}', 'error')
+        return redirect('/maintenance')
+    
+    try:
+        # Use sudo to read the log file
+        result = subprocess.run(['sudo', 'cat', log_file], capture_output=True, text=True, check=False)
+        
+        if result.returncode != 0:
+            if 'No such file or directory' in result.stderr:
+                log_content = f"Log file {log_file} does not exist. The service may not have generated logs yet."
+            else:
+                flash(f'Error reading log file: {result.stderr}', 'error')
+                return redirect('/maintenance')
+        else:
+            log_content = result.stdout
+            
+            # If log is empty
+            if not log_content.strip():
+                log_content = "Log file is empty. No entries have been recorded yet."
+        
+        return render_template('view_logs.html', log_content=log_content, log_title=log_title, log_type=log_type)
+    
+    except Exception as e:
+        flash(f'Error: {str(e)}', 'error')
+        return redirect('/maintenance')
+
+@bp.route('/service/<action>')
+@login_required
+def service_action(action):
+    """Perform service actions (start, stop, restart, status)"""
+    if not check_sudo_access():
+        flash('Error: Sudo access is required to manage services', 'error')
+        return redirect('/')
+    
+    valid_actions = ['start', 'stop', 'restart', 'status']
+    
+    if action not in valid_actions:
+        flash(f'Invalid action: {action}', 'error')
+        return redirect('/')
+    
+    try:
+        if action == 'status':
+            status = get_samba_status()
+            return jsonify(status)
+        else:
+            result = subprocess.run(['sudo', 'systemctl', action, 'smbd', 'nmbd'], 
+                                   capture_output=True, text=True, check=False)
+            
+            if result.returncode != 0:
+                flash(f'Error {action} Samba services: {result.stderr}', 'error')
+            else:
+                flash(f'Successfully {action}ed Samba services', 'success')
+                
+        return redirect('/')
+    
+    except Exception as e:
+        flash(f'Error: {str(e)}', 'error')
+        return redirect('/')

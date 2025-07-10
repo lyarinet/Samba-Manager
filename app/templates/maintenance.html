@@ -1,111 +1,84 @@
 {% extends 'layout.html' %}
 {% block content %}
 <div class="page-header">
-  <h2>Samba Maintenance</h2>
-  <div>
-    <span class="badge bg-secondary">{{ status.smbd }}</span>
-    <span class="badge bg-secondary">{{ status.nmbd }}</span>
-  </div>
+  <h2>Maintenance</h2>
 </div>
-
-{% if not has_sudo %}
-<div class="alert alert-warning mb-4">
-  <i class="bi bi-shield-exclamation me-2"></i>
-  <strong>Warning:</strong> Sudo access is required to perform maintenance operations.
-  Run this application with sudo privileges to enable full functionality.
-</div>
-{% endif %}
 
 <div class="row">
-  <div class="col-lg-6">
-    <div class="card mb-4">
-      <div class="card-header">
+  <!-- Service Management -->
+  <div class="col-md-6 mb-4">
+    <div class="card h-100">
+      <div class="card-header d-flex justify-content-between align-items-center">
         <h5 class="mb-0">Service Management</h5>
+        <span class="badge {% if status.running %}bg-success{% else %}bg-danger{% endif %}">
+          {{ 'Running' if status.running else 'Stopped' }}
+        </span>
       </div>
       <div class="card-body">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <div>
-            <h6 class="mb-1">SMBD Service</h6>
-            <p class="text-muted small mb-0">File sharing service</p>
-          </div>
-          <div>
-            {% if status.smbd == 'active' %}
-            <span class="badge bg-success">Running</span>
-            {% else %}
-            <span class="badge bg-danger">Stopped</span>
-            {% endif %}
-          </div>
-        </div>
-        
-        <div class="d-flex justify-content-between align-items-center mb-4">
-          <div>
-            <h6 class="mb-1">NMBD Service</h6>
-            <p class="text-muted small mb-0">NetBIOS name service</p>
-          </div>
-          <div>
-            {% if status.nmbd == 'active' %}
-            <span class="badge bg-success">Running</span>
-            {% else %}
-            <span class="badge bg-danger">Stopped</span>
-            {% endif %}
-          </div>
-        </div>
-        
-        <div class="d-grid gap-3">
-          <div class="row g-2">
-            <div class="col-6">
-              <form method="POST" action="/start">
-                <button type="submit" class="btn btn-success w-100" {% if not has_sudo %}disabled{% endif %}>
-                  <i class="bi bi-play-fill me-2"></i> Start Services
-                </button>
-              </form>
-            </div>
-            <div class="col-6">
-              <form method="POST" action="/stop">
-                <button type="submit" class="btn btn-danger w-100" {% if not has_sudo %}disabled{% endif %}>
-                  <i class="bi bi-stop-fill me-2"></i> Stop Services
-                </button>
-              </form>
-            </div>
-          </div>
-          
-          <form method="POST" action="/restart">
-            <button type="submit" class="btn btn-warning w-100" {% if not has_sudo %}disabled{% endif %}>
-              <i class="bi bi-arrow-repeat me-2"></i> Restart Services
-            </button>
-          </form>
+        <p>Control the Samba service (smbd and nmbd)</p>
+        <div class="d-flex gap-2">
+          <a href="{{ url_for('main.service_action', action='start') }}" class="btn btn-success {% if status.running %}disabled{% endif %}">
+            <i class="bi bi-play-fill me-1"></i> Start
+          </a>
+          <a href="{{ url_for('main.service_action', action='stop') }}" class="btn btn-danger {% if not status.running %}disabled{% endif %}">
+            <i class="bi bi-stop-fill me-1"></i> Stop
+          </a>
+          <a href="{{ url_for('main.service_action', action='restart') }}" class="btn btn-warning text-white">
+            <i class="bi bi-arrow-clockwise me-1"></i> Restart
+          </a>
         </div>
       </div>
     </div>
-    
-    <div class="card mb-4">
+  </div>
+  
+  <!-- Log Viewing -->
+  <div class="col-md-6 mb-4">
+    <div class="card h-100">
       <div class="card-header">
-        <h5 class="mb-0">Permission Management</h5>
+        <h5 class="mb-0">Logs</h5>
       </div>
       <div class="card-body">
-        <p class="text-muted mb-3">Fix permissions on share directories to ensure proper access control.</p>
-        
-        <form method="POST" action="/fix-permissions">
-          <div class="mb-3">
-            <label for="share_path" class="form-label">Share Path</label>
-            <select class="form-select" id="share_path" name="share_path" {% if not has_sudo %}disabled{% endif %}>
-              <option value="all">All Shares</option>
-              {% for share in shares %}
-              <option value="{{ share.path }}">{{ share.name }} ({{ share.path }})</option>
-              {% endfor %}
-            </select>
-          </div>
-          
-          <div class="mb-3">
-            <div class="form-check form-switch">
-              <input class="form-check-input" type="checkbox" id="recursive" name="recursive" checked {% if not has_sudo %}disabled{% endif %}>
-              <label class="form-check-label" for="recursive">Apply Recursively</label>
-            </div>
-          </div>
-          
-          <div class="d-grid">
-            <button type="submit" class="btn btn-primary" {% if not has_sudo %}disabled{% endif %}>
-              <i class="bi bi-shield-check me-2"></i> Fix Permissions
+        <p>View Samba service logs</p>
+        <div class="d-flex gap-2">
+          <a href="{{ url_for('main.view_logs', log_type='smbd') }}" class="btn btn-outline-primary">
+            <i class="bi bi-file-text me-1"></i> Server Logs (smbd)
+          </a>
+          <a href="{{ url_for('main.view_logs', log_type='nmbd') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-file-text me-1"></i> NetBIOS Logs (nmbd)
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Configuration Export -->
+  <div class="col-md-6 mb-4">
+    <div class="card h-100">
+      <div class="card-header">
+        <h5 class="mb-0">Export Configuration</h5>
+      </div>
+      <div class="card-body">
+        <p>Download your Samba configuration as a backup</p>
+        <a href="{{ url_for('main.export') }}" class="btn btn-primary">
+          <i class="bi bi-download me-1"></i> Export Configuration
+        </a>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Configuration Import -->
+  <div class="col-md-6 mb-4">
+    <div class="card h-100">
+      <div class="card-header">
+        <h5 class="mb-0">Import Configuration</h5>
+      </div>
+      <div class="card-body">
+        <p>Restore a previously exported configuration</p>
+        <form action="{{ url_for('main.import_conf') }}" method="post" enctype="multipart/form-data">
+          <div class="input-group">
+            <input type="file" class="form-control" name="config_file" accept=".json">
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-upload me-1"></i> Import
             </button>
           </div>
         </form>
@@ -113,76 +86,34 @@
     </div>
   </div>
   
-  <div class="col-lg-6">
-    <div class="card mb-4">
+  <!-- Fix Permissions -->
+  <div class="col-md-6 mb-4">
+    <div class="card h-100">
       <div class="card-header">
-        <h5 class="mb-0">Log Management</h5>
+        <h5 class="mb-0">Fix Permissions</h5>
       </div>
       <div class="card-body">
-        <p class="text-muted mb-3">View and manage Samba log files.</p>
-        
-        <div class="mb-4">
-          <h6 class="mb-2">View Logs</h6>
-          <div class="d-grid gap-2">
-            <a href="/view-logs/smbd" class="btn btn-outline-primary">
-              <i class="bi bi-file-text me-2"></i> View SMBD Logs
-            </a>
-            <a href="/view-logs/nmbd" class="btn btn-outline-primary">
-              <i class="bi bi-file-text me-2"></i> View NMBD Logs
-            </a>
-          </div>
-        </div>
-        
-        <div class="mb-3">
-          <h6 class="mb-2">Clear Logs</h6>
-          <form method="POST" action="/clear-logs">
-            <div class="mb-3">
-              <select class="form-select" name="log_file" {% if not has_sudo %}disabled{% endif %}>
-                <option value="all">All Logs</option>
-                <option value="smbd">SMBD Logs</option>
-                <option value="nmbd">NMBD Logs</option>
-              </select>
-            </div>
-            <div class="d-grid">
-              <button type="submit" class="btn btn-outline-danger" {% if not has_sudo %}disabled{% endif %}>
-                <i class="bi bi-trash me-2"></i> Clear Selected Logs
-              </button>
-            </div>
-          </form>
-        </div>
+        <p>Fix permissions on share directories to ensure proper access</p>
+        <form action="{{ url_for('main.fix_permissions') }}" method="post">
+          <button type="submit" class="btn btn-warning text-white">
+            <i class="bi bi-shield-check me-1"></i> Fix Share Permissions
+          </button>
+        </form>
       </div>
     </div>
-    
-    <div class="card">
+  </div>
+  
+  <!-- Edit Config File -->
+  <div class="col-md-6 mb-4">
+    <div class="card h-100">
       <div class="card-header">
-        <h5 class="mb-0">Advanced Maintenance</h5>
+        <h5 class="mb-0">Edit Configuration File</h5>
       </div>
       <div class="card-body">
-        <div class="d-grid gap-3">
-          <form method="POST" action="/check-config">
-            <button type="submit" class="btn btn-outline-primary w-100" {% if not has_sudo %}disabled{% endif %}>
-              <i class="bi bi-check-circle me-2"></i> Validate Configuration
-            </button>
-          </form>
-          
-          <form method="POST" action="/rebuild-config">
-            <button type="submit" class="btn btn-outline-warning w-100" {% if not has_sudo %}disabled{% endif %}>
-              <i class="bi bi-arrow-repeat me-2"></i> Rebuild Configuration
-            </button>
-          </form>
-          
-          <form method="POST" action="/backup-config">
-            <button type="submit" class="btn btn-outline-info w-100" {% if not has_sudo %}disabled{% endif %}>
-              <i class="bi bi-download me-2"></i> Backup Configuration
-            </button>
-          </form>
-          
-          <form method="POST" action="/cleanup" onsubmit="return confirm('This will remove temporary files and old backups. Continue?');">
-            <button type="submit" class="btn btn-outline-danger w-100" {% if not has_sudo %}disabled{% endif %}>
-              <i class="bi bi-trash me-2"></i> Cleanup Temporary Files
-            </button>
-          </form>
-        </div>
+        <p>Directly edit the Samba configuration file</p>
+        <a href="{{ url_for('main.edit_config') }}" class="btn btn-outline-primary">
+          <i class="bi bi-file-earmark-code me-1"></i> Edit Config File
+        </a>
       </div>
     </div>
   </div>

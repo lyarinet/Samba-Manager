@@ -309,7 +309,7 @@
     
     /* Utilities */
     .text-muted {
-      color: var(--text-muted) !important;
+      color: #b0b8c4 !important; /* Lighter shade for better visibility */
     }
     
     .border-bottom {
@@ -346,12 +346,38 @@
     
     /* Small text */
     small, .small {
-      color: var(--text-muted);
+      color: #b0b8c4 !important; /* Lighter shade for better visibility */
     }
     
     /* Paragraphs */
     p {
-      color: var(--text-secondary);
+      color: #d1d8e0 !important; /* Even lighter shade for better readability */
+    }
+    
+    /* Make span elements visible */
+    span:not(.badge) {
+      color: #d1d8e0 !important;
+    }
+    
+    /* Fix visibility for margin-bottom classes with text */
+    .mb-1, .mb-2, .mb-3, .mb-4, .mb-5 {
+      color: inherit !important; /* Inherit color from parent */
+    }
+    
+    /* Specific styling for headings with margin classes */
+    h1.mb-1, h1.mb-2, h1.mb-3, h1.mb-4, h1.mb-5,
+    h2.mb-1, h2.mb-2, h2.mb-3, h2.mb-4, h2.mb-5,
+    h3.mb-1, h3.mb-2, h3.mb-3, h3.mb-4, h3.mb-5,
+    h4.mb-1, h4.mb-2, h4.mb-3, h4.mb-4, h4.mb-5,
+    h5.mb-1, h5.mb-2, h5.mb-3, h5.mb-4, h5.mb-5,
+    h6.mb-1, h6.mb-2, h6.mb-3, h6.mb-4, h6.mb-5 {
+      color: var(--text-primary) !important;
+    }
+    
+    /* Improve visibility for strong elements */
+    strong, b {
+      color: var(--text-primary) !important;
+      font-weight: 600;
     }
     
     /* Mobile responsive */

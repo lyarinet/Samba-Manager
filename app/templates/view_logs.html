@@ -1,0 +1,30 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="page-header">
+  <h2>{{ log_title }}</h2>
+  <div>
+    <a href="/maintenance" class="btn btn-outline-primary">
+      <i class="bi bi-arrow-left me-2"></i>Back to Maintenance
+    </a>
+    <a href="{{ url_for('main.view_logs', log_type=log_type) }}" class="btn btn-outline-secondary ms-2">
+      <i class="bi bi-arrow-clockwise me-2"></i>Refresh
+    </a>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-body">
+    {% if log_content %}
+      <div class="log-container bg-dark p-3 rounded" style="max-height: 600px; overflow-y: auto; font-family: monospace; white-space: pre-wrap; font-size: 0.85rem; color: #d1d8e0;">
+        {{ log_content }}
+      </div>
+    {% else %}
+      <div class="text-center py-5">
+        <i class="bi bi-file-earmark-x display-4 text-muted mb-3"></i>
+        <h4>No Log Data Available</h4>
+        <p>The log file is empty or could not be read.</p>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %} 
