@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Samba Manager - Login</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      /* Modern color palette */
+      --primary: #6366f1;      /* Indigo */
+      --primary-light: #818cf8;
+      --primary-dark: #4f46e5;
+      --secondary: #14b8a6;    /* Teal */
+      --secondary-light: #2dd4bf;
+      --secondary-dark: #0d9488;
+      --accent: #f59e0b;       /* Amber */
+      --accent-light: #fbbf24;
+      --accent-dark: #d97706;
+      --danger: #ef4444;       /* Red */
+      --success: #10b981;      /* Green */
+      --warning: #f59e0b;      /* Amber */
+      --info: #3b82f6;         /* Blue */
+      
+      --bg-dark: #0f172a;      /* Slate 900 */
+      --bg-card: #1e293b;      /* Slate 800 */
+      --bg-sidebar: #1e293b;   /* Slate 800 */
+      --text-primary: #f8fafc; /* Slate 50 */
+      --text-secondary: #cbd5e1; /* Slate 300 */
+      --text-muted: #94a3b8;   /* Slate 400 */
+      --border-color: #334155; /* Slate 700 */
+    }
+    
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .login-container {
+      width: 100%;
+      max-width: 400px;
+      padding: 2rem;
+    }
+    
+    .card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 0.5rem;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+    
+    .card-header {
+      border-bottom: 1px solid var(--border-color);
+      padding: 1.5rem;
+    }
+    
+    .card-body {
+      padding: 1.5rem;
+    }
+    
+    .form-control {
+      background-color: #1a2234;
+      color: var(--text-primary);
+      border-color: var(--border-color);
+    }
+    
+    .form-control:focus {
+      background-color: #141b2d;
+      color: var(--text-primary);
+      border-color: var(--primary);
+      box-shadow: 0 0 0 0.25rem rgba(99, 102, 241, 0.25);
+    }
+    
+    .btn-primary {
+      background-color: var(--primary);
+      border-color: var(--primary-dark);
+    }
+    
+    .btn-primary:hover {
+      background-color: var(--primary-dark);
+      border-color: var(--primary-dark);
+    }
+    
+    .logo {
+      max-width: 80px;
+      margin-bottom: 1rem;
+    }
+    
+    .alert {
+      border-radius: 0.5rem;
+    }
+    
+    .alert-danger {
+      background-color: rgba(239, 68, 68, 0.1);
+      border-color: rgba(239, 68, 68, 0.2);
+      color: #fca5a5;
+    }
+    
+    .alert-success {
+      background-color: rgba(16, 185, 129, 0.1);
+      border-color: rgba(16, 185, 129, 0.2);
+      color: #6ee7b7;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="text-center mb-4">
+      <i class="bi bi-hdd-network display-1 text-primary"></i>
+      <h1 class="h3 mt-3">Samba Manager</h1>
+      <p class="text-muted">Sign in to continue</p>
+    </div>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show mb-4" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+    
+    <div class="card">
+      <div class="card-body">
+        <form method="POST" action="{{ url_for('auth.login') }}">
+          <div class="mb-3">
+            <label for="username" class="form-label">Username</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-person"></i></span>
+              <input type="text" class="form-control" id="username" name="username" placeholder="Enter your username" required autofocus>
+            </div>
+          </div>
+          
+          <div class="mb-4">
+            <label for="password" class="form-label">Password</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-lock"></i></span>
+              <input type="password" class="form-control" id="password" name="password" placeholder="Enter your password" required>
+            </div>
+          </div>
+          
+          <div class="d-grid">
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-box-arrow-in-right me-2"></i> Sign In
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+    
+    <div class="text-center mt-4">
+      <p class="text-muted small">
+        &copy; <span id="currentYear"></span> Samba Manager
+      </p>
+    </div>
+  </div>
+  
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    document.getElementById('currentYear').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html> 

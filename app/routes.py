@@ -1,4 +1,5 @@
-from flask import Blueprint, render_template, request, redirect, flash, send_file, url_for
+from flask import Blueprint, render_template, request, redirect, flash, send_file, url_for, jsonify
+from flask_login import login_required, current_user
 import io
 import os
 import subprocess
@@ -8,6 +9,7 @@ import tempfile
 bp = Blueprint('main', __name__)
 
 @bp.route('/')
+@login_required
 def index():
     # Get Samba service status
     status = get_samba_status()
@@ -23,6 +25,7 @@ def index():
     return render_template('index.html', status=status, has_sudo=has_sudo, installation_status=installation_status, now=now)
 
 @bp.route('/global-settings', methods=['GET', 'POST'])
+@login_required
 def global_settings():
     if request.method == 'POST':
         if not check_sudo_access():
@@ -54,6 +57,7 @@ def global_settings():
                           has_sudo=has_sudo)
 
 @bp.route('/shares', methods=['GET', 'POST'])
+@login_required
 def shares():
     has_sudo = check_sudo_access()
     all_shares = load_shares()
@@ -77,6 +81,7 @@ def shares():
                           has_sudo=has_sudo)
 
 @bp.route('/add-share', methods=['POST'])
+@login_required
 def add_share():
     has_sudo = check_sudo_access()
     if not has_sudo:
@@ -138,6 +143,7 @@ def add_share():
     return redirect('/shares')
 
 @bp.route('/edit-share', methods=['POST'])
+@login_required
 def edit_share():
     has_sudo = check_sudo_access()
     if not has_sudo:
@@ -204,6 +210,7 @@ def edit_share():
     return redirect('/shares')
 
 @bp.route('/delete-share', methods=['POST'])
+@login_required
 def delete_share_route():
     has_sudo = check_sudo_access()
     if not has_sudo:
@@ -226,6 +233,7 @@ def delete_share_route():
     return redirect('/shares')
 
 @bp.route('/users', methods=['GET'])
+@login_required
 def users():
     if not check_sudo_access():
         flash('Error: Sudo access is required to manage Samba users', 'error')
@@ -242,6 +250,7 @@ def users():
                           has_sudo=check_sudo_access())
 
 @bp.route('/users/add', methods=['POST'])
+@login_required
 def add_user():
     if not check_sudo_access():
         flash('Error: Sudo access is required to manage Samba users', 'error')
@@ -265,6 +274,7 @@ def add_user():
     return redirect('/users')
 
 @bp.route('/users/delete/<username>', methods=['POST'])
+@login_required
 def delete_user(username):
     if not check_sudo_access():
         flash('Error: Sudo access is required to manage Samba users', 'error')
@@ -282,6 +292,7 @@ def delete_user(username):
     return redirect('/users')
 
 @bp.route('/users/enable/<username>', methods=['POST'])
+@login_required
 def enable_user(username):
     if not check_sudo_access():
         flash('Error: Sudo access is required to manage Samba users', 'error')
@@ -297,6 +308,7 @@ def enable_user(username):
     return redirect('/users')
 
 @bp.route('/users/disable/<username>', methods=['POST'])
+@login_required
 def disable_user(username):
     if not check_sudo_access():
         flash('Error: Sudo access is required to manage Samba users', 'error')
@@ -312,6 +324,7 @@ def disable_user(username):
     return redirect('/users')
 
 @bp.route('/users/reset-password/<username>', methods=['POST'])
+@login_required
 def reset_password(username):
     if not check_sudo_access():
         flash('Error: Sudo access is required to manage Samba users', 'error')
@@ -333,6 +346,7 @@ def reset_password(username):
     return redirect('/users')
 
 @bp.route('/export')
+@login_required
 def export():
     data = export_config()
     if data.startswith("Error"):
@@ -341,6 +355,7 @@ def export():
     return send_file(io.BytesIO(data.encode()), mimetype='text/plain', as_attachment=True, download_name='smb_backup.conf')
 
 @bp.route('/import', methods=['POST'])
+@login_required
 def import_conf():
     if not check_sudo_access():
         flash('Error: Sudo access is required to import Samba configuration', 'error')
@@ -366,6 +381,7 @@ def import_conf():
     return redirect('/')
 
 @bp.route('/restart')
+@login_required
 def restart_service():
     if not check_sudo_access():
         flash('Error: Sudo access is required to restart Samba service', 'error')
@@ -381,6 +397,7 @@ def restart_service():
     return redirect('/')
 
 @bp.route('/setup', methods=['GET', 'POST'])
+@login_required
 def setup():
     """Setup Samba from the web interface"""
     if not check_sudo_access():
@@ -407,6 +424,7 @@ def setup():
                           has_sudo=check_sudo_access())
 
 @bp.route('/fix-permissions', methods=['POST'])
+@login_required
 def fix_permissions():
     """Fix permissions on share directories"""
     if not check_sudo_access():
@@ -422,6 +440,7 @@ def fix_permissions():
     return redirect('/')
 
 @bp.route('/maintenance')
+@login_required
 def maintenance():
     """Maintenance page for Samba"""
     if not check_sudo_access():
@@ -444,6 +463,7 @@ def maintenance():
                           has_sudo=check_sudo_access())
 
 @bp.route('/install-samba', methods=['POST'])
+@login_required
 def install_samba():
     """Install Samba if not already installed"""
     if not check_sudo_access():
@@ -459,6 +479,7 @@ def install_samba():
     return redirect('/maintenance')
 
 @bp.route('/start-service', methods=['POST'])
+@login_required
 def start_service():
     """Start the Samba service"""
     if not check_sudo_access():
@@ -479,6 +500,7 @@ def start_service():
     return redirect('/maintenance')
 
 @bp.route('/stop-service', methods=['POST'])
+@login_required
 def stop_service():
     """Stop the Samba service"""
     if not check_sudo_access():
@@ -499,6 +521,7 @@ def stop_service():
     return redirect('/maintenance')
 
 @bp.route('/edit-config', methods=['GET', 'POST'])
+@login_required
 def edit_config():
     """Edit Samba configuration file directly"""
     if not check_sudo_access():

@@ -1,0 +1,147 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="page-header">
+  <h2>User Management</h2>
+  <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
+    <i class="bi bi-plus-lg me-1"></i> Add User
+  </button>
+</div>
+
+{% if users %}
+<div class="card">
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>Admin</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for username, user_data in users.items() %}
+          <tr>
+            <td class="align-middle">{{ username }}</td>
+            <td class="align-middle">
+              {% if user_data.is_admin %}
+              <span class="badge bg-success">Yes</span>
+              {% else %}
+              <span class="badge bg-secondary">No</span>
+              {% endif %}
+            </td>
+            <td class="align-middle">
+              <div class="btn-group">
+                <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#resetPasswordModal{{ username }}">
+                  <i class="bi bi-key"></i>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteUserModal{{ username }}">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Reset Password Modals -->
+{% for username, user_data in users.items() %}
+<div class="modal fade" id="resetPasswordModal{{ username }}" tabindex="-1" aria-labelledby="resetPasswordModalLabel{{ username }}" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="resetPasswordModalLabel{{ username }}">Reset Password: {{ username }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form action="{{ url_for('auth.reset_password', username=username) }}" method="post">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="new_password{{ username }}" class="form-label">New Password</label>
+            <input type="password" class="form-control" id="new_password{{ username }}" name="password" required>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Reset Password</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Delete User Modals -->
+<div class="modal fade" id="deleteUserModal{{ username }}" tabindex="-1" aria-labelledby="deleteUserModalLabel{{ username }}" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="deleteUserModalLabel{{ username }}">Delete User</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete the user <strong>{{ username }}</strong>?</p>
+        <p class="text-danger"><i class="bi bi-exclamation-triangle me-2"></i>This action cannot be undone.</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+        <form action="{{ url_for('auth.delete_user', username=username) }}" method="post" class="d-inline">
+          <button type="submit" class="btn btn-danger">Delete User</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %}
+
+{% else %}
+<div class="card">
+  <div class="card-body text-center py-5">
+    <i class="bi bi-people display-4 text-muted mb-3"></i>
+    <h4>No Users Found</h4>
+    <p class="text-muted">You haven't configured any users yet.</p>
+    <button type="button" class="btn btn-primary mt-2" data-bs-toggle="modal" data-bs-target="#addUserModal">
+      <i class="bi bi-plus-lg me-1"></i> Add First User
+    </button>
+  </div>
+</div>
+{% endif %}
+
+<!-- Add User Modal -->
+<div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addUserModalLabel">Add New User</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form action="{{ url_for('auth.register') }}" method="post">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="username" class="form-label">Username</label>
+            <input type="text" class="form-control" id="username" name="username" required>
+          </div>
+          
+          <div class="mb-3">
+            <label for="password" class="form-label">Password</label>
+            <input type="password" class="form-control" id="password" name="password" required>
+          </div>
+          
+          <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" id="is_admin" name="is_admin">
+            <label class="form-check-label" for="is_admin">
+              Administrator
+            </label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Add User</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %} 

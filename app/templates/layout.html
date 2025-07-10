@@ -9,7 +9,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <style>
     :root {
       /* Modern color palette */
@@ -43,429 +42,246 @@
       min-height: 100vh;
     }
     
-    .app-container {
-      display: flex;
-      min-height: 100vh;
-    }
-    
+    /* Sidebar */
     .sidebar {
-      width: 250px;
       background-color: var(--bg-sidebar);
-      border-right: 1px solid var(--border-color);
-      padding: 1.5rem 0;
+      width: 250px;
       position: fixed;
+      top: 0;
+      left: 0;
       height: 100vh;
       overflow-y: auto;
-      transition: all 0.3s ease;
-    }
-    
-    .sidebar-collapsed {
-      width: 70px;
+      z-index: 1000;
+      transition: all 0.3s;
+      border-right: 1px solid var(--border-color);
     }
     
     .sidebar-header {
-      padding: 0 1.5rem 1.5rem;
+      padding: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border-color);
+    }
+    
+    .sidebar-brand {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      text-decoration: none;
       display: flex;
       align-items: center;
     }
     
-    .sidebar-header h1 {
-      font-size: 1.25rem;
-      font-weight: 600;
-      margin: 0;
-      white-space: nowrap;
+    .sidebar-brand i {
+      margin-right: 0.75rem;
+      color: var(--primary);
     }
     
-    .sidebar-toggle {
-      background: transparent;
-      border: none;
-      color: var(--text-secondary);
-      margin-right: 0.75rem;
-      padding: 0.25rem;
-      cursor: pointer;
-      font-size: 1.5rem;
+    .sidebar-nav {
+      padding: 1rem 0;
+    }
+    
+    .nav-item {
+      margin-bottom: 0.25rem;
     }
     
     .nav-link {
+      padding: 0.75rem 1.5rem;
       color: var(--text-secondary);
+      border-radius: 0;
       display: flex;
       align-items: center;
-      padding: 0.75rem 1.5rem;
-      transition: all 0.2s ease;
-      border-left: 3px solid transparent;
+      transition: all 0.3s;
     }
     
     .nav-link:hover {
-      color: var(--text-primary);
-      background-color: rgba(255, 255, 255, 0.05);
+      background-color: rgba(99, 102, 241, 0.1);
+      color: var(--primary-light);
     }
     
     .nav-link.active {
-      color: var(--primary-light);
-      border-left-color: var(--primary);
-      background-color: rgba(99, 102, 241, 0.1);
+      background-color: rgba(99, 102, 241, 0.15);
+      color: var(--primary);
+      border-right: 3px solid var(--primary);
     }
     
     .nav-link i {
       margin-right: 0.75rem;
-      font-size: 1.25rem;
-      width: 1.5rem;
-      text-align: center;
+      font-size: 1.1rem;
     }
     
-    .nav-link-text {
-      white-space: nowrap;
-    }
-    
-    .main-content {
-      flex: 1;
-      padding: 2rem;
+    /* Content */
+    .content {
       margin-left: 250px;
-      transition: all 0.3s ease;
-    }
-    
-    .main-content-expanded {
-      margin-left: 70px;
+      padding: 1.5rem;
+      transition: all 0.3s;
     }
     
     .page-header {
-      margin-bottom: 2rem;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border-color);
     }
     
     .page-header h2 {
-      font-size: 1.75rem;
+      margin-bottom: 0;
       font-weight: 600;
-      margin: 0;
     }
     
+    /* Cards */
     .card {
       background-color: var(--bg-card);
       border: 1px solid var(--border-color);
       border-radius: 0.5rem;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
       margin-bottom: 1.5rem;
-      overflow: hidden;
+      box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
     }
     
     .card-header {
-      background-color: rgba(255, 255, 255, 0.05);
+      background-color: transparent;
       border-bottom: 1px solid var(--border-color);
-      padding: 1rem 1.5rem;
+      padding: 1rem 1.25rem;
       font-weight: 500;
-      color: var(--text-primary);
     }
     
     .card-body {
-      padding: 1.5rem;
+      padding: 1.25rem;
     }
     
-    /* Button styles */
-    .btn {
-      font-weight: 500;
-      border-radius: 0.375rem;
-      padding: 0.5rem 1rem;
-      transition: all 0.2s ease;
-    }
-    
-    .btn-primary {
-      background-color: var(--primary);
-      border-color: var(--primary);
-      color: white;
-    }
-    
-    .btn-primary:hover {
-      background-color: var(--primary-dark);
-      border-color: var(--primary-dark);
-    }
-    
-    .btn-secondary {
-      background-color: var(--secondary);
-      border-color: var(--secondary);
-      color: white;
-    }
-    
-    .btn-secondary:hover {
-      background-color: var(--secondary-dark);
-      border-color: var(--secondary-dark);
-    }
-    
-    .btn-accent {
-      background-color: var(--accent);
-      border-color: var(--accent);
-      color: white;
-    }
-    
-    .btn-accent:hover {
-      background-color: var(--accent-dark);
-      border-color: var(--accent-dark);
-    }
-    
-    .btn-danger {
-      background-color: var(--danger);
-      border-color: var(--danger);
-      color: white;
-    }
-    
-    .btn-success {
-      background-color: var(--success);
-      border-color: var(--success);
-      color: white;
-    }
-    
-    .btn-warning {
-      background-color: var(--warning);
-      border-color: var(--warning);
-      color: white;
-    }
-    
-    .btn-info {
-      background-color: var(--info);
-      border-color: var(--info);
-      color: white;
-    }
-    
-    /* Form controls */
+    /* Forms */
     .form-control, .form-select {
-      background-color: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--border-color);
+      background-color: #1a2234;
       color: var(--text-primary);
-      border-radius: 0.375rem;
-      padding: 0.5rem 0.75rem;
+      border-color: var(--border-color);
     }
     
     .form-control:focus, .form-select:focus {
-      background-color: rgba(255, 255, 255, 0.1);
-      border-color: var(--primary-light);
+      background-color: #141b2d;
       color: var(--text-primary);
+      border-color: var(--primary);
       box-shadow: 0 0 0 0.25rem rgba(99, 102, 241, 0.25);
     }
     
-    /* Labels */
-    label {
+    .form-control::placeholder {
+      color: var(--text-muted);
+    }
+    
+    .form-label {
       color: var(--text-secondary);
-      margin-bottom: 0.5rem;
       font-weight: 500;
     }
     
     /* Tables */
     .table {
       color: var(--text-primary);
-      border-color: var(--border-color);
-    }
-    
-    .table-dark {
-      --bs-table-color: var(--text-primary);
-      --bs-table-bg: var(--bg-card);
-      --bs-table-border-color: var(--border-color);
-      --bs-table-striped-bg: rgba(255, 255, 255, 0.03);
-      --bs-table-striped-color: var(--text-primary);
-      --bs-table-active-bg: rgba(255, 255, 255, 0.05);
-      --bs-table-active-color: var(--text-primary);
-      --bs-table-hover-bg: rgba(255, 255, 255, 0.05);
-      --bs-table-hover-color: var(--text-primary);
     }
     
     .table thead th {
-      background-color: rgba(255, 255, 255, 0.05);
-      border-bottom: 1px solid var(--border-color);
+      background-color: rgba(0, 0, 0, 0.2);
       color: var(--text-secondary);
       font-weight: 500;
-      text-transform: uppercase;
-      font-size: 0.75rem;
-      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--border-color);
+    }
+    
+    .table tbody td {
+      border-color: var(--border-color);
+    }
+    
+    .table-hover tbody tr:hover {
+      background-color: rgba(99, 102, 241, 0.05);
+    }
+    
+    /* Buttons */
+    .btn-primary {
+      background-color: var(--primary);
+      border-color: var(--primary-dark);
+    }
+    
+    .btn-primary:hover, .btn-primary:focus {
+      background-color: var(--primary-dark);
+      border-color: var(--primary-dark);
+    }
+    
+    .btn-secondary {
+      background-color: var(--secondary);
+      border-color: var(--secondary-dark);
+    }
+    
+    .btn-secondary:hover, .btn-secondary:focus {
+      background-color: var(--secondary-dark);
+      border-color: var(--secondary-dark);
+    }
+    
+    .btn-success {
+      background-color: var(--success);
+      border-color: var(--success);
+    }
+    
+    .btn-danger {
+      background-color: var(--danger);
+      border-color: var(--danger);
+    }
+    
+    .btn-warning {
+      background-color: var(--warning);
+      border-color: var(--warning);
+      color: #fff;
+    }
+    
+    .btn-outline-primary {
+      color: var(--primary);
+      border-color: var(--primary);
+    }
+    
+    .btn-outline-primary:hover {
+      background-color: var(--primary);
+      border-color: var(--primary);
     }
     
     /* Badges */
-    .badge {
-      font-weight: 500;
-      padding: 0.35em 0.65em;
-      border-radius: 0.375rem;
+    .badge.bg-success {
+      background-color: var(--success) !important;
     }
     
-    .badge-primary {
-      background-color: var(--primary);
-      color: white;
+    .badge.bg-danger {
+      background-color: var(--danger) !important;
     }
     
-    .badge-secondary {
-      background-color: var(--secondary);
-      color: white;
+    .badge.bg-warning {
+      background-color: var(--warning) !important;
     }
     
-    .badge-success {
-      background-color: var(--success);
-      color: white;
-    }
-    
-    .badge-danger {
-      background-color: var(--danger);
-      color: white;
-    }
-    
-    .badge-warning {
-      background-color: var(--warning);
-      color: white;
-    }
-    
-    .badge-info {
-      background-color: var(--info);
-      color: white;
+    .badge.bg-info {
+      background-color: var(--info) !important;
     }
     
     /* Alerts */
-    .alert {
-      border-radius: 0.375rem;
-      border: 1px solid transparent;
-      padding: 1rem;
-    }
-    
     .alert-success {
       background-color: rgba(16, 185, 129, 0.1);
-      border-color: var(--success);
-      color: var(--text-primary);
+      border-color: rgba(16, 185, 129, 0.2);
+      color: #6ee7b7;
     }
     
     .alert-danger {
       background-color: rgba(239, 68, 68, 0.1);
-      border-color: var(--danger);
-      color: var(--text-primary);
+      border-color: rgba(239, 68, 68, 0.2);
+      color: #fca5a5;
     }
     
     .alert-warning {
       background-color: rgba(245, 158, 11, 0.1);
-      border-color: var(--warning);
-      color: var(--text-primary);
+      border-color: rgba(245, 158, 11, 0.2);
+      color: #fcd34d;
     }
     
-    .alert-info {
-      background-color: rgba(59, 130, 246, 0.1);
-      border-color: var(--info);
-      color: var(--text-primary);
-    }
-    
-    /* Status indicators */
-    .status-indicator {
-      display: inline-block;
-      width: 0.75rem;
-      height: 0.75rem;
-      border-radius: 50%;
-      margin-right: 0.5rem;
-    }
-    
-
-
-    /* Make muted text more visible on dark background */
-    .text-muted {
-      color: #b0b8c4 !important; /* Lighter shade for better visibility */
-    }
-    
-    /* Improve visibility for small text and descriptions */
-    .small, 
-    small,
-    p,
-    .form-text,
-    .card-body p  {
-      color: #d1d8e0 !important; /* Even lighter shade for small text */
-    }
-    
-    /* Make span elements visible */
-    span:not(.badge):not(.nav-link-text) {
-      color: #d1d8e0 !important;
-    }
-    
-    /* Improve dropdown visibility */
-    .dropdown-menu {
-      background-color: var(--bg-card);
-      border-color: var(--border-color);
-    }
-    
-    .dropdown-item {
-      color: var(--text-primary);
-    }
-    
-    .dropdown-item:hover, .dropdown-item:focus {
-      background-color: rgba(255, 255, 255, 0.1);
-      color: var(--text-primary);
-    }
-    
-    .dropdown-divider {
-      border-top-color: var(--border-color);
-    }
-    
-    /* Improve select elements and options visibility */
-    select.form-select {
-      background-color: var(--bg-card);
-      color: var(--text-primary);
-      border-color: var(--border-color);
-      cursor: pointer;
-      appearance: auto;
-      -webkit-appearance: menulist;
-      -moz-appearance: menulist;
-      z-index: 100;
-      position: relative;
-    }
-    
-    /* Enhanced select for better clickability */
-    .select-enhanced {
-      cursor: pointer !important;
-      position: relative;
-      z-index: 10;
-    }
-    
-    select.form-select option {
-      background-color: var(--bg-card);
-      color: var(--text-primary);
-    }
-    
-    /* Fix input fields */
-    input.form-control {
-      background-color: var(--bg-card);
-      color: var(--text-primary);
-      border-color: var(--border-color);
-      position: relative;
-      z-index: 5;
-    }
-    
-    /* Fix textarea fields */
-    textarea.form-control {
-      background-color: var(--bg-card);
-      color: var(--text-primary);
-      border-color: var(--border-color);
-    }
-    
-    /* Fix form elements focus state */
-    .form-control:focus,
-    .form-select:focus {
-      background-color: var(--bg-dark);
-      color: var(--text-primary);
-      border-color: var(--primary);
-      box-shadow: 0 0 0 0.25rem rgba(99, 102, 241, 0.25);
-    }
-    
-    /* Fix modal styling */
+    /* Modals */
     .modal-content {
       background-color: var(--bg-card);
-      color: var(--text-primary);
       border-color: var(--border-color);
-      box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-    }
-    
-    /* Add a subtle border glow to modals */
-    .modal-dialog {
-      border-radius: 0.5rem;
-      box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.2);
-    }
-    
-    /* Improve modal backdrop */
-    .modal-backdrop {
-      background-color: rgba(0, 0, 0, 0.7);
-    }
-    
-    .modal-backdrop.show {
-      opacity: 1;
     }
     
     .modal-header {
@@ -476,339 +292,199 @@
       border-top-color: var(--border-color);
     }
     
-    .modal-title {
-      color: var(--text-primary);
-    }
-    
-    /* Fix modal form labels */
-    .modal-content label {
-      color: var(--text-primary);
-      font-weight: 500;
-    }
-    
-    /* Fix modal form inputs */
-    .modal-content .form-control,
-    .modal-content .form-select {
-      background-color: #1a2234;
-      color: var(--text-primary);
+    /* Dropdown */
+    .dropdown-menu {
+      background-color: var(--bg-card);
       border-color: var(--border-color);
     }
     
-    /* Fix placeholder text in modals */
-    .modal-content .form-control::placeholder {
-      color: #8b95a8;
-      opacity: 1;
+    .dropdown-item {
+      color: var(--text-secondary);
     }
     
-    /* Fix form check labels */
-    .form-check-label {
-      color: var(--text-primary);
-    }
-    
-    /* Fix form switch styling */
-    .form-switch .form-check-input {
-      background-color: #3a4559;
-      border-color: #2c3548;
-    }
-    
-    .form-switch .form-check-input:checked {
-      background-color: var(--primary);
-      border-color: var(--primary-dark);
-    }
-    
-    /* Fix modal form inputs focus */
-    .modal-content .form-control:focus,
-    .modal-content .form-select:focus {
-      background-color: #141b2d;
-      border-color: var(--primary);
-    }
-    
-    /* Fix modal form text help */
-    .modal-content .form-text {
-      color: var(--text-muted);
-    }
-    
-    /* Fix visibility for margin-bottom classes with text */
-    .mb-1, .mb-2, .mb-3, .mb-4, .mb-5 {
-      color: inherit !important; /* Inherit color from parent */
-    }
-    
-    /* Specific styling for headings with margin classes */
-    h1.mb-1, h1.mb-2, h1.mb-3, h1.mb-4, h1.mb-5,
-    h2.mb-1, h2.mb-2, h2.mb-3, h2.mb-4, h2.mb-5,
-    h3.mb-1, h3.mb-2, h3.mb-3, h3.mb-4, h3.mb-5,
-    h4.mb-1, h4.mb-2, h4.mb-3, h4.mb-4, h4.mb-5,
-    h5.mb-1, h5.mb-2, h5.mb-3, h5.mb-4, h5.mb-5,
-    h6.mb-1, h6.mb-2, h6.mb-3, h6.mb-4, h6.mb-5 {
-      color: var(--text-primary) !important; /* Make headings with margin classes clearly visible */
-    }
-    
-    .status-active {
-      background-color: var(--success);
-      box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.3);
-    }
-    
-    .status-inactive {
-      background-color: var(--danger);
-      box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.3);
-    }
-    
-    /* Footer */
-    .footer {
-      padding: 1.5rem 0;
-      text-align: center;
-      color: var(--text-muted);
-      font-size: 0.875rem;
-      border-top: 1px solid var(--border-color);
-      margin-top: 2rem;
+    .dropdown-item:hover {
+      background-color: rgba(99, 102, 241, 0.1);
+      color: var(--primary-light);
     }
     
     /* Utilities */
-    .text-primary {
-      color: var(--primary) !important;
-    }
-    
-    .text-secondary {
-      color: var(--secondary) !important;
-    }
-    
-    .text-accent {
-      color: var(--accent) !important;
-    }
-    
-    .text-success {
-      color: var(--success) !important;
-    }
-    
-    .text-danger {
-      color: var(--danger) !important;
-    }
-    
-    .text-warning {
-      color: var(--warning) !important;
-    }
-    
-    .text-info {
-      color: var(--info) !important;
-    }
-    
-    .text-white {
-      color: var(--text-primary) !important;
-    }
-    
     .text-muted {
       color: var(--text-muted) !important;
     }
     
-    .mb-1 {
-      color: peachpuff !important;
-    }
-
-    /* Responsive */
-    @media (max-width: 992px) {
-      .sidebar {
-        width: 70px;
-      }
-      
-      .sidebar-header h1 {
-        display: none;
-      }
-      
-      .nav-link-text {
-        display: none;
-      }
-      
-      .main-content {
-        margin-left: 70px;
-      }
+    .border-bottom {
+      border-bottom-color: var(--border-color) !important;
     }
     
+    /* User dropdown */
+    .user-dropdown {
+      display: flex;
+      align-items: center;
+      padding: 0.5rem 1rem;
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: all 0.3s;
+    }
+    
+    .user-dropdown:hover {
+      background-color: rgba(99, 102, 241, 0.1);
+      color: var(--primary-light);
+    }
+    
+    .user-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background-color: var(--primary);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 0.75rem;
+      font-weight: 600;
+    }
+    
+    /* Small text */
+    small, .small {
+      color: var(--text-muted);
+    }
+    
+    /* Paragraphs */
+    p {
+      color: var(--text-secondary);
+    }
+    
+    /* Mobile responsive */
     @media (max-width: 768px) {
       .sidebar {
-        width: 0;
-        transform: translateX(-100%);
+        margin-left: -250px;
       }
       
-      .sidebar.show {
-        width: 250px;
-        transform: translateX(0);
-      }
-      
-      .sidebar.show .nav-link-text,
-      .sidebar.show .sidebar-header h1 {
-        display: block;
-      }
-      
-      .main-content {
+      .sidebar.active {
         margin-left: 0;
       }
       
-      .mobile-menu-toggle {
-        display: block !important;
+      .content {
+        margin-left: 0;
+      }
+      
+      .content.active {
+        margin-left: 250px;
       }
     }
   </style>
 </head>
 <body>
-  <div class="app-container">
-    <!-- Sidebar -->
-    <div class="sidebar" id="sidebar">
-      <div class="sidebar-header">
-        <button class="sidebar-toggle d-none d-md-block" id="sidebarToggle">
-          <i class="bi bi-list"></i>
-        </button>
-        <h1>Samba Manager</h1>
-      </div>
-      <nav class="nav flex-column">
-        <a href="/" class="nav-link {% if request.path == '/' %}active{% endif %}">
-          <i class="bi bi-house-door"></i>
-          <span class="nav-link-text">Dashboard</span>
-        </a>
-        <a href="/global-settings" class="nav-link {% if request.path == '/global-settings' %}active{% endif %}">
-          <i class="bi bi-gear"></i>
-          <span class="nav-link-text">Global Settings</span>
-        </a>
-        <a href="/shares" class="nav-link {% if request.path == '/shares' %}active{% endif %}">
-          <i class="bi bi-folder-symlink"></i>
-          <span class="nav-link-text">Shares</span>
-        </a>
-        <a href="/users" class="nav-link {% if request.path == '/users' %}active{% endif %}">
-          <i class="bi bi-people"></i>
-          <span class="nav-link-text">Users</span>
-        </a>
-        <a href="/setup" class="nav-link {% if request.path == '/setup' %}active{% endif %}">
-          <i class="bi bi-tools"></i>
-          <span class="nav-link-text">Setup</span>
-        </a>
-        <a href="/maintenance" class="nav-link {% if request.path == '/maintenance' %}active{% endif %}">
-          <i class="bi bi-wrench"></i>
-          <span class="nav-link-text">Maintenance</span>
-        </a>
-        <a href="/edit-config" class="nav-link {% if request.path == '/edit-config' %}active{% endif %}">
-          <i class="bi bi-file-earmark-code"></i>
-          <span class="nav-link-text">Edit Config</span>
-        </a>
-      </nav>
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="sidebar-header">
+      <a href="/" class="sidebar-brand">
+        <i class="bi bi-hdd-network"></i>
+        <span>Samba Manager</span>
+      </a>
     </div>
     
-    <!-- Main Content -->
-    <div class="main-content" id="mainContent">
-      <!-- Mobile Menu Toggle -->
-      <button class="mobile-menu-toggle btn btn-sm btn-outline-secondary d-md-none mb-3" style="display: none;" id="mobileMenuToggle">
-        <i class="bi bi-list"></i> Menu
-      </button>
-      
-      <!-- Flash Messages -->
-      {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-          {% for category, message in messages %}
-            <div class="alert alert-{{ category }}">
-              <i class="bi {% if category == 'success' %}bi-check-circle{% elif category == 'error' %}bi-exclamation-triangle{% else %}bi-info-circle{% endif %} me-2"></i>
-              {{ message }}
-            </div>
-          {% endfor %}
+    <div class="sidebar-nav">
+      <ul class="nav flex-column">
+        <li class="nav-item">
+          <a href="/" class="nav-link {{ 'active' if request.path == '/' }}">
+            <i class="bi bi-speedometer2"></i>
+            <span>Dashboard</span>
+          </a>
+        </li>
+        
+        <li class="nav-item">
+          <a href="/shares" class="nav-link {{ 'active' if request.path == '/shares' }}">
+            <i class="bi bi-folder2-open"></i>
+            <span>Shares</span>
+          </a>
+        </li>
+        
+        <li class="nav-item">
+          <a href="/users" class="nav-link {{ 'active' if request.path == '/users' }}">
+            <i class="bi bi-people"></i>
+            <span>Samba Users</span>
+          </a>
+        </li>
+        
+        <li class="nav-item">
+          <a href="/global-settings" class="nav-link {{ 'active' if request.path == '/global-settings' }}">
+            <i class="bi bi-gear"></i>
+            <span>Global Settings</span>
+          </a>
+        </li>
+        
+        <li class="nav-item">
+          <a href="/maintenance" class="nav-link {{ 'active' if request.path == '/maintenance' }}">
+            <i class="bi bi-tools"></i>
+            <span>Maintenance</span>
+          </a>
+        </li>
+        
+        {% if current_user.is_admin %}
+        <li class="nav-item">
+          <a href="{{ url_for('auth.register') }}" class="nav-link {{ 'active' if request.path == url_for('auth.register') }}">
+            <i class="bi bi-person-plus"></i>
+            <span>User Management</span>
+          </a>
+        </li>
         {% endif %}
-      {% endwith %}
-      
-      <!-- Page Content -->
-      {% block content %}{% endblock %}
-      
-      <!-- Footer -->
-      <footer class="footer">
-        <div class="container">
-          <span>Samba Manager &copy; <script>document.write(new Date().getFullYear());</script> - A modern web interface for managing Samba shares</span>
-        </div>
-      </footer>
+      </ul>
     </div>
+    
+    <div class="mt-auto p-3 border-top" style="border-color: var(--border-color);">
+      <div class="dropdown">
+        <a href="#" class="user-dropdown d-flex align-items-center" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+          <div class="user-avatar">
+            {{ current_user.username[0].upper() }}
+          </div>
+          <div>
+            <div class="fw-medium">{{ current_user.username }}</div>
+            <div class="small text-muted">
+              {% if current_user.is_admin %}
+              Administrator
+              {% else %}
+              User
+              {% endif %}
+            </div>
+          </div>
+          <i class="bi bi-chevron-down ms-auto"></i>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+          <li><a class="dropdown-item" href="{{ url_for('auth.logout') }}"><i class="bi bi-box-arrow-right me-2"></i> Sign Out</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+  
+  <!-- Content -->
+  <div class="content">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+    
+    {% block content %}{% endblock %}
   </div>
   
-  <!-- Scripts -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      const sidebar = document.getElementById('sidebar');
-      const mainContent = document.getElementById('mainContent');
-      const sidebarToggle = document.getElementById('sidebarToggle');
-      const mobileMenuToggle = document.getElementById('mobileMenuToggle');
-      
-      // Sidebar toggle for desktop
-      sidebarToggle.addEventListener('click', function() {
-        sidebar.classList.toggle('sidebar-collapsed');
-        mainContent.classList.toggle('main-content-expanded');
-      });
-      
-      // Mobile menu toggle
-      mobileMenuToggle.addEventListener('click', function() {
-        sidebar.classList.toggle('show');
-      });
-      
-      // Close sidebar when clicking outside on mobile
-      document.addEventListener('click', function(event) {
-        const isClickInsideSidebar = sidebar.contains(event.target);
-        const isClickOnMobileToggle = mobileMenuToggle.contains(event.target);
-        
-        if (window.innerWidth < 768 && !isClickInsideSidebar && !isClickOnMobileToggle && sidebar.classList.contains('show')) {
-          sidebar.classList.remove('show');
-        }
-      });
-      
-      // Handle window resize
-      window.addEventListener('resize', function() {
-        if (window.innerWidth >= 768) {
-          sidebar.classList.remove('show');
-        }
-      });
-      
-      // Initialize Bootstrap dropdowns
-      var dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'))
-      var dropdownList = dropdownElementList.map(function (dropdownToggleEl) {
-        return new bootstrap.Dropdown(dropdownToggleEl)
-      });
-      
-      // Fix for dropdown click events
-      document.querySelectorAll('.dropdown-toggle').forEach(function(element) {
-        element.addEventListener('click', function(e) {
-          e.stopPropagation();
-          e.preventDefault();
-          var dropdown = bootstrap.Dropdown.getInstance(element);
-          if (!dropdown) {
-            dropdown = new bootstrap.Dropdown(element);
-          }
-          dropdown.toggle();
+      // Mobile sidebar toggle
+      const sidebarToggle = document.querySelector('.sidebar-toggle');
+      if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', function() {
+          document.querySelector('.sidebar').classList.toggle('active');
+          document.querySelector('.content').classList.toggle('active');
         });
-      });
-      
-      // Fix for select elements in dark mode
-      document.querySelectorAll('select.form-select').forEach(function(select) {
-        if (!select.disabled) {
-          // Add a click handler to ensure the dropdown opens
-          select.addEventListener('mousedown', function(e) {
-            // This helps ensure the dropdown opens properly
-            e.stopPropagation();
-          });
-          
-          // Add a custom class to make it more clickable
-          select.classList.add('select-enhanced');
-        }
-      });
-      
-      // Fix for input fields in dark mode
-      document.querySelectorAll('input.form-control, textarea.form-control').forEach(function(input) {
-        if (!input.disabled) {
-          // Make sure inputs are properly focused and clickable
-          input.addEventListener('click', function(e) {
-            e.stopPropagation();
-            this.focus();
-          });
-          
-          // Prevent any parent elements from stealing focus
-          input.addEventListener('focus', function(e) {
-            e.stopPropagation();
-          });
-        }
-      });
+      }
     });
   </script>
-  
-  {% block extra_js %}{% endblock %}
 </body>
 </html>
