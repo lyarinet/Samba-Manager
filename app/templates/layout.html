@@ -354,10 +354,42 @@
       margin-right: 0.5rem;
     }
     
-    .mb-1 {
-      color: peachpuff !important;
-    }
 
+
+    /* Make muted text more visible on dark background */
+    .text-muted {
+      color: #b0b8c4 !important; /* Lighter shade for better visibility */
+    }
+    
+    /* Improve visibility for small text and descriptions */
+    .small, 
+    small,
+    p,
+    .form-text,
+    .card-body p  {
+      color: #d1d8e0 !important; /* Even lighter shade for small text */
+    }
+    
+    /* Make span elements visible */
+    span:not(.badge):not(.nav-link-text) {
+      color: #d1d8e0 !important;
+    }
+    
+    /* Fix visibility for margin-bottom classes with text */
+    .mb-1, .mb-2, .mb-3, .mb-4, .mb-5 {
+      color: inherit !important; /* Inherit color from parent */
+    }
+    
+    /* Specific styling for headings with margin classes */
+    h1.mb-1, h1.mb-2, h1.mb-3, h1.mb-4, h1.mb-5,
+    h2.mb-1, h2.mb-2, h2.mb-3, h2.mb-4, h2.mb-5,
+    h3.mb-1, h3.mb-2, h3.mb-3, h3.mb-4, h3.mb-5,
+    h4.mb-1, h4.mb-2, h4.mb-3, h4.mb-4, h4.mb-5,
+    h5.mb-1, h5.mb-2, h5.mb-3, h5.mb-4, h5.mb-5,
+    h6.mb-1, h6.mb-2, h6.mb-3, h6.mb-4, h6.mb-5 {
+      color: var(--text-primary) !important; /* Make headings with margin classes clearly visible */
+    }
+    
     .status-active {
       background-color: var(--success);
       box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.3);
@@ -415,6 +447,10 @@
       color: var(--text-muted) !important;
     }
     
+    .mb-1 {
+      color: peachpuff !important;
+    }
+
     /* Responsive */
     @media (max-width: 992px) {
       .sidebar {
