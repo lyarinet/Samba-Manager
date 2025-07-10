@@ -24,9 +24,3 @@
    force group = smbusers
    inherit permissions = yes
 
-[testing]
-   path = /var/www/html/files
-   read only = no
-   valid users = @smbusers
-   vfs objects = 
-

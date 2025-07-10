@@ -7,20 +7,31 @@
 <body class="bg-dark text-white">
   <div class="container py-4">
     <h1>Samba Manager</h1>
-    <nav>
+    <nav class="mb-4">
       <a href="/" class="btn btn-secondary">Home</a>
       <a href="/global-settings" class="btn btn-secondary">Global Settings</a>
       <a href="/shares" class="btn btn-secondary">Shares</a>
     </nav>
-    <hr>
-    {% with messages = get_flashed_messages() %}
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
-        {% for msg in messages %}
-          <div class="alert alert-info">{{ msg }}</div>
+        {% for category, message in messages %}
+          {% if category == 'error' %}
+            <div class="alert alert-danger">{{ message }}</div>
+          {% elif category == 'success' %}
+            <div class="alert alert-success">{{ message }}</div>
+          {% else %}
+            <div class="alert alert-info">{{ message }}</div>
+          {% endif %}
         {% endfor %}
       {% endif %}
     {% endwith %}
+    
     {% block content %}{% endblock %}
+    
+    <footer class="mt-5 text-center text-muted">
+      <small>Samba Manager - A web interface for managing Samba shares</small>
+    </footer>
   </div>
 </body>
 </html>

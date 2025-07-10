@@ -1,4 +1,58 @@
 {% extends 'layout.html' %}
 {% block content %}
 <h3>Welcome to Samba Manager</h3>
+
+<div class="card bg-dark border-secondary mb-4">
+  <div class="card-header">Samba Service Status</div>
+  <div class="card-body">
+    <div class="row">
+      <div class="col-md-6">
+        <p><strong>SMBD Status:</strong> 
+          <span class="badge {% if status.smbd == 'active' %}bg-success{% else %}bg-danger{% endif %}">
+            {{ status.smbd }}
+          </span>
+        </p>
+      </div>
+      <div class="col-md-6">
+        <p><strong>NMBD Status:</strong>
+          <span class="badge {% if status.nmbd == 'active' %}bg-success{% else %}bg-danger{% endif %}">
+            {{ status.nmbd }}
+          </span>
+        </p>
+      </div>
+    </div>
+    
+    {% if has_sudo %}
+    <a href="/restart" class="btn btn-warning">Restart Samba Service</a>
+    {% else %}
+    <div class="alert alert-warning">
+      <strong>Warning:</strong> Sudo access is required to manage Samba service. 
+      Run this application with sudo privileges to enable full functionality.
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<div class="card bg-dark border-secondary">
+  <div class="card-header">Configuration Management</div>
+  <div class="card-body">
+    <div class="row">
+      <div class="col-md-6">
+        <h5>Export Configuration</h5>
+        <p>Download your current Samba configuration as a backup file</p>
+        <a href="/export" class="btn btn-primary">Export Config</a>
+      </div>
+      <div class="col-md-6">
+        <h5>Import Configuration</h5>
+        <p>Upload a previously exported configuration file</p>
+        <form action="/import" method="POST" enctype="multipart/form-data">
+          <div class="input-group">
+            <input type="file" name="file" class="form-control" required>
+            <button type="submit" class="btn btn-primary">Import</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
 {% endblock %}

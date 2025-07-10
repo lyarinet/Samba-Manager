@@ -1,19 +1,40 @@
 {% extends 'layout.html' %}
 {% block content %}
 <h2>Global Settings</h2>
-<form method="POST">
-  <div class="mb-3">
-    <label class="form-label">Server Description</label>
-    <input name="server_string" class="form-control" value="{{ settings.server_string }}">
+
+{% if not has_sudo %}
+<div class="alert alert-warning mb-4">
+  <strong>Warning:</strong> Sudo access is required to modify Samba settings.
+  Run this application with sudo privileges to enable full functionality.
+</div>
+{% endif %}
+
+<form method="POST" class="card bg-dark border-secondary">
+  <div class="card-body">
+    <div class="mb-3">
+      <label class="form-label">Server Description</label>
+      <input name="server_string" class="form-control" value="{{ settings.server_string }}">
+      <small class="text-muted">Description of your Samba server</small>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Workgroup</label>
+      <input name="workgroup" class="form-control" value="{{ settings.workgroup }}">
+      <small class="text-muted">Windows workgroup name</small>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Log Level</label>
+      <select name="log_level" class="form-control">
+        {% for i in range(1, 11) %}
+        <option value="{{ i }}" {% if settings.log_level|int == i %}selected{% endif %}>{{ i }}</option>
+        {% endfor %}
+      </select>
+      <small class="text-muted">Higher values provide more detailed logs</small>
+    </div>
+    <button class="btn btn-primary" {% if not has_sudo %}disabled{% endif %}>Save</button>
+    
+    {% if not has_sudo %}
+    <small class="text-warning">You need sudo privileges to save settings</small>
+    {% endif %}
   </div>
-  <div class="mb-3">
-    <label class="form-label">Workgroup</label>
-    <input name="workgroup" class="form-control" value="{{ settings.workgroup }}">
-  </div>
-  <div class="mb-3">
-    <label class="form-label">Log Level</label>
-    <input name="log_level" class="form-control" value="{{ settings.log_level }}">
-  </div>
-  <button class="btn btn-primary">Save</button>
 </form>
 {% endblock %}
