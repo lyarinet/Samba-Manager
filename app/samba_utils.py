@@ -177,15 +177,45 @@ def run_command(cmd, input_str=None):
         return False, str(e)
 
 def restart_samba_service():
-    """Restart the Samba service to apply configuration changes"""
-    if DEV_MODE:
-        print("[DEV MODE] Would restart Samba service in production")
-        return True
+    """Restart Samba service with proper error handling"""
     try:
-        subprocess.run(['sudo', 'systemctl', 'restart', 'smbd'], check=True)
-        subprocess.run(['sudo', 'systemctl', 'restart', 'nmbd'], check=True)
-        return True
-    except subprocess.CalledProcessError:
+        # First try systemctl
+        print("Attempting to restart Samba services with systemctl")
+        systemctl_cmd = ['sudo', 'systemctl', 'restart', 'smbd.service', 'nmbd.service']
+        result = subprocess.run(systemctl_cmd, capture_output=True, text=True, check=False)
+        
+        if result.returncode == 0:
+            print("Successfully restarted Samba services with systemctl")
+            return True
+        
+        # If systemctl fails, try service command
+        print("systemctl failed, trying service command")
+        service_cmd1 = ['sudo', 'service', 'smbd', 'restart']
+        service_cmd2 = ['sudo', 'service', 'nmbd', 'restart']
+        
+        result1 = subprocess.run(service_cmd1, capture_output=True, text=True, check=False)
+        result2 = subprocess.run(service_cmd2, capture_output=True, text=True, check=False)
+        
+        if result1.returncode == 0 and result2.returncode == 0:
+            print("Successfully restarted Samba services with service command")
+            return True
+        
+        # If both methods fail, try init.d scripts
+        print("service command failed, trying init.d scripts")
+        init_cmd1 = ['sudo', '/etc/init.d/smbd', 'restart']
+        init_cmd2 = ['sudo', '/etc/init.d/nmbd', 'restart']
+        
+        result1 = subprocess.run(init_cmd1, capture_output=True, text=True, check=False)
+        result2 = subprocess.run(init_cmd2, capture_output=True, text=True, check=False)
+        
+        if result1.returncode == 0 and result2.returncode == 0:
+            print("Successfully restarted Samba services with init.d scripts")
+            return True
+        
+        print("All methods to restart Samba services failed")
+        return False
+    except Exception as e:
+        print(f"Error restarting Samba service: {e}")
         return False
 
 def get_samba_status():
@@ -289,79 +319,160 @@ def write_global_settings(settings):
         return False
 
 def load_shares():
-    """Load shares from both development and actual Samba configuration files"""
+    """Load Samba shares from the configuration files"""
     shares = []
     
-    print(f"Loading shares. DEV_MODE={DEV_MODE}, SHARE_CONF={SHARE_CONF}, ACTUAL_SMB_CONF={ACTUAL_SMB_CONF}")
-    
-    # Load shares from development file if in DEV_MODE
-    if DEV_MODE and os.path.exists(SHARE_CONF):
+    # First read from the main configuration file
+    if os.path.exists(SMB_CONF):
+        print(f"Reading shares from main config {SMB_CONF}")
         try:
-            print(f"Loading shares from development file: {SHARE_CONF}")
+            with open(SMB_CONF, 'r') as f:
+                content = f.read()
+            
+            # Parse shares from content
+            sections = parse_config_content(content)
+            for name, section in sections.items():
+                # Skip non-share sections and special shares
+                if name in ['global', 'printers', 'print$']:
+                    continue
+                    
+                # Create share dictionary with normalized keys
+                share = {'name': name}
+                
+                # Map Samba config keys to our normalized keys
+                key_mapping = {
+                    'path': 'path',
+                    'comment': 'comment',
+                    'browseable': 'browseable',
+                    'browsable': 'browseable',  # Alternative spelling
+                    'read only': 'read_only',
+                    'guest ok': 'guest_ok',
+                    'valid users': 'valid_users',
+                    'write list': 'write_list',
+                    'create mask': 'create_mask',
+                    'directory mask': 'directory_mask',
+                    'force group': 'force_group'
+                }
+                
+                # Copy values using the mapping
+                for samba_key, our_key in key_mapping.items():
+                    if samba_key in section:
+                        share[our_key] = section[samba_key]
+                
+                # Add default values if not present
+                defaults = {
+                    'path': '/tmp',
+                    'comment': '',
+                    'browseable': 'yes',
+                    'read_only': 'no',
+                    'guest_ok': 'no',
+                    'valid_users': '',
+                    'write_list': '',
+                    'create_mask': '0775',
+                    'directory_mask': '0775',
+                    'force_group': 'smbusers'
+                }
+                
+                for key, value in defaults.items():
+                    if key not in share:
+                        share[key] = value
+                
+                # Debug output for valid_users and write_list
+                print(f"Share {name} from main config - valid_users: '{share.get('valid_users', '')}', write_list: '{share.get('write_list', '')}'")
+                
+                shares.append(share)
+        except Exception as e:
+            print(f"Error reading shares from main config: {e}")
+    
+    # Then read from the shares configuration file
+    if os.path.exists(SHARE_CONF):
+        print(f"Reading shares from shares config {SHARE_CONF}")
+        try:
             with open(SHARE_CONF, 'r') as f:
                 content = f.read()
-            dev_shares = parse_share_section(content)
-            shares.extend(dev_shares)
-            print(f"Loaded {len(dev_shares)} shares from development file")
-        except Exception as e:
-            print(f"Error loading development shares: {e}")
-    
-    # Always try to load shares from the actual Samba configuration
-    if os.path.exists(ACTUAL_SMB_CONF):
-        try:
-            print(f"Loading shares from actual Samba config: {ACTUAL_SMB_CONF}")
-            # Use sudo to read the file
-            result = subprocess.run(['sudo', 'cat', ACTUAL_SMB_CONF], capture_output=True, text=True, check=True)
-            content = result.stdout
-            print(f"Read {len(content)} bytes from main config file")
             
-            # Check if the file includes the shares.conf
-            include_match = re.search(r'include\s*=\s*(\S+)', content)
-            if include_match:
-                shares_file = include_match.group(1)
-                print(f"Found include directive for: {shares_file}")
-                
-                # Read the shares file directly
-                if os.path.exists(shares_file):
-                    try:
-                        print(f"Reading shares file: {shares_file}")
-                        shares_result = subprocess.run(['sudo', 'cat', shares_file], capture_output=True, text=True, check=True)
-                        shares_content = shares_result.stdout
-                        print(f"Read {len(shares_content)} bytes from shares file")
-                        
-                        # Parse shares from the shares file
-                        shares_from_file = parse_share_section(shares_content)
-                        print(f"Found {len(shares_from_file)} shares in shares file")
-                        shares.extend(shares_from_file)
-                    except Exception as e:
-                        print(f"Error reading shares file: {e}")
-            
-            # Also parse the main config file for any shares defined there
-            actual_shares = parse_share_section(content)
-            print(f"Found {len(actual_shares)} shares in actual Samba config")
-            
-            # Merge with existing shares, avoiding duplicates
-            share_names = [s['name'] for s in shares]
-            added_count = 0
-            for share in actual_shares:
-                if share['name'] not in share_names and share['name'] not in ['printers', 'print$']:
+            # Parse shares from content
+            sections = parse_config_content(content)
+            for name, section in sections.items():
+                # Skip non-share sections
+                if name == 'global':
+                    continue
+                    
+                # Check if this share already exists (from main config)
+                existing_share = next((s for s in shares if s['name'] == name), None)
+                if existing_share:
+                    print(f"Share {name} already exists from main config, updating from shares config")
+                    
+                    # Map Samba config keys to our normalized keys
+                    key_mapping = {
+                        'path': 'path',
+                        'comment': 'comment',
+                        'browseable': 'browseable',
+                        'browsable': 'browseable',  # Alternative spelling
+                        'read only': 'read_only',
+                        'guest ok': 'guest_ok',
+                        'valid users': 'valid_users',
+                        'write list': 'write_list',
+                        'create mask': 'create_mask',
+                        'directory mask': 'directory_mask',
+                        'force group': 'force_group'
+                    }
+                    
+                    # Update values using the mapping
+                    for samba_key, our_key in key_mapping.items():
+                        if samba_key in section:
+                            existing_share[our_key] = section[samba_key]
+                    
+                    # Debug output for valid_users and write_list
+                    print(f"Updated share {name} - valid_users: '{existing_share.get('valid_users', '')}', write_list: '{existing_share.get('write_list', '')}'")
+                else:
+                    # Create new share dictionary with normalized keys
+                    share = {'name': name}
+                    
+                    # Map Samba config keys to our normalized keys
+                    key_mapping = {
+                        'path': 'path',
+                        'comment': 'comment',
+                        'browseable': 'browseable',
+                        'browsable': 'browseable',  # Alternative spelling
+                        'read only': 'read_only',
+                        'guest ok': 'guest_ok',
+                        'valid users': 'valid_users',
+                        'write list': 'write_list',
+                        'create mask': 'create_mask',
+                        'directory mask': 'directory_mask',
+                        'force group': 'force_group'
+                    }
+                    
+                    # Copy values using the mapping
+                    for samba_key, our_key in key_mapping.items():
+                        if samba_key in section:
+                            share[our_key] = section[samba_key]
+                    
+                    # Add default values if not present
+                    defaults = {
+                        'path': '/tmp',
+                        'comment': '',
+                        'browseable': 'yes',
+                        'read_only': 'no',
+                        'guest_ok': 'no',
+                        'valid_users': '',
+                        'write_list': '',
+                        'create_mask': '0775',
+                        'directory_mask': '0775',
+                        'force_group': 'smbusers'
+                    }
+                    
+                    for key, value in defaults.items():
+                        if key not in share:
+                            share[key] = value
+                    
+                    # Debug output for valid_users and write_list
+                    print(f"Share {name} from shares config - valid_users: '{share.get('valid_users', '')}', write_list: '{share.get('write_list', '')}'")
+                    
                     shares.append(share)
-                    share_names.append(share['name'])
-                    added_count += 1
-            print(f"Added {added_count} unique shares from actual Samba config")
         except Exception as e:
-            print(f"Error loading actual Samba shares: {e}")
-    else:
-        print(f"Actual Samba config file not found: {ACTUAL_SMB_CONF}")
-    
-    # Create empty shares file if it doesn't exist in DEV_MODE
-    if DEV_MODE and not os.path.exists(SHARE_CONF):
-        try:
-            print(f"Creating empty shares file: {SHARE_CONF}")
-            with open(SHARE_CONF, 'w') as f:
-                f.write("# Samba shares configuration\n")
-        except Exception as e:
-            print(f"Error creating shares file: {e}")
+            print(f"Error reading shares from shares config: {e}")
     
     print(f"Total shares loaded: {len(shares)}")
     return shares
@@ -370,15 +481,46 @@ def save_shares(shares):
     try:
         print(f"Saving {len(shares)} shares to {SHARE_CONF}")
         
+        # Map our normalized keys back to Samba config keys
+        reverse_key_mapping = {
+            'path': 'path',
+            'comment': 'comment',
+            'browseable': 'browseable',
+            'read_only': 'read only',
+            'guest_ok': 'guest ok',
+            'valid_users': 'valid users',
+            'write_list': 'write list',
+            'create_mask': 'create mask',
+            'directory_mask': 'directory mask',
+            'force_group': 'force group'
+        }
+        
+        # These fields should always be included in the config, even if empty
+        required_fields = ['path', 'valid_users', 'write_list', 'create_mask', 'directory_mask']
+        
         # Create temporary file with new configuration
         import tempfile
         with tempfile.NamedTemporaryFile(mode='w', delete=False) as temp_file:
             temp_file.write("# Samba shares configuration\n\n")
             for s in shares:
                 temp_file.write(f"[{s['name']}]\n")
-                for key in s:
-                    if key != 'name':
-                        temp_file.write(f"   {key} = {s[key]}\n")
+                
+                # First write required fields
+                for our_key in required_fields:
+                    if our_key in s:
+                        samba_key = reverse_key_mapping.get(our_key, our_key)
+                        temp_file.write(f"   {samba_key} = {s[our_key]}\n")
+                
+                # Then write the rest of the fields
+                for our_key, value in s.items():
+                    if our_key != 'name' and our_key not in required_fields:  # Skip the name and required fields
+                        if our_key in reverse_key_mapping:
+                            samba_key = reverse_key_mapping[our_key]
+                            temp_file.write(f"   {samba_key} = {value}\n")
+                        else:
+                            # For any keys not in our mapping, write them as-is
+                            temp_file.write(f"   {our_key} = {value}\n")
+                
                 temp_file.write('\n')
             temp_path = temp_file.name
             print(f"Created temporary file at {temp_path}")
@@ -395,11 +537,63 @@ def save_shares(shares):
         try:
             print(f"Copying temporary file to {SHARE_CONF}")
             subprocess.run(['sudo', 'cp', temp_path, SHARE_CONF], check=True)
+            # Set proper permissions
+            subprocess.run(['sudo', 'chmod', '644', SHARE_CONF], check=True)
             os.unlink(temp_path)  # Remove the temp file
             print(f"Successfully copied configuration to {SHARE_CONF}")
         except Exception as e:
             print(f"Error copying shares file: {e}")
             return False
+        
+        # Check if there are any shares defined directly in the main config
+        try:
+            if os.path.exists(SMB_CONF):
+                print(f"Checking for shares in main config {SMB_CONF}")
+                with open(SMB_CONF, 'r') as f:
+                    content = f.read()
+                
+                # Parse the main config
+                sections = parse_config_content(content)
+                share_sections = [name for name in sections.keys() if name not in ['global', 'printers', 'print$']]
+                
+                if share_sections:
+                    print(f"Found {len(share_sections)} shares in main config: {', '.join(share_sections)}")
+                    
+                    # Create a new main config without the share sections
+                    with tempfile.NamedTemporaryFile(mode='w', delete=False) as temp_file:
+                        # First write the global section
+                        if 'global' in sections:
+                            temp_file.write("[global]\n")
+                            for key, value in sections['global'].items():
+                                temp_file.write(f"   {key} = {value}\n")
+                            temp_file.write("\n")
+                        
+                        # Then write any other special sections
+                        for section_name in ['printers', 'print$']:
+                            if section_name in sections:
+                                temp_file.write(f"[{section_name}]\n")
+                                for key, value in sections[section_name].items():
+                                    temp_file.write(f"   {key} = {value}\n")
+                                temp_file.write("\n")
+                        
+                        temp_path = temp_file.name
+                        print(f"Created temporary main config at {temp_path}")
+                    
+                    # Backup original main config
+                    try:
+                        subprocess.run(['sudo', 'cp', SMB_CONF, f"{SMB_CONF}.bak"], check=True)
+                        print(f"Backed up {SMB_CONF} to {SMB_CONF}.bak")
+                    except Exception as e:
+                        print(f"Warning: Could not backup main config: {e}")
+                    
+                    # Use sudo to copy the temporary file to the correct location
+                    subprocess.run(['sudo', 'cp', temp_path, SMB_CONF], check=True)
+                    # Set proper permissions
+                    subprocess.run(['sudo', 'chmod', '644', SMB_CONF], check=True)
+                    os.unlink(temp_path)  # Remove the temp file
+                    print(f"Successfully removed shares from main config")
+        except Exception as e:
+            print(f"Warning: Could not check/update main config: {e}")
         
         # Ensure the include directive exists in the main config
         try:
@@ -421,10 +615,22 @@ def save_shares(shares):
                     
                     # Use sudo to copy the temporary file to the correct location
                     subprocess.run(['sudo', 'cp', temp_path, SMB_CONF], check=True)
+                    # Set proper permissions
+                    subprocess.run(['sudo', 'chmod', '644', SMB_CONF], check=True)
                     os.unlink(temp_path)  # Remove the temp file
                     print(f"Added include directive to {SMB_CONF}")
         except Exception as e:
             print(f"Warning: Could not update include directive: {e}")
+        
+        # Validate configuration before restarting
+        try:
+            validate_cmd = ['sudo', 'testparm', '-s']
+            validate_result = subprocess.run(validate_cmd, capture_output=True, text=True, check=False)
+            if validate_result.returncode != 0:
+                print(f"Warning: Samba configuration validation failed: {validate_result.stderr}")
+                # Continue anyway as testparm might have warnings but still be valid
+        except Exception as e:
+            print(f"Warning: Could not validate configuration: {e}")
         
         # Restart Samba service
         print("Restarting Samba service")
@@ -437,22 +643,71 @@ def save_shares(shares):
 
 def add_or_update_share(new_share):
     """Add or update a Samba share"""
+    # Ensure we have all required keys with normalized names
+    required_keys = ['name', 'path', 'browseable', 'read_only', 'guest_ok', 
+                     'valid_users', 'write_list', 'create_mask', 'directory_mask']
+    
+    # Add default values for missing keys
+    defaults = {
+        'comment': '',
+        'browseable': 'yes',
+        'read_only': 'no',
+        'guest_ok': 'no',
+        'valid_users': '',
+        'write_list': '',
+        'create_mask': '0775',
+        'directory_mask': '0775'
+    }
+    
+    for key, value in defaults.items():
+        if key not in new_share or not new_share[key]:
+            new_share[key] = value
+    
+    # Load existing shares
     shares = load_shares()
+    
+    # Check if we're updating an existing share
     for idx, s in enumerate(shares):
         if s['name'] == new_share['name']:
             shares[idx] = new_share
             break
     else:
+        # Share doesn't exist, add it
         shares.append(new_share)
     
     # Ensure the share directory exists with proper permissions
     create_share_directory(new_share['name'], new_share['path'])
     
+    # Save the updated shares
     return save_shares(shares)
 
 def delete_share(name):
-    shares = [s for s in load_shares() if s['name'] != name]
-    return save_shares(shares)
+    """Delete a Samba share by name and restart the service"""
+    try:
+        print(f"Deleting share: {name}")
+        shares = load_shares()
+        original_count = len(shares)
+        
+        # Filter out the share to delete
+        new_shares = [s for s in shares if s['name'] != name]
+        
+        if len(new_shares) == original_count:
+            print(f"Warning: Share '{name}' not found in configuration")
+            return False
+        
+        print(f"Removed share '{name}' from configuration")
+        
+        # Save the updated shares and restart Samba
+        result = save_shares(new_shares)
+        if result:
+            print(f"Successfully deleted share '{name}' and restarted Samba")
+        else:
+            print(f"Failed to save configuration after deleting share '{name}'")
+        
+        return result
+    except Exception as e:
+        print(f"Error deleting share: {e}")
+        return False
 
 def list_system_users():
     try:

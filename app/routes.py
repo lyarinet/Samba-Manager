@@ -67,6 +67,8 @@ def shares():
     print(f"Loaded {len(all_shares)} shares from configuration")
     for share in all_shares:
         print(f"Share: {share.get('name', 'unknown')} - Path: {share.get('path', 'unknown')}")
+        print(f"  valid_users: '{share.get('valid_users', '<missing>')}', write_list: '{share.get('write_list', '<missing>')}'")
+        print(f"  create_mask: '{share.get('create_mask', '<missing>')}', directory_mask: '{share.get('directory_mask', '<missing>')}'")
     
     # Sort shares: system shares first, then local shares
     system_shares = [s for s in all_shares if s['name'] in ['secure-share', 'share']]
@@ -120,20 +122,25 @@ def add_share():
         flash(f'Cannot create system share "{name}". Edit /etc/samba/smb.conf directly.', 'error')
         return redirect('/shares')
     
-    # Create new share
+    # Create new share with normalized key names
     share = {
         'name': name,
         'path': path,
         'comment': request.form.get('comment', ''),
         'browseable': 'yes' if request.form.get('browseable') else 'no',
-        'read only': 'yes' if request.form.get('read_only') else 'no',
-        'guest ok': 'yes' if request.form.get('guest_ok') else 'no',
-        'valid users': request.form.get('valid_users', ''),
-        'write list': request.form.get('write_list', ''),
-        'create mask': request.form.get('create_mask', '0744'),
-        'directory mask': request.form.get('directory_mask', '0755'),
-        'force group': 'smbusers'
+        'read_only': 'yes' if request.form.get('read_only') else 'no',
+        'guest_ok': 'yes' if request.form.get('guest_ok') else 'no',
+        'valid_users': request.form.get('valid_users', ''),
+        'write_list': request.form.get('write_list', ''),
+        'create_mask': request.form.get('create_mask', '0744'),
+        'directory_mask': request.form.get('directory_mask', '0755'),
+        'force_group': 'smbusers'
     }
+    
+    # Debug log the share data
+    print(f"Adding share: {name}")
+    for key, value in share.items():
+        print(f"  {key}: {value}")
     
     result = add_or_update_share(share)
     if result:
@@ -184,19 +191,25 @@ def edit_share():
             flash(f'A share with the name "{name}" already exists', 'error')
             return redirect('/shares')
     
-    # Update share
+    # Update share with normalized key names
     share = {
         'name': name,
         'path': path,
         'comment': request.form.get('comment', ''),
         'browseable': 'yes' if request.form.get('browseable') else 'no',
-        'read only': 'yes' if request.form.get('read_only') else 'no',
-        'guest ok': 'yes' if request.form.get('guest_ok') else 'no',
-        'valid users': request.form.get('valid_users', ''),
-        'write list': request.form.get('write_list', ''),
-        'create mask': request.form.get('create_mask', '0744'),
-        'directory mask': request.form.get('directory_mask', '0755')
+        'read_only': 'yes' if request.form.get('read_only') else 'no',
+        'guest_ok': 'yes' if request.form.get('guest_ok') else 'no',
+        'valid_users': request.form.get('valid_users', ''),
+        'write_list': request.form.get('write_list', ''),
+        'create_mask': request.form.get('create_mask', '0744'),
+        'directory_mask': request.form.get('directory_mask', '0755'),
+        'force_group': 'smbusers'
     }
+    
+    # Debug log the share data
+    print(f"Updating share: {name}")
+    for key, value in share.items():
+        print(f"  {key}: {value}")
     
     # If name was changed, delete the old share first
     if original_name != name:
@@ -231,6 +244,7 @@ def delete_share_route():
     else:
         flash('Failed to delete share', 'error')
     
+    # Force a page refresh to update the UI
     return redirect('/shares')
 
 @bp.route('/users', methods=['GET'])
