@@ -125,7 +125,8 @@ def add_share():
         'valid users': request.form.get('valid_users', ''),
         'write list': request.form.get('write_list', ''),
         'create mask': request.form.get('create_mask', '0744'),
-        'directory mask': request.form.get('directory_mask', '0755')
+        'directory mask': request.form.get('directory_mask', '0755'),
+        'force group': 'smbusers'
     }
     
     result = add_or_update_share(share)
