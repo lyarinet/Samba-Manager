@@ -486,13 +486,13 @@ def save_shares(shares):
             'path': 'path',
             'comment': 'comment',
             'browseable': 'browseable',
-            'read_only': 'read only',
-            'guest_ok': 'guest ok',
-            'valid_users': 'valid users',
-            'write_list': 'write list',
-            'create_mask': 'create mask',
-            'directory_mask': 'directory mask',
-            'force_group': 'force group'
+            'read only': 'read only',
+            'guest ok': 'guest ok',
+            'valid users': 'valid users',
+            'write list': 'write list',
+            'create mask': 'create mask',
+            'directory mask': 'directory mask',
+            'force group': 'force group'
         }
         
         # These fields should always be included in the config, even if empty
@@ -643,43 +643,62 @@ def save_shares(shares):
 
 def add_or_update_share(new_share):
     """Add or update a Samba share"""
-    # Ensure we have all required keys with normalized names
-    required_keys = ['name', 'path', 'browseable', 'read_only', 'guest_ok', 
-                     'valid_users', 'write_list', 'create_mask', 'directory_mask']
-    
-    # Add default values for missing keys
-    defaults = {
-        'comment': '',
-        'browseable': 'yes',
-        'read_only': 'no',
-        'guest_ok': 'no',
-        'valid_users': '',
-        'write_list': '',
-        'create_mask': '0775',
-        'directory_mask': '0775'
-    }
-    
-    for key, value in defaults.items():
-        if key not in new_share or not new_share[key]:
-            new_share[key] = value
-    
-    # Load existing shares
-    shares = load_shares()
-    
-    # Check if we're updating an existing share
-    for idx, s in enumerate(shares):
-        if s['name'] == new_share['name']:
-            shares[idx] = new_share
-            break
-    else:
-        # Share doesn't exist, add it
-        shares.append(new_share)
-    
-    # Ensure the share directory exists with proper permissions
-    create_share_directory(new_share['name'], new_share['path'])
-    
-    # Save the updated shares
-    return save_shares(shares)
+    try:
+        print(f"Adding or updating share: {new_share['name']}")
+        
+        # Ensure we have all required keys with normalized names
+        required_keys = ['name', 'path', 'browseable', 'read_only', 'guest_ok', 
+                         'valid_users', 'write_list', 'create_mask', 'directory_mask']
+        
+        # Add default values for missing keys
+        defaults = {
+            'comment': '',
+            'browseable': 'yes',
+            'read_only': 'no',
+            'guest_ok': 'no',
+            'valid_users': '',
+            'write_list': '',
+            'create_mask': '0775',
+            'directory_mask': '0775'
+        }
+        
+        for key, value in defaults.items():
+            if key not in new_share or not new_share[key]:
+                new_share[key] = value
+                print(f"Using default value for {key}: {value}")
+        
+        print(f"Processing share with path: {new_share['path']}")
+        
+        # Ensure the share directory exists with proper permissions
+        if not create_share_directory(new_share['name'], new_share['path']):
+            print(f"Failed to create or set permissions on share directory: {new_share['path']}")
+            return False
+        
+        # Load existing shares
+        shares = load_shares()
+        
+        # Check if we're updating an existing share
+        for idx, s in enumerate(shares):
+            if s['name'] == new_share['name']:
+                print(f"Updating existing share: {new_share['name']}")
+                shares[idx] = new_share
+                break
+        else:
+            # Share doesn't exist, add it
+            print(f"Adding new share: {new_share['name']}")
+            shares.append(new_share)
+        
+        # Save the updated shares
+        result = save_shares(shares)
+        if result:
+            print(f"Successfully saved share: {new_share['name']}")
+        else:
+            print(f"Failed to save share: {new_share['name']}")
+        
+        return result
+    except Exception as e:
+        print(f"Error adding or updating share: {e}")
+        return False
 
 def delete_share(name):
     """Delete a Samba share by name and restart the service"""
@@ -724,15 +743,108 @@ def list_system_groups():
         return []
 
 def validate_share_path(path):
-    """Validate if a share path exists and is accessible by Samba"""
-    if not os.path.exists(path):
-        return False, "Path does not exist"
-    
-    # Check if path is readable
-    if not os.access(path, os.R_OK):
-        return False, "Path is not readable"
-    
-    return True, "Path is valid"
+    """Validate if a share path exists and is accessible by Samba.
+    If the path doesn't exist, attempt to create it."""
+    try:
+        print(f"Validating share path: {path}")
+        
+        # Check if path exists
+        if not os.path.exists(path):
+            print(f"Path {path} does not exist, attempting to create it")
+            
+            # Create parent directories first if they don't exist
+            parent_dir = os.path.dirname(path)
+            if parent_dir and not os.path.exists(parent_dir):
+                print(f"Parent directory {parent_dir} does not exist, creating it first")
+                parent_result = subprocess.run(['sudo', 'mkdir', '-p', parent_dir], 
+                                             capture_output=True, text=True, check=False)
+                if parent_result.returncode != 0:
+                    error_msg = f"Could not create parent directory: {parent_result.stderr}"
+                    print(error_msg)
+                    return False, error_msg
+            
+            # Try to create the directory with sudo
+            result = subprocess.run(['sudo', 'mkdir', '-p', path], 
+                                   capture_output=True, text=True, check=False)
+            if result.returncode != 0:
+                error_msg = f"Path does not exist and could not be created: {result.stderr}"
+                print(error_msg)
+                return False, error_msg
+            
+            # Verify the directory was created
+            if not os.path.exists(path):
+                error_msg = f"Directory creation command completed but path still doesn't exist: {path}"
+                print(error_msg)
+                return False, "Path could not be created"
+            
+            print(f"Successfully created directory: {path}")
+            
+            # Create smbusers group if it doesn't exist
+            try:
+                grp.getgrnam('smbusers')
+                print("smbusers group exists")
+            except KeyError:
+                print("Creating smbusers group")
+                group_result = subprocess.run(['sudo', 'groupadd', 'smbusers'], 
+                                            capture_output=True, text=True, check=False)
+                if group_result.returncode != 0:
+                    print(f"Warning: Could not create smbusers group: {group_result.stderr}")
+            
+            # Set proper permissions on the new directory
+            print(f"Setting ownership for {path}")
+            chown_result = subprocess.run(['sudo', 'chown', '-R', 'root:smbusers', path], 
+                                        capture_output=True, text=True, check=False)
+            if chown_result.returncode != 0:
+                print(f"Warning: Could not set ownership: {chown_result.stderr}")
+            
+            print(f"Setting permissions for {path}")
+            chmod_result = subprocess.run(['sudo', 'chmod', '-R', '2775', path], 
+                                        capture_output=True, text=True, check=False)
+            if chmod_result.returncode != 0:
+                print(f"Warning: Could not set permissions: {chmod_result.stderr}")
+        else:
+            print(f"Path {path} already exists")
+        
+        # Check if path is readable
+        try:
+            # Use sudo to check if the path is readable
+            read_result = subprocess.run(['sudo', 'test', '-r', path], 
+                                       capture_output=True, text=True, check=False)
+            if read_result.returncode != 0:
+                error_msg = f"Path is not readable: {path}"
+                print(error_msg)
+                return False, "Path is not readable"
+        except Exception as e:
+            print(f"Error checking read access: {e}")
+            # Fall back to direct check if sudo test fails
+            if not os.access(path, os.R_OK):
+                error_msg = f"Path is not readable (direct check): {path}"
+                print(error_msg)
+                return False, "Path is not readable"
+        
+        # Check if path is writable
+        try:
+            # Use sudo to check if the path is writable
+            write_result = subprocess.run(['sudo', 'test', '-w', path], 
+                                        capture_output=True, text=True, check=False)
+            if write_result.returncode != 0:
+                error_msg = f"Path is not writable: {path}"
+                print(error_msg)
+                return False, "Path is not writable"
+        except Exception as e:
+            print(f"Error checking write access: {e}")
+            # Fall back to direct check if sudo test fails
+            if not os.access(path, os.W_OK):
+                error_msg = f"Path is not writable (direct check): {path}"
+                print(error_msg)
+                return False, "Path is not writable"
+        
+        print(f"Path validation successful for {path}")
+        return True, "Path is valid and accessible"
+    except Exception as e:
+        error_msg = f"Error validating share path: {e}"
+        print(error_msg)
+        return False, f"Error validating path: {str(e)}"
 
 def export_config():
     try:
@@ -1041,19 +1153,26 @@ def create_share_directory(name, path):
         return True
         
     try:
-        # Create the directory
-        run_command(['sudo', 'mkdir', '-p', path])
+        print(f"Creating or ensuring share directory exists: {path}")
         
-        # Create smbusers group if it doesn't exist
-        try:
-            grp.getgrnam('smbusers')
-        except KeyError:
-            run_command(['sudo', 'groupadd', 'smbusers'])
+        # First validate the path - this will create it if needed
+        valid, message = validate_share_path(path)
+        if not valid:
+            print(f"Failed to validate/create share path: {message}")
+            return False
         
-        # Set permissions
-        run_command(['sudo', 'chown', '-R', 'root:smbusers', path])
-        run_command(['sudo', 'chmod', '-R', '2770', path])  # 2 sets the SGID bit
+        print(f"Path validation successful: {message}")
         
+        # Double-check that the directory exists after validation
+        if not os.path.exists(path):
+            print(f"Error: Path {path} still doesn't exist after validation")
+            return False
+        
+        # Set additional share-specific permissions if needed
+        # For example, you might want to set specific ACLs or extended attributes
+        
+        # Verify the directory is properly set up
+        print(f"Successfully created/updated share directory: {path}")
         return True
     except Exception as e:
         print(f"Error creating share directory: {e}")

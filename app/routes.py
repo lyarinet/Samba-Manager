@@ -94,23 +94,6 @@ def add_share():
     name = request.form['name']
     path = request.form['path']
     
-    # Validate path
-    valid, message = validate_share_path(path)
-    if not valid and not os.path.exists(path):
-        # Try to create the directory
-        try:
-            # Use sudo to create the directory
-            subprocess.run(['sudo', 'mkdir', '-p', path], check=True)
-            valid = os.path.exists(path)
-            if valid:
-                message = "Path created successfully"
-        except Exception as e:
-            message = f"Failed to create path: {str(e)}"
-    
-    if not valid:
-        flash(f'Invalid path: {message}', 'error')
-        return redirect('/shares')
-    
     # Check if share name already exists
     all_shares = load_shares()
     if any(s['name'] == name for s in all_shares):
@@ -121,6 +104,14 @@ def add_share():
     if name in ['secure-share', 'share']:
         flash(f'Cannot create system share "{name}". Edit /etc/samba/smb.conf directly.', 'error')
         return redirect('/shares')
+    
+    # Validate and create path if needed
+    valid, message = validate_share_path(path)
+    if not valid:
+        flash(f'Invalid path: {message}', 'error')
+        return redirect('/shares')
+    else:
+        print(f"Path validation successful: {message}")
     
     # Create new share with normalized key names
     share = {
@@ -167,29 +158,20 @@ def edit_share():
         flash(f'Cannot modify system share "{original_name}". Edit /etc/samba/smb.conf directly.', 'error')
         return redirect('/shares')
     
-    # Validate path
-    valid, message = validate_share_path(path)
-    if not valid and not os.path.exists(path):
-        # Try to create the directory
-        try:
-            # Use sudo to create the directory
-            subprocess.run(['sudo', 'mkdir', '-p', path], check=True)
-            valid = os.path.exists(path)
-            if valid:
-                message = "Path created successfully"
-        except Exception as e:
-            message = f"Failed to create path: {str(e)}"
-    
-    if not valid:
-        flash(f'Invalid path: {message}', 'error')
-        return redirect('/shares')
-    
     # Check if new name already exists (if name was changed)
     if original_name != name:
         all_shares = load_shares()
         if any(s['name'] == name for s in all_shares):
             flash(f'A share with the name "{name}" already exists', 'error')
             return redirect('/shares')
+    
+    # Validate and create path if needed
+    valid, message = validate_share_path(path)
+    if not valid:
+        flash(f'Invalid path: {message}', 'error')
+        return redirect('/shares')
+    else:
+        print(f"Path validation successful: {message}")
     
     # Update share with normalized key names
     share = {
