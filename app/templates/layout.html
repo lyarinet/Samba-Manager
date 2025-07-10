@@ -9,6 +9,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <style>
     :root {
       /* Modern color palette */
@@ -375,6 +376,75 @@
       color: #d1d8e0 !important;
     }
     
+    /* Improve dropdown visibility */
+    .dropdown-menu {
+      background-color: var(--bg-card);
+      border-color: var(--border-color);
+    }
+    
+    .dropdown-item {
+      color: var(--text-primary);
+    }
+    
+    .dropdown-item:hover, .dropdown-item:focus {
+      background-color: rgba(255, 255, 255, 0.1);
+      color: var(--text-primary);
+    }
+    
+    .dropdown-divider {
+      border-top-color: var(--border-color);
+    }
+    
+    /* Improve select elements and options visibility */
+    select.form-select {
+      background-color: var(--bg-card);
+      color: var(--text-primary);
+      border-color: var(--border-color);
+      cursor: pointer;
+      appearance: auto;
+      -webkit-appearance: menulist;
+      -moz-appearance: menulist;
+      z-index: 100;
+      position: relative;
+    }
+    
+    /* Enhanced select for better clickability */
+    .select-enhanced {
+      cursor: pointer !important;
+      position: relative;
+      z-index: 10;
+    }
+    
+    select.form-select option {
+      background-color: var(--bg-card);
+      color: var(--text-primary);
+    }
+    
+    /* Fix input fields */
+    input.form-control {
+      background-color: var(--bg-card);
+      color: var(--text-primary);
+      border-color: var(--border-color);
+      position: relative;
+      z-index: 5;
+    }
+    
+    /* Fix textarea fields */
+    textarea.form-control {
+      background-color: var(--bg-card);
+      color: var(--text-primary);
+      border-color: var(--border-color);
+    }
+    
+    /* Fix form elements focus state */
+    .form-control:focus,
+    .form-select:focus {
+      background-color: var(--bg-dark);
+      color: var(--text-primary);
+      border-color: var(--primary);
+      box-shadow: 0 0 0 0.25rem rgba(99, 102, 241, 0.25);
+    }
+    
     /* Fix visibility for margin-bottom classes with text */
     .mb-1, .mb-2, .mb-3, .mb-4, .mb-5 {
       color: inherit !important; /* Inherit color from parent */
@@ -570,7 +640,6 @@
   </div>
   
   <!-- Scripts -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       const sidebar = document.getElementById('sidebar');
@@ -603,6 +672,55 @@
       window.addEventListener('resize', function() {
         if (window.innerWidth >= 768) {
           sidebar.classList.remove('show');
+        }
+      });
+      
+      // Initialize Bootstrap dropdowns
+      var dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'))
+      var dropdownList = dropdownElementList.map(function (dropdownToggleEl) {
+        return new bootstrap.Dropdown(dropdownToggleEl)
+      });
+      
+      // Fix for dropdown click events
+      document.querySelectorAll('.dropdown-toggle').forEach(function(element) {
+        element.addEventListener('click', function(e) {
+          e.stopPropagation();
+          e.preventDefault();
+          var dropdown = bootstrap.Dropdown.getInstance(element);
+          if (!dropdown) {
+            dropdown = new bootstrap.Dropdown(element);
+          }
+          dropdown.toggle();
+        });
+      });
+      
+      // Fix for select elements in dark mode
+      document.querySelectorAll('select.form-select').forEach(function(select) {
+        if (!select.disabled) {
+          // Add a click handler to ensure the dropdown opens
+          select.addEventListener('mousedown', function(e) {
+            // This helps ensure the dropdown opens properly
+            e.stopPropagation();
+          });
+          
+          // Add a custom class to make it more clickable
+          select.classList.add('select-enhanced');
+        }
+      });
+      
+      // Fix for input fields in dark mode
+      document.querySelectorAll('input.form-control, textarea.form-control').forEach(function(input) {
+        if (!input.disabled) {
+          // Make sure inputs are properly focused and clickable
+          input.addEventListener('click', function(e) {
+            e.stopPropagation();
+            this.focus();
+          });
+          
+          // Prevent any parent elements from stealing focus
+          input.addEventListener('focus', function(e) {
+            e.stopPropagation();
+          });
         }
       });
     });

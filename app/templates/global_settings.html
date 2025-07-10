@@ -2,7 +2,7 @@
 {% block content %}
 <div class="page-header">
 <h2>Global Settings</h2>
-  <button type="submit" form="settingsForm" class="btn btn-primary">
+  <button type="submit" form="settingsForm" class="btn btn-primary" {% if not has_sudo %}disabled{% endif %}>
     <i class="bi bi-save me-1"></i> Save Changes
   </button>
 </div>
@@ -243,4 +243,20 @@
     </div>
   </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Fix for select elements in dark mode
+    document.querySelectorAll('select.form-select').forEach(function(select) {
+      select.addEventListener('mousedown', function(e) {
+        if (!this.disabled) {
+          // This helps ensure the dropdown opens properly
+          e.stopPropagation();
+        }
+      });
+    });
+  });
+</script>
 {% endblock %}

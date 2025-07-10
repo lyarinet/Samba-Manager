@@ -3,6 +3,7 @@ import io
 import os
 import subprocess
 from .samba_utils import *
+import tempfile
 
 bp = Blueprint('main', __name__)
 
@@ -411,17 +412,39 @@ def edit_config():
     if request.method == 'POST':
         if 'main_config' in request.form:
             try:
-                with open(config_file, 'w') as f:
-                    f.write(request.form['main_config'])
+                # Create a temporary file
+                with tempfile.NamedTemporaryFile(mode='w', delete=False) as temp_file:
+                    temp_file.write(request.form['main_config'])
+                    temp_path = temp_file.name
+                
+                # Use sudo to move the file to the correct location
+                result = subprocess.run(
+                    ['sudo', 'cp', temp_path, config_file],
+                    capture_output=True, text=True, check=True
+                )
+                os.unlink(temp_path)  # Remove the temp file
                 flash('Main configuration file updated successfully', 'success')
+            except subprocess.CalledProcessError as e:
+                flash(f'Error updating main configuration: {e.stderr}', 'error')
             except Exception as e:
                 flash(f'Error updating main configuration: {str(e)}', 'error')
         
         if 'share_config' in request.form:
             try:
-                with open(share_file, 'w') as f:
-                    f.write(request.form['share_config'])
+                # Create a temporary file
+                with tempfile.NamedTemporaryFile(mode='w', delete=False) as temp_file:
+                    temp_file.write(request.form['share_config'])
+                    temp_path = temp_file.name
+                
+                # Use sudo to move the file to the correct location
+                result = subprocess.run(
+                    ['sudo', 'cp', temp_path, share_file],
+                    capture_output=True, text=True, check=True
+                )
+                os.unlink(temp_path)  # Remove the temp file
                 flash('Share configuration file updated successfully', 'success')
+            except subprocess.CalledProcessError as e:
+                flash(f'Error updating share configuration: {e.stderr}', 'error')
             except Exception as e:
                 flash(f'Error updating share configuration: {str(e)}', 'error')
         
@@ -439,15 +462,25 @@ def edit_config():
     
     try:
         if os.path.exists(config_file):
-            with open(config_file, 'r') as f:
-                main_config = f.read()
+            result = subprocess.run(
+                ['sudo', 'cat', config_file],
+                capture_output=True, text=True, check=True
+            )
+            main_config = result.stdout
+    except subprocess.CalledProcessError as e:
+        flash(f'Error reading main configuration: {e.stderr}', 'error')
     except Exception as e:
         flash(f'Error reading main configuration: {str(e)}', 'error')
     
     try:
         if os.path.exists(share_file):
-            with open(share_file, 'r') as f:
-                share_config = f.read()
+            result = subprocess.run(
+                ['sudo', 'cat', share_file],
+                capture_output=True, text=True, check=True
+            )
+            share_config = result.stdout
+    except subprocess.CalledProcessError as e:
+        flash(f'Error reading share configuration: {e.stderr}', 'error')
     except Exception as e:
         flash(f'Error reading share configuration: {str(e)}', 'error')
     
