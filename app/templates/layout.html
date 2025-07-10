@@ -445,6 +445,89 @@
       box-shadow: 0 0 0 0.25rem rgba(99, 102, 241, 0.25);
     }
     
+    /* Fix modal styling */
+    .modal-content {
+      background-color: var(--bg-card);
+      color: var(--text-primary);
+      border-color: var(--border-color);
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+    }
+    
+    /* Add a subtle border glow to modals */
+    .modal-dialog {
+      border-radius: 0.5rem;
+      box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.2);
+    }
+    
+    /* Improve modal backdrop */
+    .modal-backdrop {
+      background-color: rgba(0, 0, 0, 0.7);
+    }
+    
+    .modal-backdrop.show {
+      opacity: 1;
+    }
+    
+    .modal-header {
+      border-bottom-color: var(--border-color);
+    }
+    
+    .modal-footer {
+      border-top-color: var(--border-color);
+    }
+    
+    .modal-title {
+      color: var(--text-primary);
+    }
+    
+    /* Fix modal form labels */
+    .modal-content label {
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+    
+    /* Fix modal form inputs */
+    .modal-content .form-control,
+    .modal-content .form-select {
+      background-color: #1a2234;
+      color: var(--text-primary);
+      border-color: var(--border-color);
+    }
+    
+    /* Fix placeholder text in modals */
+    .modal-content .form-control::placeholder {
+      color: #8b95a8;
+      opacity: 1;
+    }
+    
+    /* Fix form check labels */
+    .form-check-label {
+      color: var(--text-primary);
+    }
+    
+    /* Fix form switch styling */
+    .form-switch .form-check-input {
+      background-color: #3a4559;
+      border-color: #2c3548;
+    }
+    
+    .form-switch .form-check-input:checked {
+      background-color: var(--primary);
+      border-color: var(--primary-dark);
+    }
+    
+    /* Fix modal form inputs focus */
+    .modal-content .form-control:focus,
+    .modal-content .form-select:focus {
+      background-color: #141b2d;
+      border-color: var(--primary);
+    }
+    
+    /* Fix modal form text help */
+    .modal-content .form-text {
+      color: var(--text-muted);
+    }
+    
     /* Fix visibility for margin-bottom classes with text */
     .mb-1, .mb-2, .mb-3, .mb-4, .mb-5 {
       color: inherit !important; /* Inherit color from parent */
