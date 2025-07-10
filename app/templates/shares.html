@@ -7,6 +7,14 @@
   </button>
 </div>
 
+{% if not has_sudo %}
+<div class="alert alert-warning mb-4">
+  <i class="bi bi-shield-exclamation me-2"></i>
+  <strong>Warning:</strong> Sudo access is required to manage Samba shares.
+  Run this application with sudo privileges to enable full functionality.
+</div>
+{% endif %}
+
 {% if shares %}
 <div class="card">
   <div class="card-body p-0">

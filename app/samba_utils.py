@@ -23,8 +23,10 @@ def parse_share_section(content):
     shares = []
     lines = content.split('\n')
     
+    print(f"Parsing content with {len(lines)} lines")
+    
     current_share = None
-    for line in lines:
+    for line_num, line in enumerate(lines):
         line = line.strip()
         if not line or line.startswith('#') or line.startswith(';'):
             continue
@@ -33,17 +35,22 @@ def parse_share_section(content):
         if line.startswith('[') and line.endswith(']') and not line == '[global]' and not line == '[printers]' and not line == '[print$]':
             if current_share:
                 shares.append(current_share)
+                print(f"Added share: {current_share['name']}")
             share_name = line[1:-1]
+            print(f"Found share section at line {line_num+1}: {share_name}")
             current_share = {'name': share_name}
         # Check for parameters within a share
         elif current_share and '=' in line:
             key, value = [x.strip() for x in line.split('=', 1)]
             current_share[key] = value
+            print(f"  Parameter: {key} = {value}")
             
     # Add the last share if exists
     if current_share:
         shares.append(current_share)
+        print(f"Added final share: {current_share['name']}")
         
+    print(f"Parsed {len(shares)} shares from content")
     return shares
 
 # Function to auto-detect share directories
@@ -248,67 +255,151 @@ def load_shares():
     """Load shares from both development and actual Samba configuration files"""
     shares = []
     
+    print(f"Loading shares. DEV_MODE={DEV_MODE}, SHARE_CONF={SHARE_CONF}, ACTUAL_SMB_CONF={ACTUAL_SMB_CONF}")
+    
     # Load shares from development file if in DEV_MODE
     if DEV_MODE and os.path.exists(SHARE_CONF):
         try:
+            print(f"Loading shares from development file: {SHARE_CONF}")
             with open(SHARE_CONF, 'r') as f:
                 content = f.read()
-            shares.extend(parse_share_section(content))
+            dev_shares = parse_share_section(content)
+            shares.extend(dev_shares)
+            print(f"Loaded {len(dev_shares)} shares from development file")
         except Exception as e:
             print(f"Error loading development shares: {e}")
     
     # Always try to load shares from the actual Samba configuration
     if os.path.exists(ACTUAL_SMB_CONF):
         try:
-            with open(ACTUAL_SMB_CONF, 'r') as f:
-                content = f.read()
-            # Add shares from actual Samba config
+            print(f"Loading shares from actual Samba config: {ACTUAL_SMB_CONF}")
+            # Use sudo to read the file
+            result = subprocess.run(['sudo', 'cat', ACTUAL_SMB_CONF], capture_output=True, text=True, check=True)
+            content = result.stdout
+            print(f"Read {len(content)} bytes from main config file")
+            
+            # Check if the file includes the shares.conf
+            include_match = re.search(r'include\s*=\s*(\S+)', content)
+            if include_match:
+                shares_file = include_match.group(1)
+                print(f"Found include directive for: {shares_file}")
+                
+                # Read the shares file directly
+                if os.path.exists(shares_file):
+                    try:
+                        print(f"Reading shares file: {shares_file}")
+                        shares_result = subprocess.run(['sudo', 'cat', shares_file], capture_output=True, text=True, check=True)
+                        shares_content = shares_result.stdout
+                        print(f"Read {len(shares_content)} bytes from shares file")
+                        
+                        # Parse shares from the shares file
+                        shares_from_file = parse_share_section(shares_content)
+                        print(f"Found {len(shares_from_file)} shares in shares file")
+                        shares.extend(shares_from_file)
+                    except Exception as e:
+                        print(f"Error reading shares file: {e}")
+            
+            # Also parse the main config file for any shares defined there
             actual_shares = parse_share_section(content)
+            print(f"Found {len(actual_shares)} shares in actual Samba config")
             
             # Merge with existing shares, avoiding duplicates
             share_names = [s['name'] for s in shares]
+            added_count = 0
             for share in actual_shares:
                 if share['name'] not in share_names and share['name'] not in ['printers', 'print$']:
                     shares.append(share)
                     share_names.append(share['name'])
+                    added_count += 1
+            print(f"Added {added_count} unique shares from actual Samba config")
         except Exception as e:
             print(f"Error loading actual Samba shares: {e}")
+    else:
+        print(f"Actual Samba config file not found: {ACTUAL_SMB_CONF}")
     
     # Create empty shares file if it doesn't exist in DEV_MODE
     if DEV_MODE and not os.path.exists(SHARE_CONF):
         try:
+            print(f"Creating empty shares file: {SHARE_CONF}")
             with open(SHARE_CONF, 'w') as f:
                 f.write("# Samba shares configuration\n")
         except Exception as e:
             print(f"Error creating shares file: {e}")
     
+    print(f"Total shares loaded: {len(shares)}")
     return shares
 
 def save_shares(shares):
     try:
-        # Backup original shares file
-        if os.path.exists(SHARE_CONF):
-            with open(f"{SHARE_CONF}.bak", 'w') as f_bak:
-                with open(SHARE_CONF, 'r') as f_orig:
-                    f_bak.write(f_orig.read())
+        print(f"Saving {len(shares)} shares to {SHARE_CONF}")
         
-        # Write new shares configuration
-        with open(SHARE_CONF, 'w') as f:
-            f.write("# Samba shares configuration\n\n")
+        # Create temporary file with new configuration
+        import tempfile
+        with tempfile.NamedTemporaryFile(mode='w', delete=False) as temp_file:
+            temp_file.write("# Samba shares configuration\n\n")
             for s in shares:
-                f.write(f"[{s['name']}]\n")
+                temp_file.write(f"[{s['name']}]\n")
                 for key in s:
                     if key != 'name':
-                        f.write(f"   {key} = {s[key]}\n")
-                f.write('\n')
+                        temp_file.write(f"   {key} = {s[key]}\n")
+                temp_file.write('\n')
+            temp_path = temp_file.name
+            print(f"Created temporary file at {temp_path}")
+        
+        # Backup original shares file if it exists
+        if os.path.exists(SHARE_CONF):
+            try:
+                subprocess.run(['sudo', 'cp', SHARE_CONF, f"{SHARE_CONF}.bak"], check=True)
+                print(f"Backed up {SHARE_CONF} to {SHARE_CONF}.bak")
+            except Exception as e:
+                print(f"Warning: Could not backup shares file: {e}")
+        
+        # Use sudo to copy the temporary file to the correct location
+        try:
+            print(f"Copying temporary file to {SHARE_CONF}")
+            subprocess.run(['sudo', 'cp', temp_path, SHARE_CONF], check=True)
+            os.unlink(temp_path)  # Remove the temp file
+            print(f"Successfully copied configuration to {SHARE_CONF}")
+        except Exception as e:
+            print(f"Error copying shares file: {e}")
+            return False
+        
+        # Ensure the include directive exists in the main config
+        try:
+            if os.path.exists(SMB_CONF):
+                print(f"Checking for include directive in {SMB_CONF}")
+                with open(SMB_CONF, 'r') as f:
+                    content = f.read()
+                
+                if f"include = {SHARE_CONF}" not in content:
+                    print(f"Adding include directive to {SMB_CONF}")
+                    # Create a temporary file with updated content
+                    with tempfile.NamedTemporaryFile(mode='w', delete=False) as temp_file:
+                        if '[global]' in content:
+                            new_content = content.replace('[global]', f'[global]\n   include = {SHARE_CONF}')
+                        else:
+                            new_content = f"[global]\n   include = {SHARE_CONF}\n\n{content}"
+                        temp_file.write(new_content)
+                        temp_path = temp_file.name
+                    
+                    # Use sudo to copy the temporary file to the correct location
+                    subprocess.run(['sudo', 'cp', temp_path, SMB_CONF], check=True)
+                    os.unlink(temp_path)  # Remove the temp file
+                    print(f"Added include directive to {SMB_CONF}")
+        except Exception as e:
+            print(f"Warning: Could not update include directive: {e}")
         
         # Restart Samba service
-        return restart_samba_service()
+        print("Restarting Samba service")
+        result = restart_samba_service()
+        print(f"Samba service restart {'successful' if result else 'failed'}")
+        return result
     except Exception as e:
         print(f"Error saving shares: {e}")
         return False
 
 def add_or_update_share(new_share):
+    """Add or update a Samba share"""
     shares = load_shares()
     for idx, s in enumerate(shares):
         if s['name'] == new_share['name']:

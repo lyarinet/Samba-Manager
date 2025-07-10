@@ -55,76 +55,174 @@ def global_settings():
 
 @bp.route('/shares', methods=['GET', 'POST'])
 def shares():
-    if request.method == 'POST':
-        if not check_sudo_access():
-            flash('Error: Sudo access is required to modify Samba shares', 'error')
-            return redirect('/shares')
-            
-        if 'delete' in request.form:
-            share_name = request.form['name']
-            # Check if it's a system share
-            if share_name in ['secure-share', 'share']:
-                flash(f'Cannot delete system share "{share_name}". Edit /etc/samba/smb.conf directly.', 'error')
-                return redirect('/shares')
-                
-            result = delete_share(share_name)
-            if result:
-                flash('Share deleted and Samba service restarted', 'success')
-            else:
-                flash('Failed to delete share', 'error')
-        else:
-            path = request.form['path']
-            
-            # Validate path
-            valid, message = validate_share_path(path)
-            if not valid and not os.path.exists(path):
-                # Try to create the directory
-                try:
-                    os.makedirs(path, exist_ok=True)
-                    valid = os.path.exists(path)
-                    if valid:
-                        message = "Path created successfully"
-                except Exception as e:
-                    message = f"Failed to create path: {str(e)}"
-            
-            if not valid:
-                flash(f'Invalid path: {message}', 'error')
-                return redirect('/shares')
-                
-            share = {
-                'name': request.form['name'],
-                'path': path,
-                'read only': request.form.get('readonly', 'no'),
-                'valid users': request.form.get('valid_users', ''),
-                'vfs objects': request.form.get('vfs', ''),
-            }
-            
-            # Check if it's trying to override a system share
-            if share['name'] in ['secure-share', 'share']:
-                flash(f'Cannot modify system share "{share["name"]}". Edit /etc/samba/smb.conf directly.', 'error')
-                return redirect('/shares')
-            
-            result = add_or_update_share(share)
-            if result:
-                flash('Share saved and Samba service restarted', 'success')
-            else:
-                flash('Failed to save share', 'error')
-                
-        return redirect('/shares')
-        
     has_sudo = check_sudo_access()
     all_shares = load_shares()
+    
+    # Debug logging
+    print(f"Loaded {len(all_shares)} shares from configuration")
+    for share in all_shares:
+        print(f"Share: {share.get('name', 'unknown')} - Path: {share.get('path', 'unknown')}")
     
     # Sort shares: system shares first, then local shares
     system_shares = [s for s in all_shares if s['name'] in ['secure-share', 'share']]
     local_shares = [s for s in all_shares if s['name'] not in ['secure-share', 'share']]
     sorted_shares = system_shares + local_shares
     
+    print(f"Sending {len(sorted_shares)} shares to template")
+    
     return render_template('shares.html', 
                           shares=sorted_shares, 
                           users=list_system_users(), 
                           groups=list_system_groups(),
                           has_sudo=has_sudo)
+
+@bp.route('/add-share', methods=['POST'])
+def add_share():
+    has_sudo = check_sudo_access()
+    if not has_sudo:
+        flash('Error: Sudo access is required to add shares', 'error')
+        return redirect('/shares')
+    
+    name = request.form['name']
+    path = request.form['path']
+    
+    # Validate path
+    valid, message = validate_share_path(path)
+    if not valid and not os.path.exists(path):
+        # Try to create the directory
+        try:
+            # Use sudo to create the directory
+            subprocess.run(['sudo', 'mkdir', '-p', path], check=True)
+            valid = os.path.exists(path)
+            if valid:
+                message = "Path created successfully"
+        except Exception as e:
+            message = f"Failed to create path: {str(e)}"
+    
+    if not valid:
+        flash(f'Invalid path: {message}', 'error')
+        return redirect('/shares')
+    
+    # Check if share name already exists
+    all_shares = load_shares()
+    if any(s['name'] == name for s in all_shares):
+        flash(f'A share with the name "{name}" already exists', 'error')
+        return redirect('/shares')
+    
+    # Check if it's trying to override a system share
+    if name in ['secure-share', 'share']:
+        flash(f'Cannot create system share "{name}". Edit /etc/samba/smb.conf directly.', 'error')
+        return redirect('/shares')
+    
+    # Create new share
+    share = {
+        'name': name,
+        'path': path,
+        'comment': request.form.get('comment', ''),
+        'browseable': 'yes' if request.form.get('browseable') else 'no',
+        'read only': 'yes' if request.form.get('read_only') else 'no',
+        'guest ok': 'yes' if request.form.get('guest_ok') else 'no',
+        'valid users': request.form.get('valid_users', ''),
+        'write list': request.form.get('write_list', ''),
+        'create mask': request.form.get('create_mask', '0744'),
+        'directory mask': request.form.get('directory_mask', '0755')
+    }
+    
+    result = add_or_update_share(share)
+    if result:
+        flash('Share added successfully and Samba service restarted', 'success')
+    else:
+        flash('Failed to add share', 'error')
+    
+    return redirect('/shares')
+
+@bp.route('/edit-share', methods=['POST'])
+def edit_share():
+    has_sudo = check_sudo_access()
+    if not has_sudo:
+        flash('Error: Sudo access is required to modify shares', 'error')
+        return redirect('/shares')
+    
+    original_name = request.form['original_name']
+    name = request.form['name']
+    path = request.form['path']
+    
+    # Check if it's a system share
+    if original_name in ['secure-share', 'share']:
+        flash(f'Cannot modify system share "{original_name}". Edit /etc/samba/smb.conf directly.', 'error')
+        return redirect('/shares')
+    
+    # Validate path
+    valid, message = validate_share_path(path)
+    if not valid and not os.path.exists(path):
+        # Try to create the directory
+        try:
+            # Use sudo to create the directory
+            subprocess.run(['sudo', 'mkdir', '-p', path], check=True)
+            valid = os.path.exists(path)
+            if valid:
+                message = "Path created successfully"
+        except Exception as e:
+            message = f"Failed to create path: {str(e)}"
+    
+    if not valid:
+        flash(f'Invalid path: {message}', 'error')
+        return redirect('/shares')
+    
+    # Check if new name already exists (if name was changed)
+    if original_name != name:
+        all_shares = load_shares()
+        if any(s['name'] == name for s in all_shares):
+            flash(f'A share with the name "{name}" already exists', 'error')
+            return redirect('/shares')
+    
+    # Update share
+    share = {
+        'name': name,
+        'path': path,
+        'comment': request.form.get('comment', ''),
+        'browseable': 'yes' if request.form.get('browseable') else 'no',
+        'read only': 'yes' if request.form.get('read_only') else 'no',
+        'guest ok': 'yes' if request.form.get('guest_ok') else 'no',
+        'valid users': request.form.get('valid_users', ''),
+        'write list': request.form.get('write_list', ''),
+        'create mask': request.form.get('create_mask', '0744'),
+        'directory mask': request.form.get('directory_mask', '0755')
+    }
+    
+    # If name was changed, delete the old share first
+    if original_name != name:
+        delete_share(original_name)
+    
+    result = add_or_update_share(share)
+    if result:
+        flash('Share updated successfully and Samba service restarted', 'success')
+    else:
+        flash('Failed to update share', 'error')
+    
+    return redirect('/shares')
+
+@bp.route('/delete-share', methods=['POST'])
+def delete_share_route():
+    has_sudo = check_sudo_access()
+    if not has_sudo:
+        flash('Error: Sudo access is required to delete shares', 'error')
+        return redirect('/shares')
+    
+    share_name = request.form['name']
+    
+    # Check if it's a system share
+    if share_name in ['secure-share', 'share']:
+        flash(f'Cannot delete system share "{share_name}". Edit /etc/samba/smb.conf directly.', 'error')
+        return redirect('/shares')
+    
+    result = delete_share(share_name)
+    if result:
+        flash('Share deleted successfully and Samba service restarted', 'success')
+    else:
+        flash('Failed to delete share', 'error')
+    
+    return redirect('/shares')
 
 @bp.route('/users', methods=['GET'])
 def users():
