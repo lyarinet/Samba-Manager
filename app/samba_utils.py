@@ -1503,8 +1503,41 @@ def delete_system_group(group_name):
                 primary_users.append(user.pw_name)
         
         if primary_users:
-            print(f"Cannot delete group {group_name}: It is the primary group for user(s): {', '.join(primary_users)}")
-            return False
+            print(f"Group {group_name} is the primary group for user(s): {', '.join(primary_users)}")
+            
+            # Try to find a suitable alternative group
+            try:
+                # Try to use 'users' group if it exists
+                alt_group = 'users'
+                grp.getgrnam(alt_group)
+                
+                # Change primary group for each user
+                for username in primary_users:
+                    print(f"Changing primary group for user {username} from {group_name} to {alt_group}")
+                    result = subprocess.run(['sudo', 'usermod', '-g', alt_group, username], 
+                                          capture_output=True, text=True, check=False)
+                    if result.returncode != 0:
+                        print(f"Error changing primary group for user {username}: {result.stderr}")
+                        return False
+                    print(f"Successfully changed primary group for user {username}")
+            except KeyError:
+                # If 'users' group doesn't exist, create it
+                print(f"Creating alternative group 'users'")
+                create_result = subprocess.run(['sudo', 'groupadd', 'users'], 
+                                             capture_output=True, text=True, check=False)
+                if create_result.returncode != 0:
+                    print(f"Error creating alternative group: {create_result.stderr}")
+                    return False
+                
+                # Change primary group for each user
+                for username in primary_users:
+                    print(f"Changing primary group for user {username} from {group_name} to users")
+                    result = subprocess.run(['sudo', 'usermod', '-g', 'users', username], 
+                                          capture_output=True, text=True, check=False)
+                    if result.returncode != 0:
+                        print(f"Error changing primary group for user {username}: {result.stderr}")
+                        return False
+                    print(f"Successfully changed primary group for user {username}")
         
         # Delete the group
         print(f"Deleting system group: {group_name}")

@@ -871,25 +871,25 @@ def delete_group(group_name):
         flash(f'Group {group_name} does not exist', 'error')
         return redirect('/groups')
     
-    # Check if it's a primary group before attempting deletion
-    try:
-        primary_users = []
-        for user in pwd.getpwall():
-            if user.pw_gid == grp.getgrnam(group_name).gr_gid:
-                primary_users.append(user.pw_name)
-        
-        if primary_users:
-            flash(f'Cannot delete group {group_name}: It is the primary group for user(s): {", ".join(primary_users)}', 'error')
-            return redirect('/groups')
-    except Exception as e:
-        print(f"Error checking primary group: {e}")
-    
-    # Delete the group
+    # Try to delete the group (this will handle primary group changes if needed)
     result = delete_system_group(group_name)
     
     if result:
         flash(f'Group {group_name} deleted successfully', 'success')
     else:
-        flash(f'Failed to delete group {group_name}. Check server logs for details.', 'error')
+        # Check if it's a primary group issue
+        try:
+            import pwd
+            primary_users = []
+            for user in pwd.getpwall():
+                if user.pw_gid == grp.getgrnam(group_name).gr_gid:
+                    primary_users.append(user.pw_name)
+            
+            if primary_users:
+                flash(f'Failed to delete group {group_name}. It is the primary group for user(s): {", ".join(primary_users)}. Try changing their primary group first.', 'error')
+            else:
+                flash(f'Failed to delete group {group_name}. Check server logs for details.', 'error')
+        except Exception:
+            flash(f'Failed to delete group {group_name}. Check server logs for details.', 'error')
         
     return redirect('/groups')
