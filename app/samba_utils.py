@@ -1878,6 +1878,178 @@ def get_disk_usage(share_path):
         print(f"Error getting disk usage for {share_path}: {str(e)}")
         return None
 
+def terminate_connection(pid):
+    """Terminate a Samba connection by PID"""
+    try:
+        # Validate PID is numeric
+        try:
+            pid_num = int(pid)
+            if pid_num <= 0:
+                return False, f"Invalid PID: {pid} - must be a positive number"
+        except ValueError:
+            return False, f"Invalid PID: {pid} - not a number"
+            
+        # Use the numeric PID for all operations
+        pid = str(pid_num)
+        
+        # Verify that the PID belongs to a Samba process
+        result = subprocess.run(
+            ['sudo', 'ps', '-p', pid, '-o', 'comm='],
+            capture_output=True,
+            text=True,
+            check=False
+        )
+        
+        # Check if this is a smbd process
+        process_name = result.stdout.strip()
+        if not process_name or 'smbd' not in process_name:
+            return False, f"Process {pid} is not a Samba connection or doesn't exist"
+        
+        # First try to get the machine name associated with this PID
+        machine_name = None
+        try:
+            # Get smbstatus output
+            status_result = subprocess.run(
+                ['sudo', 'smbstatus'], 
+                capture_output=True, 
+                text=True,
+                check=False
+            )
+            
+            if status_result.returncode == 0:
+                # Parse output to find the machine associated with this PID
+                lines = status_result.stdout.strip().split('\n')
+                for line in lines:
+                    if pid in line and ('Service' not in line and 'PID' not in line):
+                        parts = line.split()
+                        if len(parts) > 2:
+                            # Extract machine name (typically the 3rd column)
+                            machine_name = parts[2]
+                            break
+        except Exception as e:
+            print(f"Error getting machine name for PID {pid}: {str(e)}")
+        
+        # Try to kill the process with SIGTERM first
+        kill_result = subprocess.run(
+            ['sudo', 'kill', '-TERM', pid],
+            capture_output=True,
+            text=True,
+            check=False
+        )
+        
+        # Check if the process is still running
+        check_result = subprocess.run(
+            ['sudo', 'ps', '-p', pid],
+            capture_output=True,
+            text=True,
+            check=False
+        )
+        
+        # If process still exists, try SIGKILL
+        if check_result.returncode == 0:
+            print(f"Process {pid} still running after SIGTERM, trying SIGKILL")
+            kill_result = subprocess.run(
+                ['sudo', 'kill', '-KILL', pid],
+                capture_output=True,
+                text=True,
+                check=False
+            )
+        
+        # If we have a machine name, also try to disconnect using smbcontrol
+        if machine_name:
+            try:
+                print(f"Attempting to force disconnect machine: {machine_name}")
+                # Use smbcontrol to force disconnect the client
+                smbcontrol_result = subprocess.run(
+                    ['sudo', 'smbcontrol', 'smbd', 'close-share', machine_name],
+                    capture_output=True,
+                    text=True,
+                    check=False
+                )
+                if smbcontrol_result.returncode != 0:
+                    print(f"smbcontrol error: {smbcontrol_result.stderr}")
+            except Exception as e:
+                print(f"Error using smbcontrol: {str(e)}")
+        
+        # Final check if the process is still running
+        final_check = subprocess.run(
+            ['sudo', 'ps', '-p', pid],
+            capture_output=True,
+            text=True,
+            check=False
+        )
+        
+        if final_check.returncode == 0:
+            return False, f"Failed to terminate connection {pid} - process still running"
+        
+        return True, f"Connection {pid} terminated successfully"
+    except Exception as e:
+        print(f"Error terminating connection: {str(e)}")
+        return False, f"Error terminating connection: {str(e)}"
+
+def terminate_connection_by_machine(machine):
+    """Terminate a Samba connection by machine name/IP"""
+    try:
+        if not machine:
+            return False, "No machine name provided"
+            
+        # Try to use smbcontrol to force disconnect the client
+        try:
+            print(f"Attempting to force disconnect machine: {machine}")
+            # Use smbcontrol to force disconnect the client
+            smbcontrol_result = subprocess.run(
+                ['sudo', 'smbcontrol', 'smbd', 'close-share', machine],
+                capture_output=True,
+                text=True,
+                check=False
+            )
+            if smbcontrol_result.returncode != 0:
+                print(f"smbcontrol error: {smbcontrol_result.stderr}")
+                return False, f"Failed to disconnect {machine}: {smbcontrol_result.stderr}"
+        except Exception as e:
+            print(f"Error using smbcontrol: {str(e)}")
+            return False, f"Error disconnecting {machine}: {str(e)}"
+            
+        # Also try to find and kill the associated PID
+        try:
+            # Get smbstatus output
+            status_result = subprocess.run(
+                ['sudo', 'smbstatus'], 
+                capture_output=True, 
+                text=True,
+                check=False
+            )
+            
+            if status_result.returncode == 0:
+                # Parse output to find PIDs associated with this machine
+                lines = status_result.stdout.strip().split('\n')
+                pids_to_kill = []
+                
+                for line in lines:
+                    if machine in line and ('Service' not in line and 'PID' not in line):
+                        parts = line.split()
+                        if len(parts) > 2:
+                            # Extract PID (typically the 2nd column in connection list)
+                            for part in parts:
+                                try:
+                                    pid = int(part)
+                                    pids_to_kill.append(str(pid))
+                                    break
+                                except ValueError:
+                                    continue
+                
+                # Kill all PIDs associated with this machine
+                for pid in pids_to_kill:
+                    print(f"Killing PID {pid} associated with machine {machine}")
+                    subprocess.run(['sudo', 'kill', '-KILL', pid], check=False)
+        except Exception as e:
+            print(f"Error killing PIDs for machine {machine}: {str(e)}")
+            
+        return True, f"Connection from {machine} terminated successfully"
+    except Exception as e:
+        print(f"Error terminating connection for machine {machine}: {str(e)}")
+        return False, f"Error terminating connection: {str(e)}"
+
 def get_active_connections():
     """Get active Samba connections"""
     try:
@@ -1948,12 +2120,26 @@ def get_active_connections():
                         pid_num = int(pid)
                     except ValueError:
                         pid = None
+                    
+                    # Extract machine name and IP if available
+                    machine = parts[3] if len(parts) > 3 else ''
+                    machine_ip = ''
+                    
+                    # Extract IP address if it's in the format machine (ipv4:x.x.x.x)
+                    if machine and '(' in machine and 'ipv4:' in machine:
+                        try:
+                            ip_part = machine.split('(ipv4:')[1].split(')')[0].split(':')[0]
+                            if ip_part:
+                                machine_ip = ip_part
+                        except:
+                            pass
                         
                     process = {
                         'pid': pid,
                         'username': parts[1] if len(parts) > 1 else '',
                         'group': parts[2] if len(parts) > 2 else '',
-                        'machine': parts[3] if len(parts) > 3 else '',
+                        'machine': machine,
+                        'machine_ip': machine_ip,
                         'protocol': parts[4] if len(parts) > 4 else '',
                         'version': parts[5] if len(parts) > 5 else '',
                         'encryption': parts[6] if len(parts) > 6 else '',
@@ -1972,11 +2158,25 @@ def get_active_connections():
                         pid_num = int(pid)
                     except ValueError:
                         pid = None
+                    
+                    # Extract machine name and IP if available
+                    machine = parts[2] if len(parts) > 2 else ''
+                    machine_ip = ''
+                    
+                    # Extract IP address if it's in the format machine (ipv4:x.x.x.x)
+                    if machine and '(' in machine and 'ipv4:' in machine:
+                        try:
+                            ip_part = machine.split('(ipv4:')[1].split(')')[0].split(':')[0]
+                            if ip_part:
+                                machine_ip = ip_part
+                        except:
+                            pass
                         
                     connection = {
                         'service': parts[0],
                         'pid': pid,
-                        'machine': parts[2],
+                        'machine': machine,
+                        'machine_ip': machine_ip,
                         'connected_at': parts[3] if len(parts) > 3 else ''
                     }
                     connections.append(connection)
@@ -2011,52 +2211,6 @@ def get_share_usage_stats():
                 })
     
     return stats
-
-def terminate_connection(pid):
-    """Terminate a Samba connection by PID"""
-    try:
-        # Validate PID is numeric
-        try:
-            pid_num = int(pid)
-            if pid_num <= 0:
-                return False, f"Invalid PID: {pid} - must be a positive number"
-        except ValueError:
-            return False, f"Invalid PID: {pid} - not a number"
-            
-        # Use the numeric PID for all operations
-        pid = str(pid_num)
-        
-        # Verify that the PID belongs to a Samba process
-        result = subprocess.run(
-            ['sudo', 'ps', '-p', pid, '-o', 'comm='],
-            capture_output=True,
-            text=True,
-            check=False
-        )
-        
-        # Check if this is a smbd process
-        process_name = result.stdout.strip()
-        if not process_name or 'smbd' not in process_name:
-            return False, f"Process {pid} is not a Samba connection or doesn't exist"
-        
-        # Kill the process with SIGTERM
-        kill_result = subprocess.run(
-            ['sudo', 'kill', '-TERM', pid],
-            capture_output=True,
-            text=True,
-            check=False
-        )
-        
-        if kill_result.returncode != 0:
-            if kill_result.stderr:
-                return False, f"Failed to terminate connection: {kill_result.stderr}"
-            else:
-                return False, "Failed to terminate connection for unknown reason"
-        
-        return True, f"Connection {pid} terminated successfully"
-    except Exception as e:
-        print(f"Error terminating connection: {str(e)}")
-        return False, f"Error terminating connection: {str(e)}"
 
 def list_backups():
     """List all available backups"""

@@ -76,11 +76,11 @@
       </div>
       <div class="modal-body">
         <p>Are you sure you want to terminate this connection?</p>
-        <div class="row mb-3">
+        <div class="row mb-3" id="terminatePidRow">
           <div class="col-3"><strong>PID:</strong></div>
           <div class="col-9" id="terminatePid"></div>
         </div>
-        <div class="row mb-3">
+        <div class="row mb-3" id="terminateUserRow">
           <div class="col-3"><strong>User:</strong></div>
           <div class="col-9" id="terminateUser"></div>
         </div>
@@ -88,7 +88,7 @@
           <div class="col-3"><strong>Machine:</strong></div>
           <div class="col-9" id="terminateMachine"></div>
         </div>
-        <div class="alert alert-warning mt-3">
+        <div class="alert alert-warning mt-3" id="terminateWarning">
           <i class="bi bi-exclamation-triangle-fill me-2"></i>
           Terminating a connection will disconnect the user immediately and may cause data loss if they have unsaved changes.
         </div>
@@ -110,11 +110,13 @@
     let currentPid = '';
     let currentUser = '';
     let currentMachine = '';
-    let currentType = ''; // 'process' or 'connection'
+    let currentType = ''; // 'process', 'connection', or 'machine'
     
     // Set up the confirm terminate button
     document.getElementById('confirmTerminate').addEventListener('click', function() {
-      if (currentPid) {
+      if (currentType === 'machine' && currentMachine) {
+        terminateConnectionByMachine(currentMachine);
+      } else if (currentPid) {
         terminateConnection(currentPid);
       }
     });
@@ -128,6 +130,39 @@
       }
       
       fetch(`/api/connections/terminate/${pid}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Close the modal
+          terminateModal.hide();
+          // Show success message
+          showAlert('success', data.message);
+          // Refresh connections after a short delay
+          setTimeout(loadConnections, 1000);
+        } else {
+          // Show error message
+          showAlert('danger', data.message);
+        }
+      })
+      .catch(error => {
+        console.error('Error terminating connection:', error);
+        showAlert('danger', 'Failed to terminate connection: ' + error.message);
+      });
+    }
+    
+    // Function to terminate all connections from a machine
+    function terminateConnectionByMachine(machine) {
+      if (!machine) {
+        showAlert('danger', 'No machine name provided');
+        return;
+      }
+      
+      fetch(`/api/connections/terminate-machine/${machine}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -175,22 +210,55 @@
     
     // Function to show the terminate confirmation modal
     function showTerminateModal(pid, user, machine, type) {
-      // Validate the PID is numeric
-      if (!pid || isNaN(parseInt(pid))) {
-        showAlert('danger', `Invalid PID: ${pid}. Cannot terminate connection.`);
-        return;
+      // Default to process/connection termination
+      currentType = type || 'process';
+      
+      // If we're terminating by machine only
+      if (type === 'machine') {
+        if (!machine) {
+          showAlert('danger', 'No machine name provided');
+          return;
+        }
+        
+        // Store the data
+        currentPid = '';
+        currentUser = '';
+        currentMachine = machine;
+        currentType = 'machine';
+        
+        // Update modal title and content
+        document.querySelector('.modal-title').textContent = 'Disconnect Machine';
+        document.getElementById('terminatePidRow').style.display = 'none';
+        document.getElementById('terminateUserRow').style.display = 'none';
+        document.getElementById('terminateMachine').textContent = machine;
+        document.getElementById('terminateWarning').textContent = 
+          'Disconnecting a machine will terminate ALL connections from this client and may cause data loss if they have unsaved changes.';
+        document.getElementById('confirmTerminate').textContent = 'Disconnect Machine';
+      } 
+      // For process or connection termination
+      else {
+        // Validate the PID is numeric
+        if (!pid || isNaN(parseInt(pid))) {
+          showAlert('danger', `Invalid PID: ${pid}. Cannot terminate connection.`);
+          return;
+        }
+        
+        // Store the data
+        currentPid = pid;
+        currentUser = user || 'Unknown';
+        currentMachine = machine || 'Unknown';
+        
+        // Update modal title and content
+        document.querySelector('.modal-title').textContent = 'Terminate Connection';
+        document.getElementById('terminatePidRow').style.display = '';
+        document.getElementById('terminateUserRow').style.display = '';
+        document.getElementById('terminatePid').textContent = pid;
+        document.getElementById('terminateUser').textContent = currentUser;
+        document.getElementById('terminateMachine').textContent = currentMachine;
+        document.getElementById('terminateWarning').textContent = 
+          'Terminating a connection will disconnect the user immediately and may cause data loss if they have unsaved changes.';
+        document.getElementById('confirmTerminate').textContent = 'Terminate Connection';
       }
-      
-      // Store the data
-      currentPid = pid;
-      currentUser = user || 'Unknown';
-      currentMachine = machine || 'Unknown';
-      currentType = type;
-      
-      // Set modal content
-      document.getElementById('terminatePid').textContent = pid;
-      document.getElementById('terminateUser').textContent = currentUser;
-      document.getElementById('terminateMachine').textContent = currentMachine;
       
       // Show the modal
       terminateModal.show();
@@ -248,6 +316,9 @@
       tableBody.innerHTML = '';
       
       if (processes && processes.length > 0) {
+        // Track machines we've already added "Disconnect All" buttons for
+        const machinesWithButtons = new Set();
+        
         processes.forEach(process => {
           const row = document.createElement('tr');
           
@@ -297,15 +368,36 @@
           // Actions column
           const actionsCell = document.createElement('td');
           
+          // Add actions based on what's available
+          const actions = document.createElement('div');
+          actions.className = 'd-flex gap-1';
+          
           // Only show Kick button if PID is valid
           if (isPidValid) {
             const kickBtn = document.createElement('button');
             kickBtn.className = 'btn btn-sm btn-danger';
             kickBtn.innerHTML = '<i class="bi bi-x-circle"></i> Kick';
             kickBtn.addEventListener('click', () => showTerminateModal(process.pid, process.username, process.machine, 'process'));
-            actionsCell.appendChild(kickBtn);
-          } else {
+            actions.appendChild(kickBtn);
+          }
+          
+          // Add "Disconnect All" button for the machine if we haven't already
+          const machineName = process.machine_ip || process.machine;
+          if (machineName && !machinesWithButtons.has(machineName)) {
+            machinesWithButtons.add(machineName);
+            
+            const disconnectBtn = document.createElement('button');
+            disconnectBtn.className = 'btn btn-sm btn-warning';
+            disconnectBtn.innerHTML = '<i class="bi bi-x-octagon"></i> Disconnect All';
+            disconnectBtn.addEventListener('click', () => showTerminateModal(null, null, machineName, 'machine'));
+            actions.appendChild(disconnectBtn);
+          }
+          
+          // If no actions are available
+          if (actions.children.length === 0) {
             actionsCell.textContent = 'N/A';
+          } else {
+            actionsCell.appendChild(actions);
           }
           
           row.appendChild(actionsCell);
@@ -329,6 +421,9 @@
       tableBody.innerHTML = '';
       
       if (connections && connections.length > 0) {
+        // Track machines we've already added "Disconnect All" buttons for
+        const machinesWithButtons = new Set();
+        
         connections.forEach(conn => {
           const row = document.createElement('tr');
           
@@ -358,15 +453,36 @@
           // Actions column
           const actionsCell = document.createElement('td');
           
+          // Add actions based on what's available
+          const actions = document.createElement('div');
+          actions.className = 'd-flex gap-1';
+          
           // Only show Kick button if PID is valid
           if (isPidValid) {
             const kickBtn = document.createElement('button');
             kickBtn.className = 'btn btn-sm btn-danger';
             kickBtn.innerHTML = '<i class="bi bi-x-circle"></i> Kick';
             kickBtn.addEventListener('click', () => showTerminateModal(conn.pid, '', conn.machine, 'connection'));
-            actionsCell.appendChild(kickBtn);
-          } else {
+            actions.appendChild(kickBtn);
+          }
+          
+          // Add "Disconnect All" button for the machine if we haven't already
+          const machineName = conn.machine_ip || conn.machine;
+          if (machineName && !machinesWithButtons.has(machineName)) {
+            machinesWithButtons.add(machineName);
+            
+            const disconnectBtn = document.createElement('button');
+            disconnectBtn.className = 'btn btn-sm btn-warning';
+            disconnectBtn.innerHTML = '<i class="bi bi-x-octagon"></i> Disconnect All';
+            disconnectBtn.addEventListener('click', () => showTerminateModal(null, null, machineName, 'machine'));
+            actions.appendChild(disconnectBtn);
+          }
+          
+          // If no actions are available
+          if (actions.children.length === 0) {
             actionsCell.textContent = 'N/A';
+          } else {
+            actionsCell.appendChild(actions);
           }
           
           row.appendChild(actionsCell);

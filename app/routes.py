@@ -1172,6 +1172,24 @@ def api_terminate_connection(pid):
     else:
         return jsonify({"success": False, "message": message}), 400
 
+@bp.route('/api/connections/terminate-machine/<machine>', methods=['POST'])
+@login_required
+def api_terminate_connection_by_machine(machine):
+    """API endpoint to terminate all connections from a specific machine"""
+    if not check_sudo_access():
+        return jsonify({"error": "Sudo access required to terminate connections"}), 403
+    
+    # Validate machine name
+    if not machine:
+        return jsonify({"success": False, "message": "No machine name provided"}), 400
+    
+    success, message = terminate_connection_by_machine(machine)
+    
+    if success:
+        return jsonify({"success": True, "message": message})
+    else:
+        return jsonify({"success": False, "message": message}), 400
+
 @bp.route('/disk-usage')
 @login_required
 def disk_usage():
