@@ -1,111 +1,129 @@
 # Samba Manager
 
-A web-based interface for managing Samba shares and configuration.
+A comprehensive web-based interface for managing Samba file sharing on Linux systems.
+
+![Samba Manager](https://github.com/user-attachments/assets/61670b6f-0d9b-445e-a74e-c57c58342c54)
 
 ## Features
 
-- Manage Samba global settings
-- Create, update, and delete shares
-- Monitor Samba service status
-- Export and import configurations
-- User and group integration
-- View both system and local shares
+- **Web-Based Administration**: Manage your Samba server through an intuitive web interface
+- **Global Settings Management**: Configure workgroup, server string, security settings, and other global parameters
+- **Share Management**: Create, edit, and delete Samba shares with advanced configuration options
+  - Set path, permissions, and access controls
+  - Configure user and group access restrictions
+  - Set connection limits per share
+  - Control browseable status and guest access
+- **User Management**: Add, modify, and remove Samba users directly from the web interface
+- **Group Management**: Create and manage Samba groups for easier permission management
+- **Access Control**: Fine-grained control over who can access shares
+  - User-specific permissions
+  - Group-based access control
+  - Host allow/deny restrictions
+- **Service Control**: Start, stop, restart, and monitor Samba services
+- **Log Viewing**: View Samba logs directly from the web interface
+- **Import/Export**: Backup and restore your Samba configuration
+- **Setup Wizard**: Easy initial configuration for new installations
+- **Multi-Mode Operation**:
+  - Development mode for testing without system modifications
+  - Production mode for actual system configuration management
 
 ## Requirements
 
+- Linux system with Samba installed
 - Python 3.6+
-- Samba
-- Sudo access (for modifying Samba configuration)
+- Flask and related dependencies
+- Sudo access (for modifying system Samba configuration)
 
 ## Installation
 
-1. Clone this repository:
-   ```
-   git clone https://github.com/yourusername/samba_manager.git
-   cd samba_manager
-   ```
+### 1. Clone the Repository
 
-2. Create a virtual environment and install dependencies:
-   ```
-   python3 -m venv venv
-   source venv/bin/activate
-   pip install -r requirements.txt
-   ```
-
-## Setting Up Samba
-
-For the Samba Manager to work properly, you need to have Samba installed and configured correctly. We've provided a setup script to help you with this:
-
-1. Make the setup script executable:
-   ```
-   chmod +x setup_samba.sh
-   ```
-
-2. Run the setup script as root:
-   ```
-   sudo ./setup_samba.sh
-   ```
-
-This script will:
-- Install Samba if it's not already installed
-- Configure the shares properly
-- Set up the required permissions
-- Create and configure a Samba user
-- Restart the Samba services
-
-## Running the Application
-
-### Development Mode
-
-In development mode, the application uses local configuration files and doesn't require sudo privileges:
-
+```bash
+git clone https://github.com/lyarinet/samba-manager.git
+cd samba-manager
 ```
+
+### 2. Create a Virtual Environment
+
+```bash
+python3 -m venv venv
 source venv/bin/activate
-python run.py
 ```
 
-The web interface will be available at http://localhost:5000
+### 3. Install Dependencies
 
-### Production Mode
-
-For production use, you should set `DEV_MODE = False` in `app/samba_utils.py` and run with sudo:
-
-```
-sudo /path/to/venv/bin/python run.py
+```bash
+pip install -r requirements.txt
 ```
 
-## Accessing Shares
+### 4. Run in Development Mode (Optional)
 
-After setting up Samba and creating shares, you can access them from:
+This mode uses local configuration files instead of system files, great for testing:
 
-### Windows
+```bash
+python run.py --dev
+```
 
-1. Open File Explorer
-2. In the address bar, type: `\\your-server-ip\sharename`
-3. Enter your Samba username and password when prompted
+### 5. Run in Production Mode
 
-### Linux
+For actual system configuration management:
 
-1. Open your file manager
-2. Connect to server: `smb://your-server-ip/sharename`
-3. Enter your Samba username and password when prompted
+```bash
+./run_with_sudo.sh
+```
 
-### macOS
+The web interface will be accessible at http://your-server-ip:5000
 
-1. In Finder, press Cmd+K
-2. Enter: `smb://your-server-ip/sharename`
-3. Enter your Samba username and password when prompted
+## Setup
 
-## Troubleshooting
-
-If you encounter issues with your Samba shares, please refer to the [Troubleshooting Guide](TROUBLESHOOTING.md).
+1. **First Login**: The default credentials are username: `admin`, password: `admin` (change immediately after first login)
+2. **Global Settings**: Configure your workgroup, security settings, and other global parameters
+3. **Add Users**: Create Samba users that will access your shares
+4. **Create Shares**: Set up the directories you want to share
+5. **Configure Permissions**: Set appropriate permissions for each share
+6. **Restart Service**: Apply changes by restarting the Samba service
 
 ## Security Considerations
 
-- This application requires sudo access to modify Samba configuration files and restart services
-- In production environments, consider using a more secure approach like sudo rules or a dedicated service user
-- The application uses a random secret key by default - for production, set a consistent SECRET_KEY environment variable
+- **Change Default Password**: Immediately change the default admin password
+- **Network Security**: Restrict access to the web interface using a firewall
+- **Sudo Access**: The application requires sudo access to modify system configuration files
+- **Custom Sudo Rules**: Consider setting up specific sudo rules for production environments
+- **HTTPS**: For production use, configure a proper HTTPS setup using a reverse proxy
+
+## Troubleshooting
+
+If you encounter issues:
+
+1. **Check Logs**: Review logs in the Maintenance section
+2. **Verify Permissions**: Ensure proper file system permissions on shared directories
+3. **Service Status**: Confirm Samba services are running
+4. **Network Access**: Verify network connectivity and firewall settings
+5. **See the Troubleshooting Guide**: Refer to [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for common issues
+
+## Advanced Configuration
+
+- **Custom Samba Configuration**: Edit the Samba configuration directly in the advanced mode
+- **Host Restrictions**: Limit access to shares by IP address or network
+- **Connection Limits**: Set maximum number of connections per share
+- **User Management**: Create specific users for Samba access
+
+## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## License
 
-MIT
+MIT License
+
+## Author
+
+Developed by AsifAgaria by Lyarinet.
+
+---
+
+## Screenshots
+
+![Dashboard](https://via.placeholder.com/400x200?text=Dashboard)
+![Shares Management](https://via.placeholder.com/400x200?text=Shares+Management)
+![Global Settings](https://via.placeholder.com/400x200?text=Global+Settings)
