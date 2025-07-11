@@ -50,6 +50,15 @@ mkdir -p $INSTALL_DIR
 # Copy all files to installation directory
 cp -r * $INSTALL_DIR
 
+# Make sure uninstall script is executable
+if [ -f "$INSTALL_DIR/uninstall.sh" ]; then
+    chmod +x $INSTALL_DIR/uninstall.sh
+    
+    # Create a symlink to the uninstall script
+    ln -sf $INSTALL_DIR/uninstall.sh /usr/local/bin/samba-manager-uninstall
+    echo "Created uninstall command: samba-manager-uninstall"
+fi
+
 # Create a virtual environment
 echo "Creating Python virtual environment..."
 cd $INSTALL_DIR

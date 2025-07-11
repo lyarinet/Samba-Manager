@@ -170,6 +170,30 @@ pip install -r requirements.txt
 python run.py --dev
 ```
 
+## Uninstalling Samba Manager
+
+If you need to remove Samba Manager from your system, you can use the uninstall script:
+
+```bash
+# Use the convenient uninstall command:
+sudo samba-manager-uninstall
+
+# Or if you're in the Samba Manager directory:
+sudo ./uninstall.sh
+
+# Or if Samba Manager is installed system-wide:
+sudo /opt/samba-manager/uninstall.sh
+```
+
+The uninstall script will:
+- Stop and disable the Samba Manager service
+- Remove the systemd service file
+- Remove the commands from /usr/local/bin
+- Delete all Samba Manager files from /opt/samba-manager
+- Terminate any active terminal sessions
+
+Note: The uninstall script will NOT remove Samba itself or your Samba configuration files. Only the Samba Manager web interface will be removed.
+
 ## After Installation
 
 ### Access the Web Interface
