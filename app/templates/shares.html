@@ -166,6 +166,12 @@
             <label for="directory_mask{{ share.name }}" class="form-label">Directory Mask</label>
             <input type="text" class="form-control" id="directory_mask{{ share.name }}" name="directory_mask" value="{{ share.directory_mask }}">
           </div>
+          
+          <div class="mb-3">
+            <label for="max_connections{{ share.name }}" class="form-label">Max Connections</label>
+            <input type="number" class="form-control" id="max_connections{{ share.name }}" name="max_connections" value="{{ share.max_connections|default('0') }}" min="0">
+            <div class="form-text help-text">Maximum number of connections (0 = unlimited)</div>
+          </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -301,6 +307,12 @@
           <div class="mb-3">
             <label for="directory_mask" class="form-label">Directory Mask</label>
             <input type="text" class="form-control" id="directory_mask" name="directory_mask" value="0755">
+          </div>
+          
+          <div class="mb-3">
+            <label for="max_connections" class="form-label">Max Connections</label>
+            <input type="number" class="form-control" id="max_connections" name="max_connections" value="0" min="0">
+            <div class="form-text help-text">Maximum number of connections (0 = unlimited)</div>
           </div>
         </div>
         <div class="modal-footer">

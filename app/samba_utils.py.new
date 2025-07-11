@@ -670,8 +670,8 @@ def load_shares():
                         'write list': 'write_list',
                         'create mask': 'create_mask',
                         'directory mask': 'directory_mask',
-                        'force group': 'force_group',
-                        'max connections': 'max_connections'
+                        'force group': 'force_group'
+                        'max connections': 'max_connections',
                     }
                     
                     # Update values using the mapping
@@ -702,8 +702,7 @@ def load_shares():
                         'write list': 'write_list',
                         'create mask': 'create_mask',
                         'directory mask': 'directory_mask',
-                        'force group': 'force_group',
-                        'max connections': 'max_connections'
+                        'force group': 'force_group'
                     }
                     
                     # Copy values using the mapping

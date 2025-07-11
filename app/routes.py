@@ -181,7 +181,8 @@ def add_share():
         'write_list': write_list,
         'create_mask': request.form.get('create_mask', '0744'),
         'directory_mask': request.form.get('directory_mask', '0755'),
-        'force_group': 'smbusers'
+        'force_group': 'smbusers',
+        'max_connections': request.form.get('max_connections', '0')
     }
     
     # Debug log the share data
@@ -263,7 +264,8 @@ def edit_share():
         'write_list': write_list,
         'create_mask': request.form.get('create_mask', '0744'),
         'directory_mask': request.form.get('directory_mask', '0755'),
-        'force_group': 'smbusers'
+        'force_group': 'smbusers',
+        'max_connections': request.form.get('max_connections', '0')
     }
     
     # Debug log the share data
