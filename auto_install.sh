@@ -88,6 +88,24 @@ run_installation() {
     fi
 }
 
+# Configure network access
+configure_network_access() {
+    echo "Configuring network access for remote connections..."
+    
+    # Make the fix script executable
+    chmod +x fix_network_access.sh
+    
+    # Run the network access fix script
+    ./fix_network_access.sh
+    
+    if [ $? -ne 0 ]; then
+        echo "Warning: Network access configuration may not be complete."
+        echo "You may need to run 'sudo /opt/samba-manager/fix_network_access.sh' manually."
+    else
+        echo "Network access configured successfully."
+    fi
+}
+
 # Clean up
 cleanup() {
     echo "Cleaning up temporary files..."
@@ -101,6 +119,7 @@ main() {
     check_requirements
     download_samba_manager
     run_installation
+    configure_network_access
     cleanup
     
     echo ""
@@ -109,6 +128,10 @@ main() {
     echo "=========================================================="
     echo "Samba Manager has been successfully installed on your system."
     echo "You can access it at: http://$(hostname -I | awk '{print $1}'):5000"
+    echo "Terminal service is available at: http://$(hostname -I | awk '{print $1}'):8080"
+    echo ""
+    echo "Both services should be accessible from other computers on your network."
+    echo "If you have connection issues, run: sudo /opt/samba-manager/fix_network_access.sh"
     echo "=========================================================="
 }
 

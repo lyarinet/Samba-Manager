@@ -86,6 +86,12 @@ install_samba_manager() {
         echo "Created uninstall command: samba-manager-uninstall"
     fi
 
+    # Make sure network fix script is executable
+    if [ -f "$INSTALL_DIR/fix_network_access.sh" ]; then
+        chmod +x $INSTALL_DIR/fix_network_access.sh
+        echo "Network access fix script is ready."
+    fi
+
     # Create a virtual environment
     echo "Creating Python virtual environment..."
     cd $INSTALL_DIR

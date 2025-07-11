@@ -226,6 +226,23 @@ You can also run Samba Manager manually:
 sudo samba-manager
 ```
 
+### Network Access
+If you're having trouble accessing Samba Manager from other computers on your network, you can run the network access fix script:
+
+```bash
+sudo /opt/samba-manager/fix_network_access.sh
+```
+
+This script will:
+- Configure the web interface to listen on all network interfaces
+- Configure the terminal service to listen on all network interfaces
+- Update firewall rules to allow access to ports 5000 (web interface) and 8080 (terminal)
+- Restart both services to apply the changes
+
+After running this script, you should be able to access Samba Manager from any computer on your network using:
+- Web interface: `http://your-server-ip:5000`
+- Terminal: `http://your-server-ip:8080`
+
 ## Setup Guide
 
 1. **First Login**: Log in with the default credentials and change your password
