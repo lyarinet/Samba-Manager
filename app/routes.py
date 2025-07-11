@@ -1149,6 +1149,20 @@ def connections():
     
     return render_template('connections.html', has_sudo=check_sudo_access())
 
+@bp.route('/api/connections/terminate/<pid>', methods=['POST'])
+@login_required
+def api_terminate_connection(pid):
+    """API endpoint to terminate a connection by PID"""
+    if not check_sudo_access():
+        return jsonify({"error": "Sudo access required to terminate connections"}), 403
+    
+    success, message = terminate_connection(pid)
+    
+    if success:
+        return jsonify({"success": True, "message": message})
+    else:
+        return jsonify({"success": False, "message": message}), 400
+
 @bp.route('/disk-usage')
 @login_required
 def disk_usage():

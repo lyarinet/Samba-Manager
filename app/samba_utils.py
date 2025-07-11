@@ -1891,33 +1891,68 @@ def get_active_connections():
         
         output = result.stdout.strip()
         
-        # First split will be the version line
-        parts = output.split('\n\n', 1)
-        if len(parts) > 0:
-            samba_version = parts[0].strip()
-        else:
-            samba_version = "Unknown Samba version"
-        
-        # Parse the connection information
-        connections = []
+        # Process the version information (first line)
         lines = output.split('\n')
-        in_connections_section = False
-        headers = []
+        samba_version = lines[0].strip() if lines else "Unknown Samba version"
         
+        # Parse the process list section (first table with PIDs, Username, etc.)
+        processes = []
+        in_process_section = False
+        process_headers = []
+        
+        # Parse the connection information (second table with Service, PID, etc.)
+        connections = []
+        in_connections_section = False
+        connection_headers = []
+        
+        # Process each line to extract both tables
         for i, line in enumerate(lines):
-            # Look for the section that lists connections
-            if "PID" in line and "Service" in line and "Machine" in line:
-                headers = line.split()
-                in_connections_section = True
+            # Skip empty lines
+            if not line.strip():
+                continue
+                
+            # Look for the process list section headers
+            if "PID" in line and "Username" in line and not in_process_section:
+                in_process_section = True
+                process_headers = line.split()
                 continue
             
+            # Look for the connection section headers
+            if "Service" in line and "PID" in line and "Machine" in line:
+                in_process_section = False
+                in_connections_section = True
+                connection_headers = line.split()
+                continue
+            
+            # Parse process list entries
+            if in_process_section and line.strip() and not line.startswith('---'):
+                # Skip separator lines
+                if '---' in line:
+                    continue
+                    
+                # Parse process details
+                parts = line.split(None, len(process_headers))
+                if len(parts) >= 3:
+                    process = {
+                        'pid': parts[0],
+                        'username': parts[1],
+                        'group': parts[2],
+                        'machine': parts[3] if len(parts) > 3 else '',
+                        'protocol': parts[4] if len(parts) > 4 else '',
+                        'version': parts[5] if len(parts) > 5 else '',
+                        'encryption': parts[6] if len(parts) > 6 else '',
+                        'signing': parts[7] if len(parts) > 7 else ''
+                    }
+                    processes.append(process)
+            
+            # Parse connection entries
             if in_connections_section and line.strip() and not line.startswith('---'):
                 # Skip separator lines
-                if line.strip().startswith('--------'):
+                if '---' in line or line.strip().startswith('-------'):
                     continue
                     
                 # Parse connection details
-                parts = line.split(None, len(headers)-1)
+                parts = line.split(None, len(connection_headers))
                 if len(parts) >= 3:
                     connection = {
                         'service': parts[0],
@@ -1926,18 +1961,19 @@ def get_active_connections():
                         'connected_at': ' '.join(parts[3:]) if len(parts) > 3 else ''
                     }
                     connections.append(connection)
-            
-            # If we find another section heading, we're done with connections
-            if in_connections_section and line.strip() == '' and i < len(lines)-1 and lines[i+1].strip() and '---' in lines[i+1]:
-                break
         
         return {
             'version': samba_version,
+            'processes': processes,
             'connections': connections
         }
     except Exception as e:
         print(f"Error getting active connections: {str(e)}")
-        return {'version': "Error retrieving Samba information", 'connections': []}
+        return {
+            'version': "Error retrieving Samba information", 
+            'processes': [],
+            'connections': []
+        }
 
 def get_share_usage_stats():
     """Get usage statistics for all shares"""
@@ -1956,6 +1992,82 @@ def get_share_usage_stats():
                 })
     
     return stats
+
+def terminate_connection(pid):
+    """Terminate a Samba connection by PID"""
+    try:
+        # Verify that the PID belongs to a Samba process
+        result = subprocess.run(
+            ['sudo', 'ps', '-p', pid, '-o', 'comm='],
+            capture_output=True,
+            text=True,
+            check=False
+        )
+        
+        # Check if this is a smbd process
+        process_name = result.stdout.strip()
+        if not process_name or 'smbd' not in process_name:
+            return False, f"Process {pid} is not a Samba connection or doesn't exist"
+        
+        # Kill the process with SIGTERM
+        kill_result = subprocess.run(
+            ['sudo', 'kill', '-TERM', pid],
+            capture_output=True,
+            text=True,
+            check=False
+        )
+        
+        if kill_result.returncode != 0:
+            if kill_result.stderr:
+                return False, f"Failed to terminate connection: {kill_result.stderr}"
+            else:
+                return False, "Failed to terminate connection for unknown reason"
+        
+        return True, f"Connection {pid} terminated successfully"
+    except Exception as e:
+        print(f"Error terminating connection: {str(e)}")
+        return False, f"Error terminating connection: {str(e)}"
+
+def list_backups():
+    """List all available backups"""
+    try:
+        backup_dir = '/var/lib/samba_manager/backups'
+        
+        # Create backup directory if it doesn't exist
+        if not os.path.exists(backup_dir):
+            os.makedirs(backup_dir, exist_ok=True)
+            return []
+        
+        # Get a list of all backup files
+        backup_files = []
+        for file in os.listdir(backup_dir):
+            if file.startswith('samba_backup_') and file.endswith('.tar.gz'):
+                file_path = os.path.join(backup_dir, file)
+                file_stat = os.stat(file_path)
+                
+                # Parse timestamp from filename
+                timestamp_str = file.replace('samba_backup_', '').replace('.tar.gz', '')
+                try:
+                    import datetime
+                    timestamp = datetime.datetime.strptime(timestamp_str, "%Y%m%d_%H%M%S")
+                    formatted_date = timestamp.strftime("%Y-%m-%d %H:%M:%S")
+                except ValueError:
+                    formatted_date = "Unknown Date"
+                
+                backup_files.append({
+                    'filename': file,
+                    'path': file_path,
+                    'size': file_stat.st_size,
+                    'date': formatted_date
+                })
+        
+        # Sort by date (newest first)
+        backup_files.sort(key=lambda x: x['filename'], reverse=True)
+        
+        return backup_files
+    except Exception as e:
+        print(f"Error listing backups: {e}")
+        return []
 
 def create_backup():
     """Create a backup of Samba configuration files"""
@@ -2054,44 +2166,3 @@ def restore_backup(backup_file):
     except Exception as e:
         print(f"Error restoring backup: {e}")
         return False, str(e)
-
-def list_backups():
-    """List all available backups"""
-    try:
-        backup_dir = '/var/lib/samba_manager/backups'
-        
-        # Create backup directory if it doesn't exist
-        if not os.path.exists(backup_dir):
-            os.makedirs(backup_dir, exist_ok=True)
-            return []
-        
-        # Get a list of all backup files
-        backup_files = []
-        for file in os.listdir(backup_dir):
-            if file.startswith('samba_backup_') and file.endswith('.tar.gz'):
-                file_path = os.path.join(backup_dir, file)
-                file_stat = os.stat(file_path)
-                
-                # Parse timestamp from filename
-                timestamp_str = file.replace('samba_backup_', '').replace('.tar.gz', '')
-                try:
-                    import datetime
-                    timestamp = datetime.datetime.strptime(timestamp_str, "%Y%m%d_%H%M%S")
-                    formatted_date = timestamp.strftime("%Y-%m-%d %H:%M:%S")
-                except ValueError:
-                    formatted_date = "Unknown Date"
-                
-                backup_files.append({
-                    'filename': file,
-                    'path': file_path,
-                    'size': file_stat.st_size,
-                    'date': formatted_date
-                })
-        
-        # Sort by date (newest first)
-        backup_files.sort(key=lambda x: x['filename'], reverse=True)
-        
-        return backup_files
-    except Exception as e:
-        print(f"Error listing backups: {e}")
-        return []

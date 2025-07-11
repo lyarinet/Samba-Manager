@@ -14,7 +14,36 @@
         </button>
       </div>
       <div class="card-body">
+        <!-- Samba version info -->
         <div id="versionInfo" class="mb-4"></div>
+        
+        <!-- Process List Table -->
+        <h6 class="mb-3">Connected Processes</h6>
+        <div class="table-responsive mb-4">
+          <table class="table table-sm table-hover">
+            <thead>
+              <tr>
+                <th>PID</th>
+                <th>Username</th>
+                <th>Group</th>
+                <th>Machine</th>
+                <th>Protocol</th>
+                <th>Version</th>
+                <th>Encryption</th>
+                <th>Signing</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="processesTableBody">
+              <tr>
+                <td colspan="9" class="text-center">Loading process data...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <!-- Connection List Table -->
+        <h6 class="mb-3">Active Shares</h6>
         <div class="table-responsive">
           <table class="table table-sm table-hover">
             <thead>
@@ -23,11 +52,12 @@
                 <th>PID</th>
                 <th>Machine</th>
                 <th>Connected At</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody id="connectionsTableBody">
               <tr>
-                <td colspan="4" class="text-center">Loading connection data...</td>
+                <td colspan="5" class="text-center">Loading connection data...</td>
               </tr>
             </tbody>
           </table>
@@ -37,8 +67,123 @@
   </div>
 </div>
 
+<div class="modal fade" id="terminateModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Terminate Connection</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to terminate this connection?</p>
+        <div class="row mb-3">
+          <div class="col-3"><strong>PID:</strong></div>
+          <div class="col-9" id="terminatePid"></div>
+        </div>
+        <div class="row mb-3">
+          <div class="col-3"><strong>User:</strong></div>
+          <div class="col-9" id="terminateUser"></div>
+        </div>
+        <div class="row">
+          <div class="col-3"><strong>Machine:</strong></div>
+          <div class="col-9" id="terminateMachine"></div>
+        </div>
+        <div class="alert alert-warning mt-3">
+          <i class="bi bi-exclamation-triangle-fill me-2"></i>
+          Terminating a connection will disconnect the user immediately and may cause data loss if they have unsaved changes.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmTerminate">Terminate Connection</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
   document.addEventListener('DOMContentLoaded', function() {
+    // Global variable for the modal
+    let terminateModal = new bootstrap.Modal(document.getElementById('terminateModal'));
+    
+    // Current PID to terminate
+    let currentPid = '';
+    let currentUser = '';
+    let currentMachine = '';
+    let currentType = ''; // 'process' or 'connection'
+    
+    // Set up the confirm terminate button
+    document.getElementById('confirmTerminate').addEventListener('click', function() {
+      if (currentPid) {
+        terminateConnection(currentPid);
+      }
+    });
+    
+    // Function to terminate a connection
+    function terminateConnection(pid) {
+      fetch(`/api/connections/terminate/${pid}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Close the modal
+          terminateModal.hide();
+          // Show success message
+          showAlert('success', data.message);
+          // Refresh connections after a short delay
+          setTimeout(loadConnections, 1000);
+        } else {
+          // Show error message
+          showAlert('danger', data.message);
+        }
+      })
+      .catch(error => {
+        console.error('Error terminating connection:', error);
+        showAlert('danger', 'Failed to terminate connection: ' + error.message);
+      });
+    }
+    
+    // Function to show an alert
+    function showAlert(type, message) {
+      const alertDiv = document.createElement('div');
+      alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+      alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      `;
+      
+      // Insert at the top of the card body
+      const cardBody = document.querySelector('.card-body');
+      cardBody.insertBefore(alertDiv, cardBody.firstChild);
+      
+      // Auto-dismiss after 5 seconds
+      setTimeout(() => {
+        const bsAlert = bootstrap.Alert.getOrCreateInstance(alertDiv);
+        bsAlert.close();
+      }, 5000);
+    }
+    
+    // Function to show the terminate confirmation modal
+    function showTerminateModal(pid, user, machine, type) {
+      // Store the data
+      currentPid = pid;
+      currentUser = user || 'Unknown';
+      currentMachine = machine || 'Unknown';
+      currentType = type;
+      
+      // Set modal content
+      document.getElementById('terminatePid').textContent = pid;
+      document.getElementById('terminateUser').textContent = currentUser;
+      document.getElementById('terminateMachine').textContent = currentMachine;
+      
+      // Show the modal
+      terminateModal.show();
+    }
+    
     // Function to load connections
     function loadConnections() {
       fetch('/api/connections')
@@ -49,7 +194,7 @@
           return response.json();
         })
         .then(data => {
-          // Update version info - preserve the exact format as shown in the screenshot
+          // Update version info
           const versionInfoElement = document.getElementById('versionInfo');
           if (data.version && typeof data.version === 'string') {
             versionInfoElement.innerHTML = `<pre class="mb-0">${data.version}</pre>`;
@@ -57,52 +202,25 @@
             versionInfoElement.innerHTML = '<p class="text-muted">Samba version information not available</p>';
           }
           
-          // Update table
-          const tableBody = document.getElementById('connectionsTableBody');
-          tableBody.innerHTML = '';
+          // Update processes table
+          updateProcessesTable(data.processes || []);
           
-          if (data.connections && data.connections.length > 0) {
-            data.connections.forEach(conn => {
-              const row = document.createElement('tr');
-              
-              // Service column
-              const serviceCell = document.createElement('td');
-              serviceCell.textContent = conn.service;
-              row.appendChild(serviceCell);
-              
-              // PID column
-              const pidCell = document.createElement('td');
-              pidCell.textContent = conn.pid;
-              row.appendChild(pidCell);
-              
-              // Machine column
-              const machineCell = document.createElement('td');
-              machineCell.textContent = conn.machine;
-              row.appendChild(machineCell);
-              
-              // Connected At column
-              const timeCell = document.createElement('td');
-              timeCell.textContent = conn.connected_at;
-              row.appendChild(timeCell);
-              
-              tableBody.appendChild(row);
-            });
-          } else {
-            const row = document.createElement('tr');
-            const cell = document.createElement('td');
-            cell.colSpan = 4;
-            cell.className = 'text-center';
-            cell.textContent = 'No active connections';
-            row.appendChild(cell);
-            tableBody.appendChild(row);
-          }
+          // Update connections table
+          updateConnectionsTable(data.connections || []);
         })
         .catch(error => {
           console.error('Error fetching connections:', error);
-          const tableBody = document.getElementById('connectionsTableBody');
-          tableBody.innerHTML = `
+          document.getElementById('processesTableBody').innerHTML = `
             <tr>
-              <td colspan="4" class="text-center text-danger">
+              <td colspan="9" class="text-center text-danger">
+                Error loading processes: ${error.message}
+              </td>
+            </tr>
+          `;
+          
+          document.getElementById('connectionsTableBody').innerHTML = `
+            <tr>
+              <td colspan="5" class="text-center text-danger">
                 Error loading connections: ${error.message}
               </td>
             </tr>
@@ -110,6 +228,128 @@
           
           document.getElementById('versionInfo').innerHTML = '<p class="text-danger">Failed to load Samba version information</p>';
         });
+    }
+    
+    // Update the processes table
+    function updateProcessesTable(processes) {
+      const tableBody = document.getElementById('processesTableBody');
+      tableBody.innerHTML = '';
+      
+      if (processes && processes.length > 0) {
+        processes.forEach(process => {
+          const row = document.createElement('tr');
+          
+          // PID column
+          const pidCell = document.createElement('td');
+          pidCell.textContent = process.pid;
+          row.appendChild(pidCell);
+          
+          // Username column
+          const usernameCell = document.createElement('td');
+          usernameCell.textContent = process.username;
+          row.appendChild(usernameCell);
+          
+          // Group column
+          const groupCell = document.createElement('td');
+          groupCell.textContent = process.group;
+          row.appendChild(groupCell);
+          
+          // Machine column
+          const machineCell = document.createElement('td');
+          machineCell.textContent = process.machine;
+          row.appendChild(machineCell);
+          
+          // Protocol column
+          const protocolCell = document.createElement('td');
+          protocolCell.textContent = process.protocol;
+          row.appendChild(protocolCell);
+          
+          // Version column
+          const versionCell = document.createElement('td');
+          versionCell.textContent = process.version;
+          row.appendChild(versionCell);
+          
+          // Encryption column
+          const encryptionCell = document.createElement('td');
+          encryptionCell.textContent = process.encryption;
+          row.appendChild(encryptionCell);
+          
+          // Signing column
+          const signingCell = document.createElement('td');
+          signingCell.textContent = process.signing;
+          row.appendChild(signingCell);
+          
+          // Actions column
+          const actionsCell = document.createElement('td');
+          const kickBtn = document.createElement('button');
+          kickBtn.className = 'btn btn-sm btn-danger';
+          kickBtn.innerHTML = '<i class="bi bi-x-circle"></i> Kick';
+          kickBtn.addEventListener('click', () => showTerminateModal(process.pid, process.username, process.machine, 'process'));
+          actionsCell.appendChild(kickBtn);
+          row.appendChild(actionsCell);
+          
+          tableBody.appendChild(row);
+        });
+      } else {
+        const row = document.createElement('tr');
+        const cell = document.createElement('td');
+        cell.colSpan = 9;
+        cell.className = 'text-center';
+        cell.textContent = 'No active processes';
+        row.appendChild(cell);
+        tableBody.appendChild(row);
+      }
+    }
+    
+    // Update the connections table
+    function updateConnectionsTable(connections) {
+      const tableBody = document.getElementById('connectionsTableBody');
+      tableBody.innerHTML = '';
+      
+      if (connections && connections.length > 0) {
+        connections.forEach(conn => {
+          const row = document.createElement('tr');
+          
+          // Service column
+          const serviceCell = document.createElement('td');
+          serviceCell.textContent = conn.service;
+          row.appendChild(serviceCell);
+          
+          // PID column
+          const pidCell = document.createElement('td');
+          pidCell.textContent = conn.pid;
+          row.appendChild(pidCell);
+          
+          // Machine column
+          const machineCell = document.createElement('td');
+          machineCell.textContent = conn.machine;
+          row.appendChild(machineCell);
+          
+          // Connected At column
+          const timeCell = document.createElement('td');
+          timeCell.textContent = conn.connected_at;
+          row.appendChild(timeCell);
+          
+          // Actions column
+          const actionsCell = document.createElement('td');
+          const kickBtn = document.createElement('button');
+          kickBtn.className = 'btn btn-sm btn-danger';
+          kickBtn.innerHTML = '<i class="bi bi-x-circle"></i> Kick';
+          kickBtn.addEventListener('click', () => showTerminateModal(conn.pid, '', conn.machine, 'connection'));
+          actionsCell.appendChild(kickBtn);
+          row.appendChild(actionsCell);
+          
+          tableBody.appendChild(row);
+        });
+      } else {
+        const row = document.createElement('tr');
+        const cell = document.createElement('td');
+        cell.colSpan = 5;
+        cell.className = 'text-center';
+        cell.textContent = 'No active connections';
+        row.appendChild(cell);
+        tableBody.appendChild(row);
+      }
     }
     
     // Load connections on page load
