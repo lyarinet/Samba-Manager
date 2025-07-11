@@ -4,6 +4,7 @@ import subprocess
 import shlex
 import grp
 import pwd
+import tempfile
 from pathlib import Path
 
 # Use local configuration files for development
@@ -236,13 +237,79 @@ def read_global_settings():
     try:
         with open(SMB_CONF, 'r') as f:
             data = f.read()
-        return {
-            'server_string': re.search(r'server string\s*=\s*(.*)', data).group(1),
-            'workgroup': re.search(r'workgroup\s*=\s*(.*)', data).group(1),
-            'log_level': re.search(r'log level\s*=\s*(.*)', data).group(1),
+            
+        # Define default values for all settings
+        settings = {
+            'server_string': 'Samba Server',
+            'workgroup': 'WORKGROUP',
+            'log_level': '1',
+            'server_role': 'standalone',
+            'log_file': '/var/log/samba/log.%m',
+            'max_log_size': '1000',
+            'security': 'user',
+            'encrypt_passwords': 'yes',
+            'guest_account': 'nobody',
+            'map_to_guest': 'Bad User',
+            'interfaces': '',
+            'bind_interfaces_only': 'no',
+            'hosts_allow': '',
+            'hosts_deny': ''
         }
+        
+        # Define mappings between our keys and Samba config keys
+        mappings = {
+            'server_string': r'server string\s*=\s*(.*)',
+            'workgroup': r'workgroup\s*=\s*(.*)',
+            'log_level': r'log level\s*=\s*(.*)',
+            'server_role': r'server role\s*=\s*(.*)',
+            'log_file': r'log file\s*=\s*(.*)',
+            'max_log_size': r'max log size\s*=\s*(.*)',
+            'security': r'security\s*=\s*(.*)',
+            'encrypt_passwords': r'encrypt passwords\s*=\s*(.*)',
+            'guest_account': r'guest account\s*=\s*(.*)',
+            'map_to_guest': r'map to guest\s*=\s*(.*)',
+            'interfaces': r'interfaces\s*=\s*(.*)',
+            'bind_interfaces_only': r'bind interfaces only\s*=\s*(.*)',
+            'hosts_allow': r'hosts allow\s*=\s*(.*)',
+            'hosts_deny': r'hosts deny\s*=\s*(.*)'
+        }
+        
+        # Extract values from the config file
+        for key, pattern in mappings.items():
+            match = re.search(pattern, data)
+            if match:
+                settings[key] = match.group(1).strip()
+                
+        return settings
+        
     except Exception as e:
-        return {'error': str(e), 'server_string': 'Samba Server', 'workgroup': 'WORKGROUP', 'log_level': '1'}
+        print(f"Error reading global settings: {str(e)}")
+        return {
+            'error': str(e),
+            'server_string': 'Samba Server',
+            'workgroup': 'WORKGROUP',
+            'log_level': '1',
+            'server_role': 'standalone',
+            'log_file': '/var/log/samba/log.%m',
+            'max_log_size': '1000',
+            'security': 'user',
+            'encrypt_passwords': 'yes',
+            'guest_account': 'nobody',
+            'map_to_guest': 'Bad User',
+            'interfaces': '',
+            'bind_interfaces_only': 'no',
+            'hosts_allow': '',
+            'hosts_deny': ''
+        }
+
+def read_samba_config():
+    """Read the content of the Samba configuration file"""
+    try:
+        with open(SMB_CONF, 'r') as f:
+            return f.read()
+    except Exception as e:
+        print(f"Error reading Samba config: {e}")
+        return ""
 
 def write_global_settings(settings):
     """Write global settings to the Samba configuration file"""
@@ -251,7 +318,7 @@ def write_global_settings(settings):
         config_content = read_samba_config()
         
         # Create a backup of the current config
-        backup_path = '/etc/samba/smb.conf.bak'
+        backup_path = SMB_CONF + '.bak'
         with open(backup_path, 'w') as f:
             f.write(config_content)
         
@@ -266,9 +333,21 @@ def write_global_settings(settings):
             for key, value in settings.items():
                 if value:  # Only update if value is not empty
                     global_section[key] = value
+            
+            # Make sure the include statement is present
+            if DEV_MODE:
+                global_section['include'] = './shares.conf'
+            else:
+                global_section['include'] = '/etc/samba/shares.conf'
         else:
             # Create a new global section if it doesn't exist
             sections['global'] = settings
+            
+            # Add the include statement
+            if DEV_MODE:
+                sections['global']['include'] = './shares.conf'
+            else:
+                sections['global']['include'] = '/etc/samba/shares.conf'
         
         # Convert the sections back to a configuration string
         new_config = ''
@@ -283,9 +362,15 @@ def write_global_settings(settings):
             temp_file.write(new_config)
             temp_path = temp_file.name
         
-        # Copy the temporary file to the Samba configuration file using sudo
-        result = subprocess.run(['sudo', 'cp', temp_path, '/etc/samba/smb.conf'], 
-                              capture_output=True, text=True, check=False)
+        # Copy the temporary file to the Samba configuration file
+        if DEV_MODE:
+            # In dev mode, just copy the file directly
+            result = subprocess.run(['cp', temp_path, SMB_CONF], 
+                                  capture_output=True, text=True, check=False)
+        else:
+            # In production mode, use sudo
+            result = subprocess.run(['sudo', 'cp', temp_path, SMB_CONF], 
+                                  capture_output=True, text=True, check=False)
         
         # Clean up the temporary file
         os.unlink(temp_path)
@@ -295,8 +380,12 @@ def write_global_settings(settings):
             return False
         
         # Validate the configuration
-        validate_cmd = subprocess.run(['sudo', 'testparm', '-s', '/etc/samba/smb.conf'], 
-                                     capture_output=True, text=True, check=False)
+        if DEV_MODE:
+            validate_cmd = subprocess.run(['testparm', '-s', SMB_CONF], 
+                                         capture_output=True, text=True, check=False)
+        else:
+            validate_cmd = subprocess.run(['sudo', 'testparm', '-s', SMB_CONF], 
+                                         capture_output=True, text=True, check=False)
         
         if validate_cmd.returncode != 0:
             # If validation fails, restore the backup
@@ -305,17 +394,25 @@ def write_global_settings(settings):
             return False
         
         # Restart Samba services
-        restart_cmd = subprocess.run(['sudo', 'systemctl', 'restart', 'smbd', 'nmbd'], 
-                                    capture_output=True, text=True, check=False)
-        
-        if restart_cmd.returncode != 0:
-            print(f"Error restarting services: {restart_cmd.stderr}")
-            return False
+        if DEV_MODE:
+            # In development mode, we don't actually restart the services
+            print("Development mode: Skipping service restart")
+            restart_cmd_returncode = 0
+        else:
+            # In production mode, restart the services
+            restart_cmd = subprocess.run(['sudo', 'systemctl', 'restart', 'smbd', 'nmbd'], 
+                                        capture_output=True, text=True, check=False)
+            
+            if restart_cmd.returncode != 0:
+                print(f"Error restarting services: {restart_cmd.stderr}")
+                return False
         
         return True
     
     except Exception as e:
         print(f"Exception in write_global_settings: {str(e)}")
+        import traceback
+        traceback.print_exc()
         return False
 
 def parse_user_group_list(value):

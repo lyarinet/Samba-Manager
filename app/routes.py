@@ -35,11 +35,33 @@ def global_settings():
             flash('Error: Sudo access is required to modify Samba settings', 'error')
             return redirect('/global-settings')
             
-        result = write_global_settings({
+        # Collect all submitted form fields
+        settings = {
             'server string': request.form['server_string'],
             'workgroup': request.form['workgroup'],
             'log level': request.form['log_level']
-        })
+        }
+        
+        # Add optional fields if they exist in the form
+        optional_fields = [
+            ('server_role', 'server role'),
+            ('log_file', 'log file'),
+            ('max_log_size', 'max log size'),
+            ('security', 'security'),
+            ('encrypt_passwords', 'encrypt passwords'),
+            ('guest_account', 'guest account'),
+            ('map_to_guest', 'map to guest'),
+            ('interfaces', 'interfaces'),
+            ('bind_interfaces_only', 'bind interfaces only'),
+            ('hosts_allow', 'hosts allow'),
+            ('hosts_deny', 'hosts deny')
+        ]
+        
+        for form_name, samba_name in optional_fields:
+            if form_name in request.form and request.form[form_name]:
+                settings[samba_name] = request.form[form_name]
+                
+        result = write_global_settings(settings)
         
         if result:
             flash('Settings saved and Samba service restarted', 'success')
