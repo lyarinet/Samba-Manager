@@ -987,6 +987,188 @@ def delete_group(group_name):
         
     return redirect('/groups')
 
+@bp.route('/help')
+@login_required
+def help_page():
+    """View the help and documentation page"""
+    return render_template('help.html')
+
+@bp.route('/api/shares', methods=['GET'])
+@login_required
+def api_shares():
+    """API endpoint for shares"""
+    all_shares = load_shares()
+    
+    # Convert to simpler JSON format
+    shares_json = [{
+        'name': share.get('name', ''),
+        'path': share.get('path', ''),
+        'browseable': share.get('browseable', 'no') == 'yes',
+        'read_only': share.get('read_only', 'yes') == 'yes',
+        'guest_ok': share.get('guest_ok', 'no') == 'yes',
+        'valid_users': share.get('valid_users', ''),
+        'max_connections': share.get('max_connections', '0')
+    } for share in all_shares]
+    
+    return jsonify(shares_json)
+
+@bp.route('/api/status', methods=['GET'])
+@login_required
+def api_status():
+    """API endpoint for service status"""
+    status = get_samba_status()
+    return jsonify(status)
+
+@bp.route('/api/connections', methods=['GET'])
+@login_required
+def api_connections():
+    """API endpoint for active connections"""
+    if not check_sudo_access():
+        return jsonify({"error": "Sudo access required to view connections"}), 403
+        
+    connections = get_active_connections()
+    return jsonify(connections)
+    
+@bp.route('/api/disk-usage', methods=['GET'])
+@login_required
+def api_disk_usage():
+    """API endpoint for disk usage"""
+    if not check_sudo_access():
+        return jsonify({"error": "Sudo access required to view disk usage"}), 403
+        
+    usage_stats = get_share_usage_stats()
+    return jsonify(usage_stats)
+
+@bp.route('/api/backups', methods=['GET'])
+@login_required
+def api_backups():
+    """API endpoint for available backups"""
+    if not check_sudo_access():
+        return jsonify({"error": "Sudo access required to view backups"}), 403
+        
+    backups = list_backups()
+    return jsonify(backups)
+
+@bp.route('/backups', methods=['GET'])
+@login_required
+def backups():
+    """View and manage backups"""
+    if not check_sudo_access():
+        flash('Error: Sudo access is required to manage backups', 'error')
+        return redirect('/')
+    
+    all_backups = list_backups()
+    
+    return render_template('backups.html', 
+                          backups=all_backups,
+                          has_sudo=check_sudo_access())
+
+@bp.route('/create-backup', methods=['POST'])
+@login_required
+def create_backup_route():
+    """Create a new backup"""
+    if not check_sudo_access():
+        flash('Error: Sudo access is required to create backups', 'error')
+        return redirect('/backups')
+    
+    success, result = create_backup()
+    
+    if success:
+        flash(f'Backup created successfully: {os.path.basename(result)}', 'success')
+    else:
+        flash(f'Failed to create backup: {result}', 'error')
+    
+    return redirect('/backups')
+
+@bp.route('/restore-backup/<filename>', methods=['POST'])
+@login_required
+def restore_backup_route(filename):
+    """Restore from a backup file"""
+    if not check_sudo_access():
+        flash('Error: Sudo access is required to restore backups', 'error')
+        return redirect('/backups')
+    
+    # Validate the filename format
+    if not filename.startswith('samba_backup_') or not filename.endswith('.tar.gz'):
+        flash('Invalid backup filename', 'error')
+        return redirect('/backups')
+    
+    backup_dir = '/var/lib/samba_manager/backups'
+    backup_file = os.path.join(backup_dir, filename)
+    
+    # Check if the file exists
+    if not os.path.exists(backup_file):
+        flash(f'Backup file {filename} not found', 'error')
+        return redirect('/backups')
+    
+    success, message = restore_backup(backup_file)
+    
+    if success:
+        flash('Backup restored successfully', 'success')
+    else:
+        flash(f'Failed to restore backup: {message}', 'error')
+    
+    return redirect('/backups')
+
+@bp.route('/delete-backup/<filename>', methods=['POST'])
+@login_required
+def delete_backup_route(filename):
+    """Delete a backup file"""
+    if not check_sudo_access():
+        flash('Error: Sudo access is required to delete backups', 'error')
+        return redirect('/backups')
+    
+    # Validate the filename format
+    if not filename.startswith('samba_backup_') or not filename.endswith('.tar.gz'):
+        flash('Invalid backup filename', 'error')
+        return redirect('/backups')
+    
+    backup_dir = '/var/lib/samba_manager/backups'
+    backup_file = os.path.join(backup_dir, filename)
+    
+    # Check if the file exists
+    if not os.path.exists(backup_file):
+        flash(f'Backup file {filename} not found', 'error')
+        return redirect('/backups')
+    
+    try:
+        os.remove(backup_file)
+        flash(f'Backup {filename} deleted successfully', 'success')
+    except Exception as e:
+        flash(f'Failed to delete backup: {str(e)}', 'error')
+    
+    return redirect('/backups')
+
+@bp.route('/connections')
+@login_required
+def connections():
+    """View active Samba connections"""
+    if not check_sudo_access():
+        flash('Error: Sudo access is required to view connections', 'error')
+        return redirect('/')
+    
+    return render_template('connections.html', has_sudo=check_sudo_access())
+
+@bp.route('/disk-usage')
+@login_required
+def disk_usage():
+    """View disk usage for shares"""
+    if not check_sudo_access():
+        flash('Error: Sudo access is required to view disk usage', 'error')
+        return redirect('/')
+    
+    usage_stats = get_share_usage_stats()
+    
+    return render_template('disk_usage.html', 
+                          stats=usage_stats,
+                          has_sudo=check_sudo_access())
+
+@bp.route('/api/docs')
+@login_required
+def api_docs():
+    """API documentation page"""
+    return render_template('api_docs.html')
+
 @bp.route('/enable', methods=['GET'])
 @login_required
 def enable_service():

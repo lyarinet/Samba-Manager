@@ -1,0 +1,127 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="page-header">
+  <h2>Active Connections</h2>
+</div>
+
+<div class="row">
+  <div class="col-12">
+    <div class="card mb-4">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Current Connections</h5>
+        <button id="refreshBtn" class="btn btn-sm btn-primary">
+          <i class="bi bi-arrow-clockwise"></i> Refresh
+        </button>
+      </div>
+      <div class="card-body">
+        <div id="versionInfo" class="mb-4"></div>
+        <div class="table-responsive">
+          <table class="table table-sm table-hover">
+            <thead>
+              <tr>
+                <th>Service</th>
+                <th>PID</th>
+                <th>Machine</th>
+                <th>Connected At</th>
+              </tr>
+            </thead>
+            <tbody id="connectionsTableBody">
+              <tr>
+                <td colspan="4" class="text-center">Loading connection data...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Function to load connections
+    function loadConnections() {
+      fetch('/api/connections')
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.json();
+        })
+        .then(data => {
+          // Update version info - preserve the exact format as shown in the screenshot
+          const versionInfoElement = document.getElementById('versionInfo');
+          if (data.version && typeof data.version === 'string') {
+            versionInfoElement.innerHTML = `<pre class="mb-0">${data.version}</pre>`;
+          } else {
+            versionInfoElement.innerHTML = '<p class="text-muted">Samba version information not available</p>';
+          }
+          
+          // Update table
+          const tableBody = document.getElementById('connectionsTableBody');
+          tableBody.innerHTML = '';
+          
+          if (data.connections && data.connections.length > 0) {
+            data.connections.forEach(conn => {
+              const row = document.createElement('tr');
+              
+              // Service column
+              const serviceCell = document.createElement('td');
+              serviceCell.textContent = conn.service;
+              row.appendChild(serviceCell);
+              
+              // PID column
+              const pidCell = document.createElement('td');
+              pidCell.textContent = conn.pid;
+              row.appendChild(pidCell);
+              
+              // Machine column
+              const machineCell = document.createElement('td');
+              machineCell.textContent = conn.machine;
+              row.appendChild(machineCell);
+              
+              // Connected At column
+              const timeCell = document.createElement('td');
+              timeCell.textContent = conn.connected_at;
+              row.appendChild(timeCell);
+              
+              tableBody.appendChild(row);
+            });
+          } else {
+            const row = document.createElement('tr');
+            const cell = document.createElement('td');
+            cell.colSpan = 4;
+            cell.className = 'text-center';
+            cell.textContent = 'No active connections';
+            row.appendChild(cell);
+            tableBody.appendChild(row);
+          }
+        })
+        .catch(error => {
+          console.error('Error fetching connections:', error);
+          const tableBody = document.getElementById('connectionsTableBody');
+          tableBody.innerHTML = `
+            <tr>
+              <td colspan="4" class="text-center text-danger">
+                Error loading connections: ${error.message}
+              </td>
+            </tr>
+          `;
+          
+          document.getElementById('versionInfo').innerHTML = '<p class="text-danger">Failed to load Samba version information</p>';
+        });
+    }
+    
+    // Load connections on page load
+    loadConnections();
+    
+    // Set up refresh button
+    document.getElementById('refreshBtn').addEventListener('click', function() {
+      loadConnections();
+    });
+    
+    // Auto refresh every 30 seconds
+    setInterval(loadConnections, 30000);
+  });
+</script>
+{% endblock %} 

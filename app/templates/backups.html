@@ -1,0 +1,105 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-center">
+  <h2>Backups & Restore</h2>
+  <form action="/create-backup" method="post">
+    <button type="submit" class="btn btn-primary">
+      <i class="bi bi-file-earmark-zip"></i> Create Backup
+    </button>
+  </form>
+</div>
+
+<div class="row">
+  <div class="col-12">
+    <div class="card mb-4">
+      <div class="card-header">
+        <h5>Available Backups</h5>
+      </div>
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-hover">
+            <thead>
+              <tr>
+                <th>Backup Date</th>
+                <th>Filename</th>
+                <th>Size</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% if backups %}
+                {% for backup in backups %}
+                <tr>
+                  <td>{{ backup.date }}</td>
+                  <td>{{ backup.filename }}</td>
+                  <td>{{ (backup.size / 1024)|round|int }} KB</td>
+                  <td class="d-flex">
+                    <form action="{{ url_for('main.restore_backup_route', filename=backup.filename) }}" method="post" class="me-2">
+                      <button type="button" class="btn btn-sm btn-warning" onclick="confirmRestore(this.form)">
+                        <i class="bi bi-arrow-counterclockwise"></i> Restore
+                      </button>
+                    </form>
+                    <form action="{{ url_for('main.delete_backup_route', filename=backup.filename) }}" method="post">
+                      <button type="button" class="btn btn-sm btn-danger" onclick="confirmDelete(this.form)">
+                        <i class="bi bi-trash"></i> Delete
+                      </button>
+                    </form>
+                  </td>
+                </tr>
+                {% endfor %}
+              {% else %}
+                <tr>
+                  <td colspan="4" class="text-center">No backups available</td>
+                </tr>
+              {% endif %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-12">
+    <div class="card mb-4">
+      <div class="card-header">
+        <h5>About Backups</h5>
+      </div>
+      <div class="card-body">
+        <p>Backups include the following configuration files:</p>
+        <ul>
+          <li><strong>Samba Configuration</strong> - Main Samba configuration file (/etc/samba/smb.conf)</li>
+          <li><strong>Share Configuration</strong> - Share-specific configuration (/etc/samba/shares.conf)</li>
+          <li><strong>Samba Passwords</strong> - Samba user passwords database (/etc/samba/passdb.tdb)</li>
+          <li><strong>System User Information</strong> - Linux user accounts used by Samba</li>
+          <li><strong>System Group Information</strong> - Linux groups used by Samba</li>
+        </ul>
+        
+        <div class="alert alert-warning">
+          <i class="bi bi-exclamation-triangle me-2"></i>
+          <strong>Warning:</strong> Restoring a backup will overwrite your current Samba configuration and user information.
+          Make sure you create a backup of your current setup before restoring an older backup.
+        </div>
+        
+        <div class="alert alert-info">
+          <i class="bi bi-info-circle me-2"></i>
+          <strong>Backup Location:</strong> Backup files are stored in /var/lib/samba_manager/backups
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function confirmRestore(form) {
+  if (confirm('Are you sure you want to restore this backup? Current configuration will be overwritten.')) {
+    form.submit();
+  }
+}
+
+function confirmDelete(form) {
+  if (confirm('Are you sure you want to delete this backup? This cannot be undone.')) {
+    form.submit();
+  }
+}
+</script>
+{% endblock %} 

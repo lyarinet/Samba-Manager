@@ -1,0 +1,105 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="page-header">
+  <h2>API Documentation</h2>
+</div>
+
+<div class="card mb-4">
+  <div class="card-header">
+    <h5>Introduction</h5>
+  </div>
+  <div class="card-body">
+    <p>
+      Samba Manager provides a simple REST API for programmatic access to your Samba server.
+      This API allows you to integrate Samba management with your existing systems and scripts.
+    </p>
+    <p>
+      <strong>Authentication:</strong> All API endpoints require authentication using the same credentials as the web interface.
+      Requests must include the session cookie or other authentication headers.
+    </p>
+  </div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-header">
+    <h5>Available Endpoints</h5>
+  </div>
+  <div class="card-body">
+    <h6 class="mb-3">GET /api/shares</h6>
+    <p>Returns a list of all configured Samba shares.</p>
+    <div class="bg-dark p-3 rounded mb-3">
+      <code class="text-light">curl -X GET http://localhost:5001/api/shares -H "Cookie: session=your_session_cookie"</code>
+    </div>
+    <p>Example Response:</p>
+    <pre class="bg-dark p-3 rounded text-light">[
+  {
+    "name": "share",
+    "path": "/srv/samba/share",
+    "browseable": true,
+    "read_only": false,
+    "guest_ok": false,
+    "valid_users": "@smbusers",
+    "max_connections": "0"
+  },
+  {
+    "name": "testing",
+    "path": "/var/www/html",
+    "browseable": true,
+    "read_only": false,
+    "guest_ok": false,
+    "valid_users": "root,asif",
+    "max_connections": "0"
+  }
+]</pre>
+    
+    <h6 class="mt-4 mb-3">GET /api/status</h6>
+    <p>Returns the current status of Samba services.</p>
+    <div class="bg-dark p-3 rounded mb-3">
+      <code class="text-light">curl -X GET http://localhost:5001/api/status -H "Cookie: session=your_session_cookie"</code>
+    </div>
+    <p>Example Response:</p>
+    <pre class="bg-dark p-3 rounded text-light">{
+  "smbd": "active",
+  "nmbd": "active"
+}</pre>
+  </div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-header">
+    <h5>Using the API in Scripts</h5>
+  </div>
+  <div class="card-body">
+    <h6>Python Example</h6>
+    <pre class="bg-dark p-3 rounded text-light">import requests
+import json
+
+# Login to get session cookie
+session = requests.Session()
+login_data = {"username": "admin", "password": "your_password"}
+session.post("http://localhost:5001/login", data=login_data)
+
+# Get all shares
+response = session.get("http://localhost:5001/api/shares")
+shares = response.json()
+
+# Print share names
+for share in shares:
+    print(f"Share: {share['name']} - Path: {share['path']}")</pre>
+
+    <h6 class="mt-4">Bash Example</h6>
+    <pre class="bg-dark p-3 rounded text-light"># Login and save cookie
+cookie=$(curl -s -c - -X POST http://localhost:5001/login \
+  -d "username=admin&password=your_password" | grep session | awk '{print $7}')
+
+# Get all shares
+curl -s -X GET "http://localhost:5001/api/shares" \
+  -H "Cookie: session=$cookie" | jq .</pre>
+  </div>
+</div>
+
+<div class="alert alert-info">
+  <i class="bi bi-info-circle me-2"></i>
+  <strong>Note:</strong> This API is currently read-only. Future versions may include endpoints for creating, updating, and deleting shares, users, and other resources.
+</div>
+{% endblock %} 

@@ -1842,3 +1842,256 @@ def delete_system_group(group_name):
     except Exception as e:
         print(f"Error deleting system group: {e}")
         return False
+
+def get_disk_usage(share_path):
+    """Get disk usage information for a share path"""
+    try:
+        # Use subprocess to run df command
+        result = subprocess.run(
+            ['df', '-h', share_path],
+            capture_output=True, 
+            text=True,
+            check=True
+        )
+        
+        # Parse the output
+        lines = result.stdout.strip().split('\n')
+        if len(lines) < 2:
+            return None
+            
+        # Get headers and values
+        headers = lines[0].split()
+        values = lines[1].split()
+        
+        # Create a dictionary with the disk usage information
+        usage_info = {
+            'filesystem': values[0],
+            'size': values[1],
+            'used': values[2],
+            'available': values[3],
+            'use_percent': values[4],
+            'mounted_on': values[5] if len(values) > 5 else ''
+        }
+        
+        return usage_info
+    except Exception as e:
+        print(f"Error getting disk usage for {share_path}: {str(e)}")
+        return None
+
+def get_active_connections():
+    """Get active Samba connections"""
+    try:
+        # Use smbstatus to get active connections
+        result = subprocess.run(
+            ['sudo', 'smbstatus'], 
+            capture_output=True, 
+            text=True,
+            check=True
+        )
+        
+        output = result.stdout.strip()
+        
+        # First split will be the version line
+        parts = output.split('\n\n', 1)
+        if len(parts) > 0:
+            samba_version = parts[0].strip()
+        else:
+            samba_version = "Unknown Samba version"
+        
+        # Parse the connection information
+        connections = []
+        lines = output.split('\n')
+        in_connections_section = False
+        headers = []
+        
+        for i, line in enumerate(lines):
+            # Look for the section that lists connections
+            if "PID" in line and "Service" in line and "Machine" in line:
+                headers = line.split()
+                in_connections_section = True
+                continue
+            
+            if in_connections_section and line.strip() and not line.startswith('---'):
+                # Skip separator lines
+                if line.strip().startswith('--------'):
+                    continue
+                    
+                # Parse connection details
+                parts = line.split(None, len(headers)-1)
+                if len(parts) >= 3:
+                    connection = {
+                        'service': parts[0],
+                        'pid': parts[1],
+                        'machine': parts[2],
+                        'connected_at': ' '.join(parts[3:]) if len(parts) > 3 else ''
+                    }
+                    connections.append(connection)
+            
+            # If we find another section heading, we're done with connections
+            if in_connections_section and line.strip() == '' and i < len(lines)-1 and lines[i+1].strip() and '---' in lines[i+1]:
+                break
+        
+        return {
+            'version': samba_version,
+            'connections': connections
+        }
+    except Exception as e:
+        print(f"Error getting active connections: {str(e)}")
+        return {'version': "Error retrieving Samba information", 'connections': []}
+
+def get_share_usage_stats():
+    """Get usage statistics for all shares"""
+    shares = load_shares()
+    stats = []
+    
+    for share in shares:
+        path = share.get('path', '')
+        if path and os.path.exists(path):
+            usage = get_disk_usage(path)
+            if usage:
+                stats.append({
+                    'name': share.get('name', ''),
+                    'path': path,
+                    'usage': usage
+                })
+    
+    return stats
+
+def create_backup():
+    """Create a backup of Samba configuration files"""
+    try:
+        # Create a timestamp for the backup filename
+        import datetime
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        backup_dir = '/var/lib/samba_manager/backups'
+        backup_file = f"{backup_dir}/samba_backup_{timestamp}.tar.gz"
+        
+        # Create backup directory if it doesn't exist
+        if not os.path.exists(backup_dir):
+            os.makedirs(backup_dir, exist_ok=True)
+        
+        # Files to backup
+        backup_files = [
+            SMB_CONF,
+            SHARE_CONF,
+            '/etc/samba/passdb.tdb',
+            '/etc/passwd',
+            '/etc/group',
+            '/etc/shadow',
+            '/etc/gshadow'
+        ]
+        
+        # Create a temporary directory to store files
+        with tempfile.TemporaryDirectory() as temp_dir:
+            # Copy files to the temporary directory
+            for file_path in backup_files:
+                if os.path.exists(file_path):
+                    # Extract just the filename without the path
+                    file_name = os.path.basename(file_path)
+                    # Use sudo to copy the file
+                    subprocess.run(['sudo', 'cp', file_path, f"{temp_dir}/{file_name}"], check=True)
+                    # Change ownership of the copied file to be readable
+                    subprocess.run(['sudo', 'chmod', '644', f"{temp_dir}/{file_name}"], check=True)
+            
+            # Create the tar.gz archive
+            subprocess.run([
+                'sudo', 'tar', '-czf', backup_file, '-C', temp_dir, '.'
+            ], check=True)
+            
+            # Change permissions on the backup file
+            subprocess.run(['sudo', 'chmod', '644', backup_file], check=True)
+        
+        return True, backup_file
+    except Exception as e:
+        print(f"Error creating backup: {e}")
+        return False, str(e)
+
+def restore_backup(backup_file):
+    """Restore a Samba configuration from a backup file"""
+    try:
+        # Create a temporary directory to extract files
+        with tempfile.TemporaryDirectory() as temp_dir:
+            # Extract the backup archive
+            subprocess.run([
+                'sudo', 'tar', '-xzf', backup_file, '-C', temp_dir
+            ], check=True)
+            
+            # Files to restore (must match files backed up in create_backup)
+            restore_mappings = {
+                'smb.conf': SMB_CONF,
+                'shares.conf': SHARE_CONF,
+                'passdb.tdb': '/etc/samba/passdb.tdb',
+                'passwd': '/etc/passwd',
+                'group': '/etc/group',
+                'shadow': '/etc/shadow',
+                'gshadow': '/etc/gshadow'
+            }
+            
+            # Restore each file
+            for src_name, dest_path in restore_mappings.items():
+                src_path = os.path.join(temp_dir, src_name)
+                if os.path.exists(src_path):
+                    # Backup the current file before overwriting
+                    if os.path.exists(dest_path):
+                        backup_path = f"{dest_path}.bak"
+                        subprocess.run(['sudo', 'cp', '-f', dest_path, backup_path], check=True)
+                    
+                    # Copy the restored file to its proper location
+                    subprocess.run(['sudo', 'cp', '-f', src_path, dest_path], check=True)
+                    
+                    # Set proper permissions
+                    if src_name in ['passwd', 'group']:
+                        subprocess.run(['sudo', 'chmod', '644', dest_path], check=True)
+                    elif src_name in ['shadow', 'gshadow']:
+                        subprocess.run(['sudo', 'chmod', '600', dest_path], check=True)
+                    else:
+                        subprocess.run(['sudo', 'chmod', '644', dest_path], check=True)
+        
+        # Restart Samba services
+        restart_samba_service()
+        
+        return True, "Backup restored successfully"
+    except Exception as e:
+        print(f"Error restoring backup: {e}")
+        return False, str(e)
+
+def list_backups():
+    """List all available backups"""
+    try:
+        backup_dir = '/var/lib/samba_manager/backups'
+        
+        # Create backup directory if it doesn't exist
+        if not os.path.exists(backup_dir):
+            os.makedirs(backup_dir, exist_ok=True)
+            return []
+        
+        # Get a list of all backup files
+        backup_files = []
+        for file in os.listdir(backup_dir):
+            if file.startswith('samba_backup_') and file.endswith('.tar.gz'):
+                file_path = os.path.join(backup_dir, file)
+                file_stat = os.stat(file_path)
+                
+                # Parse timestamp from filename
+                timestamp_str = file.replace('samba_backup_', '').replace('.tar.gz', '')
+                try:
+                    import datetime
+                    timestamp = datetime.datetime.strptime(timestamp_str, "%Y%m%d_%H%M%S")
+                    formatted_date = timestamp.strftime("%Y-%m-%d %H:%M:%S")
+                except ValueError:
+                    formatted_date = "Unknown Date"
+                
+                backup_files.append({
+                    'filename': file,
+                    'path': file_path,
+                    'size': file_stat.st_size,
+                    'date': formatted_date
+                })
+        
+        # Sort by date (newest first)
+        backup_files.sort(key=lambda x: x['filename'], reverse=True)
+        
+        return backup_files
+    except Exception as e:
+        print(f"Error listing backups: {e}")
+        return []

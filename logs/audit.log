@@ -1,0 +1,1 @@
+2025-07-11 09:54:08 - INFO - {"timestamp": "2025-07-11T09:54:08.797075", "user": "admin", "action": "login", "target": "admin", "details": "User logged in successfully", "status": "success", "ip_address": "127.0.0.1", "user_agent": null}
