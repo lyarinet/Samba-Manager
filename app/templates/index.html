@@ -93,22 +93,28 @@
               </div>
             </div>
           {% elif has_sudo %}
-            <div class="col-md-4">
+            <div class="col-md-3">
               <a href="/restart" class="btn btn-warning w-100 d-flex align-items-center justify-content-center">
                 <i class="bi bi-arrow-repeat me-2"></i>
                 Restart Service
               </a>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
               <a href="/setup" class="btn btn-primary w-100 d-flex align-items-center justify-content-center">
                 <i class="bi bi-tools me-2"></i>
                 Setup & Config
               </a>
             </div>
-            <div class="col-md-4">
+            <div class="col-md-3">
               <a href="/maintenance" class="btn btn-info w-100 d-flex align-items-center justify-content-center">
                 <i class="bi bi-wrench me-2"></i>
                 Maintenance
+              </a>
+            </div>
+            <div class="col-md-3">
+              <a href="#" onclick="window.open('http://localhost:8080', '_blank', 'width=800,height=600'); return false;" class="btn btn-dark w-100 d-flex align-items-center justify-content-center">
+                <i class="bi bi-terminal me-2"></i>
+                Terminal
               </a>
             </div>
           {% else %}

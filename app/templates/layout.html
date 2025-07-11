@@ -545,6 +545,13 @@
         </li>
         
         <li class="nav-item">
+          <a href="#" onclick="window.open('http://localhost:8080', '_blank', 'width=800,height=600'); return false;" class="nav-link">
+            <i class="bi bi-terminal"></i>
+            <span>Terminal</span>
+          </a>
+        </li>
+        
+        <li class="nav-item">
           <a href="/backups" class="nav-link {{ 'active' if request.path == '/backups' }}">
             <i class="bi bi-file-earmark-zip"></i>
             <span>Backups</span>

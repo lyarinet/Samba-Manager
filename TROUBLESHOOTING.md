@@ -57,6 +57,58 @@
    ping hostname-or-ip
    ```
 
+### Terminal Feature Issues
+
+1. **Terminal not appearing when clicked:**
+   - Check if GoTTY is installed and running:
+     ```bash
+     ps aux | grep gotty
+     ```
+   - If not running, start it manually:
+     ```bash
+     ./start_terminal_service.sh
+     ```
+   - Verify port 8080 is available:
+     ```bash
+     sudo netstat -tuln | grep 8080
+     ```
+
+2. **GoTTY installation issues:**
+   - Verify Go is installed:
+     ```bash
+     go version
+     ```
+   - If Go is not installed:
+     ```bash
+     sudo apt update
+     sudo apt install -y golang-go
+     ```
+   - Install GoTTY manually:
+     ```bash
+     go install github.com/sorenisanerd/gotty@latest
+     export PATH=$PATH:$(go env GOPATH)/bin
+     ```
+
+3. **Terminal size issues:**
+   - Check GoTTY configuration:
+     ```bash
+     cat ~/.gotty/config.toml
+     ```
+   - Make sure width and height are set to 0 for dynamic sizing:
+     ```
+     width = 0
+     height = 0
+     ```
+
+4. **Terminal access permissions:**
+   - Make sure the user running GoTTY has appropriate permissions
+   - For sudo access in the terminal, make sure the user has sudo privileges
+
+5. **Browser issues:**
+   - Try a different browser (Chrome or Firefox recommended)
+   - Clear browser cache and cookies
+   - Check browser console for JavaScript errors
+
 ### Access Denied Errors
 
 1. **Check if the Samba user has the correct password:**

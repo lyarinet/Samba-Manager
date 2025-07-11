@@ -2,7 +2,7 @@
 
 A comprehensive web-based interface for managing Samba file sharing on Linux systems.
 
-![Samba Manager](https://github.com/user-attachments/assets/61670b6f-0d9b-445e-a74e-c57c58342c54)
+![Samba Manager](https://github.com/user-attachments/assets/42226894-8711-4779-91f4-ba145adcac67)
 
 ## Features
 
@@ -20,6 +20,10 @@ A comprehensive web-based interface for managing Samba file sharing on Linux sys
   - Group-based access control
   - Host allow/deny restrictions
 - **Service Control**: Start, stop, restart, and monitor Samba services
+- **Terminal Access**: Direct terminal access to the server through the web interface
+  - Secure terminal emulation using GoTTY
+  - Full terminal capabilities directly in your browser
+  - Available from dashboard and sidebar
 - **Log Viewing**: View Samba logs directly from the web interface
 - **Import/Export**: Backup and restore your Samba configuration
 - **Setup Wizard**: Easy initial configuration for new installations
@@ -33,6 +37,7 @@ A comprehensive web-based interface for managing Samba file sharing on Linux sys
 - Python 3.6+
 - Flask and related dependencies
 - Sudo access (for modifying system Samba configuration)
+- Go (for terminal feature using GoTTY)
 
 ## Installation
 
@@ -83,6 +88,30 @@ The web interface will be accessible at http://your-server-ip:5000
 5. **Configure Permissions**: Set appropriate permissions for each share
 6. **Restart Service**: Apply changes by restarting the Samba service
 
+## Terminal Feature
+
+The Samba Manager includes a built-in terminal feature that provides direct access to the server's command line through your web browser:
+
+### Using the Terminal
+
+1. **Access Methods**:
+   - Click the Terminal button in the Quick Actions section of the Dashboard
+   - Click the Terminal link in the sidebar navigation
+
+2. **Terminal Features**:
+   - Full terminal emulation in your browser
+   - Automatic installation of required components (Go and GoTTY)
+   - Resizable terminal window
+   - Persistent sessions
+
+3. **Technical Details**:
+   - Uses GoTTY for terminal emulation
+   - Runs on port 8080 by default
+   - Starts automatically with the Samba Manager application
+   - Terminal service can be manually started using `./start_terminal_service.sh`
+
+For detailed documentation on the terminal feature, please refer to [TERMINAL.md](TERMINAL.md).
+
 ## Security Considerations
 
 - **Change Default Password**: Immediately change the default admin password
@@ -90,6 +119,7 @@ The web interface will be accessible at http://your-server-ip:5000
 - **Sudo Access**: The application requires sudo access to modify system configuration files
 - **Custom Sudo Rules**: Consider setting up specific sudo rules for production environments
 - **HTTPS**: For production use, configure a proper HTTPS setup using a reverse proxy
+- **Terminal Security**: The terminal feature provides full system access - restrict application access accordingly
 
 ## Troubleshooting
 
@@ -99,7 +129,8 @@ If you encounter issues:
 2. **Verify Permissions**: Ensure proper file system permissions on shared directories
 3. **Service Status**: Confirm Samba services are running
 4. **Network Access**: Verify network connectivity and firewall settings
-5. **See the Troubleshooting Guide**: Refer to [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for common issues
+5. **Terminal Issues**: If the terminal doesn't appear, check that GoTTY is installed and running on port 8080
+6. **See the Troubleshooting Guide**: Refer to [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for common issues
 
 ## Advanced Configuration
 
@@ -107,6 +138,7 @@ If you encounter issues:
 - **Host Restrictions**: Limit access to shares by IP address or network
 - **Connection Limits**: Set maximum number of connections per share
 - **User Management**: Create specific users for Samba access
+- **Terminal Configuration**: Customize terminal settings in `~/.gotty/config.toml`
 
 ## Contributing
 

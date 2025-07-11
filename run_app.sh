@@ -41,6 +41,10 @@ echo "Activating virtual environment and installing dependencies..."
 source venv/bin/activate
 pip install -r requirements.txt
 
+# Start terminal service
+echo "Starting terminal service..."
+./start_terminal_service.sh
+
 # Check if app is running with sudo
 if [ "$EUID" -eq 0 ]; then
   echo "Running in production mode with sudo..."
