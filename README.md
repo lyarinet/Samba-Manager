@@ -41,18 +41,39 @@ A comprehensive web-based interface for managing Samba file sharing on Linux sys
 
 ## Quick Installation (Recommended)
 
-### One-line Installation
+### Option 1: Authentication-enabled Installation (Recommended)
 
-Install Samba Manager with a single command:
+If you're encountering authentication issues with GitHub, use this installation method:
 
 ```bash
-curl -sSL https://github.com/lyarinet/Samba-Manager/blob/main/auto_install.sh | sudo bash
+# Download the authentication-enabled installer
+wget https://raw.githubusercontent.com/lyarinet/Samba-Manager/main/install_with_auth.sh
+
+# Make it executable
+chmod +x install_with_auth.sh
+
+# Run it with sudo
+sudo ./install_with_auth.sh
+```
+
+This script will:
+- Prompt you for GitHub credentials if needed
+- Try multiple repository names
+- Allow you to enter a custom repository URL if needed
+- Handle all installation steps automatically
+
+### Option 2: One-line Installation
+
+If you have direct access to the repository, install Samba Manager with a single command:
+
+```bash
+curl -sSL https://raw.githubusercontent.com/lyarinet/Samba-Manager/main/auto_install.sh | sudo bash
 ```
 
 Or if you prefer wget:
 
 ```bash
-wget -qO- https://github.com/lyarinet/Samba-Manager/blob/main/auto_install.sh | sudo bash
+wget -qO- https://raw.githubusercontent.com/lyarinet/Samba-Manager/main/auto_install.sh | sudo bash
 ```
 
 That's it! The script will automatically:
@@ -72,7 +93,7 @@ If you prefer to review the installation script before running it:
 
 1. Download the script:
    ```bash
-   wget https://github.com/lyarinet/Samba-Manager/blob/main/auto_install.sh
+   wget https://raw.githubusercontent.com/lyarinet/Samba-Manager/main/auto_install.sh
    ```
 
 2. Make it executable:
@@ -94,8 +115,8 @@ sudo apt-get update
 sudo apt-get install -y git python3 python3-pip python3-venv samba samba-common smbclient
 
 # Clone the repository
-git clone https://github.com/lyarinet/samba_manager.git
-cd samba_manager
+git clone https://github.com/lyarinet/Samba-Manager.git
+cd Samba-Manager
 
 # Run the installation script
 sudo ./install.sh
@@ -108,8 +129,8 @@ sudo dnf update -y
 sudo dnf install -y git python3 python3-pip samba samba-client
 
 # Clone the repository
-git clone https://github.com/lyarinet/samba_manager.git
-cd samba_manager
+git clone https://github.com/lyarinet/Samba-Manager.git
+cd Samba-Manager
 
 # Run the installation script
 sudo ./install_all_distros.sh
@@ -122,8 +143,8 @@ sudo pacman -Syu --noconfirm
 sudo pacman -S --noconfirm git python python-pip samba
 
 # Clone the repository
-git clone https://github.com/lyarinet/samba_manager.git
-cd samba_manager
+git clone https://github.com/lyarinet/Samba-Manager.git
+cd Samba-Manager
 
 # Run the installation script
 sudo ./install_all_distros.sh
@@ -135,8 +156,8 @@ For development or testing without system-wide installation:
 
 ```bash
 # Clone the repository
-git clone https://github.com/lyarinet/samba_manager.git
-cd samba_manager
+git clone https://github.com/lyarinet/Samba-Manager.git
+cd Samba-Manager
 
 # Create a virtual environment
 python3 -m venv venv

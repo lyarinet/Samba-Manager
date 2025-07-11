@@ -22,7 +22,7 @@ command_exists() {
 
 # Function to download the installation script
 download_script() {
-    local url="https://raw.githubusercontent.com/lyarinet/samba_manager/main/auto_install.sh"
+    local url="https://raw.githubusercontent.com/lyarinet/Samba-Manager/main/auto_install.sh"
     local output="/tmp/samba_manager_auto_install.sh"
     
     echo "Downloading installation script..."
