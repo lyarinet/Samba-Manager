@@ -36,4 +36,7 @@ pkill -f "gotty -w"
 echo "Starting terminal service on port 8080..."
 $(go env GOPATH)/bin/gotty -w bash &
 
-echo "Terminal service started. You can access it at: http://localhost:8080" 
+# Get the server's IP address
+SERVER_IP=$(hostname -I | awk '{print $1}')
+
+echo "Terminal service started. You can access it at: http://${SERVER_IP}:8080" 

@@ -532,20 +532,13 @@
         
         <li class="nav-item">
           <a href="/disk-usage" class="nav-link {{ 'active' if request.path == '/disk-usage' }}">
-            <i class="bi bi-hdd"></i>
+            <i class="bi bi-pie-chart"></i>
             <span>Disk Usage</span>
           </a>
         </li>
         
         <li class="nav-item">
-          <a href="/connections" class="nav-link {{ 'active' if request.path == '/connections' }}">
-            <i class="bi bi-pc-display"></i>
-            <span>Connections</span>
-          </a>
-        </li>
-        
-        <li class="nav-item">
-          <a href="#" onclick="window.open('http://localhost:8080', '_blank', 'width=800,height=600'); return false;" class="nav-link">
+          <a href="#" onclick="window.open('http://' + window.location.hostname + ':8080', '_blank', 'width=800,height=600'); return false;" class="nav-link">
             <i class="bi bi-terminal"></i>
             <span>Terminal</span>
           </a>
