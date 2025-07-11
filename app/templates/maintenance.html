@@ -10,17 +10,17 @@
     <div class="card h-100">
       <div class="card-header d-flex justify-content-between align-items-center">
         <h5 class="mb-0">Service Management</h5>
-        <span class="badge {% if status.running %}bg-success{% else %}bg-danger{% endif %}">
-          {{ 'Running' if status.running else 'Stopped' }}
+        <span class="badge {% if status.smbd == 'active' %}bg-success{% else %}bg-danger{% endif %}">
+          {{ 'Running' if status.smbd == 'active' else 'Stopped' }}
         </span>
       </div>
       <div class="card-body">
         <p>Control the Samba service (smbd and nmbd)</p>
         <div class="d-flex gap-2">
-          <a href="{{ url_for('main.service_action', action='start') }}" class="btn btn-success {% if status.running %}disabled{% endif %}">
+          <a href="{{ url_for('main.service_action', action='start') }}" class="btn btn-success {% if status.smbd == 'active' %}disabled{% endif %}">
             <i class="bi bi-play-fill me-1"></i> Start
           </a>
-          <a href="{{ url_for('main.service_action', action='stop') }}" class="btn btn-danger {% if not status.running %}disabled{% endif %}">
+          <a href="{{ url_for('main.service_action', action='stop') }}" class="btn btn-danger {% if status.smbd != 'active' %}disabled{% endif %}">
             <i class="bi bi-stop-fill me-1"></i> Stop
           </a>
           <a href="{{ url_for('main.service_action', action='restart') }}" class="btn btn-warning text-white">

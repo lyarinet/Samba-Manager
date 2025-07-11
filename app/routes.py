@@ -863,18 +863,22 @@ def service_action(action):
     """Perform service actions (start, stop, restart, status)"""
     if not check_sudo_access():
         flash('Error: Sudo access is required to manage services', 'error')
-        return redirect('/')
+        return redirect('/maintenance')
     
-    valid_actions = ['start', 'stop', 'restart', 'status']
+    valid_actions = ['start', 'stop', 'restart', 'status', 'enable']
     
     if action not in valid_actions:
         flash(f'Invalid action: {action}', 'error')
-        return redirect('/')
+        return redirect('/maintenance')
     
     try:
         if action == 'status':
             status = get_samba_status()
             return jsonify(status)
+        elif action == 'enable':
+            subprocess.run(['sudo', 'systemctl', 'enable', 'smbd', 'nmbd'], 
+                          capture_output=True, text=True, check=False)
+            flash('Samba services enabled to start on boot', 'success')
         else:
             result = subprocess.run(['sudo', 'systemctl', action, 'smbd', 'nmbd'], 
                                    capture_output=True, text=True, check=False)
@@ -884,11 +888,11 @@ def service_action(action):
             else:
                 flash(f'Successfully {action}ed Samba services', 'success')
                 
-        return redirect('/')
+        return redirect('/maintenance')
     
     except Exception as e:
         flash(f'Error: {str(e)}', 'error')
-        return redirect('/')
+        return redirect('/maintenance')
 
 @bp.route('/groups', methods=['GET'])
 @login_required
