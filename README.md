@@ -124,6 +124,6 @@ Developed by AsifAgaria by Lyarinet.
 
 ## Screenshots
 
-![Dashboard](https://via.placeholder.com/400x200?text=Dashboard)
+![Dashboard](https://github.com/user-attachments/assets/61670b6f-0d9b-445e-a74e-c57c58342c54)
 ![Shares Management](https://via.placeholder.com/400x200?text=Shares+Management)
 ![Global Settings](https://via.placeholder.com/400x200?text=Global+Settings)
