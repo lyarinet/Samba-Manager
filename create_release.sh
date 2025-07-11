@@ -4,7 +4,7 @@
 #
 
 # Set version (change this for each release)
-VERSION="1.0.0"
+VERSION="1.2.0"
 RELEASE_NAME="samba-manager-$VERSION"
 
 # Create a temporary directory for the release
