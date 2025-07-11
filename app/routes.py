@@ -52,7 +52,15 @@ def global_settings():
             ('guest_account', 'guest account'),
             ('map_to_guest', 'map to guest'),
             ('interfaces', 'interfaces'),
-            ('bind_interfaces_only', 'bind interfaces only')
+            ('bind_interfaces_only', 'bind interfaces only'),
+            ('unix_charset', 'unix charset'),
+            ('dos_charset', 'dos charset'),
+            ('deadtime', 'deadtime'),
+            ('keepalive', 'keepalive'),
+            ('max_connections', 'max connections'),
+            ('socket_options', 'socket options'),
+            ('dns_proxy', 'dns proxy'),
+            ('usershare_allow_guests', 'usershare allow guests')
         ]
         
         for form_name, samba_name in optional_fields:

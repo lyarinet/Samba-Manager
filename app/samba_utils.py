@@ -277,7 +277,15 @@ def read_global_settings():
             'interfaces': '',
             'bind_interfaces_only': 'no',
             'hosts_allow': '',
-            'hosts_deny': ''
+            'hosts_deny': '',
+            'unix_charset': 'UTF-8',
+            'dos_charset': 'CP850',
+            'deadtime': '15',
+            'keepalive': '300',
+            'max_connections': '0',
+            'socket_options': 'TCP_NODELAY IPTOS_LOWDELAY',
+            'dns_proxy': 'no',
+            'usershare_allow_guests': 'yes'
         }
         
         # Define mappings between our keys and Samba config keys
@@ -295,7 +303,15 @@ def read_global_settings():
             'interfaces': r'interfaces\s*=\s*(.*)',
             'bind_interfaces_only': r'bind interfaces only\s*=\s*(.*)',
             'hosts_allow': r'hosts allow\s*=\s*(.*)',
-            'hosts_deny': r'hosts deny\s*=\s*(.*)'
+            'hosts_deny': r'hosts deny\s*=\s*(.*)',
+            'unix_charset': r'unix charset\s*=\s*(.*)',
+            'dos_charset': r'dos charset\s*=\s*(.*)',
+            'deadtime': r'deadtime\s*=\s*(.*)',
+            'keepalive': r'keepalive\s*=\s*(.*)',
+            'max_connections': r'max connections\s*=\s*(.*)',
+            'socket_options': r'socket options\s*=\s*(.*)',
+            'dns_proxy': r'dns proxy\s*=\s*(.*)',
+            'usershare_allow_guests': r'usershare allow guests\s*=\s*(.*)'
         }
         
         # Extract values from the config file
@@ -323,7 +339,15 @@ def read_global_settings():
             'interfaces': '',
             'bind_interfaces_only': 'no',
             'hosts_allow': '',
-            'hosts_deny': ''
+            'hosts_deny': '',
+            'unix_charset': 'UTF-8',
+            'dos_charset': 'CP850',
+            'deadtime': '15',
+            'keepalive': '300',
+            'max_connections': '0',
+            'socket_options': 'TCP_NODELAY IPTOS_LOWDELAY',
+            'dns_proxy': 'no',
+            'usershare_allow_guests': 'yes'
         }
 
 def read_samba_config():

@@ -178,6 +178,87 @@
               </div>
             </div>
           </div>
+          
+          <hr class="my-4">
+          
+          <h5 class="mb-3">Advanced Settings</h5>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="unix_charset" class="form-label">UNIX Charset</label>
+                <input type="text" class="form-control" id="unix_charset" name="unix_charset" value="{{ global_settings.unix_charset|default('UTF-8') }}" {% if not has_sudo %}disabled{% endif %}>
+                <div class="form-text">Character set for UNIX systems</div>
+              </div>
+            </div>
+            
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="dos_charset" class="form-label">DOS Charset</label>
+                <input type="text" class="form-control" id="dos_charset" name="dos_charset" value="{{ global_settings.dos_charset|default('CP850') }}" {% if not has_sudo %}disabled{% endif %}>
+                <div class="form-text">Character set for DOS clients</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="deadtime" class="form-label">Dead Time (minutes)</label>
+                <input type="number" class="form-control" id="deadtime" name="deadtime" value="{{ global_settings.deadtime|default('15') }}" {% if not has_sudo %}disabled{% endif %}>
+                <div class="form-text">Disconnect inactive clients after this many minutes</div>
+              </div>
+            </div>
+            
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="keepalive" class="form-label">Keepalive (seconds)</label>
+                <input type="number" class="form-control" id="keepalive" name="keepalive" value="{{ global_settings.keepalive|default('300') }}" {% if not has_sudo %}disabled{% endif %}>
+                <div class="form-text">How often to check if connections are alive</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="max_connections" class="form-label">Max Connections</label>
+                <input type="number" class="form-control" id="max_connections" name="max_connections" value="{{ global_settings.max_connections|default('0') }}" {% if not has_sudo %}disabled{% endif %}>
+                <div class="form-text">Maximum number of connections (0 = unlimited)</div>
+              </div>
+            </div>
+            
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="socket_options" class="form-label">Socket Options</label>
+                <input type="text" class="form-control" id="socket_options" name="socket_options" value="{{ global_settings.socket_options|default('TCP_NODELAY IPTOS_LOWDELAY') }}" {% if not has_sudo %}disabled{% endif %}>
+                <div class="form-text">Socket options for performance tuning</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="dns_proxy" class="form-label">DNS Proxy</label>
+                <select class="form-select" id="dns_proxy" name="dns_proxy" {% if not has_sudo %}disabled{% endif %}>
+                  <option value="yes" {% if global_settings.dns_proxy == 'yes' %}selected{% endif %}>Yes</option>
+                  <option value="no" {% if global_settings.dns_proxy == 'no' %}selected{% endif %}>No</option>
+                </select>
+                <div class="form-text">Resolve NetBIOS names via DNS</div>
+              </div>
+            </div>
+            
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="usershare_allow_guests" class="form-label">Allow Guest User Shares</label>
+                <select class="form-select" id="usershare_allow_guests" name="usershare_allow_guests" {% if not has_sudo %}disabled{% endif %}>
+                  <option value="yes" {% if global_settings.usershare_allow_guests == 'yes' %}selected{% endif %}>Yes</option>
+                  <option value="no" {% if global_settings.usershare_allow_guests == 'no' %}selected{% endif %}>No</option>
+                </select>
+                <div class="form-text">Allow guests to access user-defined shares</div>
+              </div>
+            </div>
+          </div>
         </form>
       </div>
     </div>
