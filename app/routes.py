@@ -570,6 +570,58 @@ def setup():
                           status=status,
                           has_sudo=check_sudo_access())
 
+@bp.route('/quick-setup', methods=['POST'])
+@login_required
+def quick_setup():
+    """Quick setup for Samba with basic configuration"""
+    if not check_sudo_access():
+        flash('Error: Sudo access is required to set up Samba', 'error')
+        return redirect('/setup')
+    
+    share_name = request.form.get('share_name', 'share')
+    share_path = request.form.get('share_path', '/srv/samba/share')
+    workgroup = request.form.get('workgroup', 'WORKGROUP')
+    guest_access = 'yes' if request.form.get('guest_access') else 'no'
+    
+    try:
+        # Create share directory if it doesn't exist
+        create_share_directory(share_name, share_path)
+        
+        # Configure global settings
+        global_settings = {
+            'server string': 'Samba Server',
+            'workgroup': workgroup,
+            'log level': '1',
+            'map to guest': 'Bad User' if guest_access == 'yes' else 'Never'
+        }
+        
+        write_global_settings(global_settings)
+        
+        # Create share
+        share = {
+            'name': share_name,
+            'path': share_path,
+            'read_only': 'no',
+            'valid_users': '@smbusers' if guest_access == 'no' else '',
+            'guest_ok': guest_access,
+            'browseable': 'yes',
+            'create_mask': '0770',
+            'directory_mask': '0770',
+            'force_group': 'smbusers'
+        }
+        
+        result = add_or_update_share(share)
+        
+        if result:
+            flash('Quick setup completed successfully', 'success')
+        else:
+            flash('Failed to complete quick setup', 'error')
+            
+    except Exception as e:
+        flash(f'Error during quick setup: {str(e)}', 'error')
+        
+    return redirect('/setup')
+
 @bp.route('/fix-permissions', methods=['POST'])
 @login_required
 def fix_permissions():
@@ -609,21 +661,24 @@ def maintenance():
                           shares=shares,
                           has_sudo=check_sudo_access())
 
-@bp.route('/install-samba', methods=['POST'])
+@bp.route('/install', methods=['POST'])
 @login_required
-def install_samba():
-    """Install Samba if not already installed"""
+def install_samba_route():
+    """Install Samba from the web interface"""
     if not check_sudo_access():
         flash('Error: Sudo access is required to install Samba', 'error')
-        return redirect('/')
+        return redirect('/setup')
     
-    result = ensure_samba_installed()
-    if result:
-        flash('Samba has been installed successfully', 'success')
-    else:
-        flash('Failed to install Samba. Check logs for details', 'error')
-    
-    return redirect('/maintenance')
+    try:
+        result = ensure_samba_installed()
+        if result:
+            flash('Samba has been installed successfully', 'success')
+        else:
+            flash('Failed to install Samba. Check logs for details', 'error')
+    except Exception as e:
+        flash(f'Error installing Samba: {str(e)}', 'error')
+        
+    return redirect('/setup')
 
 @bp.route('/start-service', methods=['POST'])
 @login_required
@@ -917,3 +972,23 @@ def delete_group(group_name):
             flash(f'Failed to delete group {group_name}. Check server logs for details.', 'error')
         
     return redirect('/groups')
+
+@bp.route('/enable', methods=['GET'])
+@login_required
+def enable_service():
+    """Enable Samba services to start on boot"""
+    if not check_sudo_access():
+        flash('Error: Sudo access is required to enable Samba services', 'error')
+        return redirect('/setup')
+    
+    try:
+        if DEV_MODE:
+            flash('[DEV MODE] Would enable Samba services in production', 'info')
+        else:
+            subprocess.run(['sudo', 'systemctl', 'enable', 'smbd'], check=True)
+            subprocess.run(['sudo', 'systemctl', 'enable', 'nmbd'], check=True)
+            flash('Samba services enabled to start on boot', 'success')
+    except Exception as e:
+        flash(f'Failed to enable Samba services: {str(e)}', 'error')
+    
+    return redirect('/setup')

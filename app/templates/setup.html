@@ -83,14 +83,14 @@
         <div class="d-grid gap-3">
           <div class="row g-2">
             <div class="col-6">
-              <form method="POST" action="/start">
+              <form method="POST" action="{{ url_for('main.start_service') }}">
                 <button type="submit" class="btn btn-success w-100" {% if not has_sudo %}disabled{% endif %}>
                   <i class="bi bi-play-fill me-2"></i> Start Services
                 </button>
               </form>
             </div>
             <div class="col-6">
-              <form method="POST" action="/stop">
+              <form method="POST" action="{{ url_for('main.stop_service') }}">
                 <button type="submit" class="btn btn-danger w-100" {% if not has_sudo %}disabled{% endif %}>
                   <i class="bi bi-stop-fill me-2"></i> Stop Services
                 </button>
@@ -98,17 +98,13 @@
             </div>
           </div>
           
-          <form method="POST" action="/restart">
-            <button type="submit" class="btn btn-warning w-100" {% if not has_sudo %}disabled{% endif %}>
-              <i class="bi bi-arrow-repeat me-2"></i> Restart Services
-            </button>
-          </form>
+          <a href="{{ url_for('main.restart_service') }}" class="btn btn-warning w-100" {% if not has_sudo %}disabled{% endif %}>
+            <i class="bi bi-arrow-repeat me-2"></i> Restart Services
+          </a>
           
-          <form method="POST" action="/enable">
-            <button type="submit" class="btn btn-info w-100" {% if not has_sudo %}disabled{% endif %}>
-              <i class="bi bi-lightning-charge me-2"></i> Enable on Boot
-            </button>
-          </form>
+          <a href="{{ url_for('main.service_action', action='enable') }}" class="btn btn-info w-100" {% if not has_sudo %}disabled{% endif %}>
+            <i class="bi bi-lightning-charge me-2"></i> Enable on Boot
+          </a>
         </div>
       </div>
     </div>
