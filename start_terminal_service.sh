@@ -18,25 +18,19 @@ if ! command -v gotty &> /dev/null; then
     export PATH=$PATH:$(go env GOPATH)/bin
 fi
 
-# Create GoTTY config file
-mkdir -p ~/.gotty
-cat > ~/.gotty/config.toml << EOL
-port = 8080
-permit_write = true
-width = 0
-height = 0
-title_format = "Terminal - Samba Manager"
-enable_resize = true
-EOL
+# Remove existing config if it exists
+if [ -e ~/.gotty ]; then
+    rm -rf ~/.gotty
+fi
 
 # Kill any existing GoTTY processes
-pkill -f "gotty -w"
-
-# Start GoTTY with bash in the background
-echo "Starting terminal service on port 8080..."
-$(go env GOPATH)/bin/gotty -w bash &
+pkill -f "gotty" 2>/dev/null || true
 
 # Get the server's IP address
 SERVER_IP=$(hostname -I | awk '{print $1}')
+
+# Start GoTTY with bash in the background, explicitly binding to all interfaces
+echo "Starting terminal service on port 8080..."
+$(go env GOPATH)/bin/gotty -w --address 0.0.0.0 --port 8080 bash &
 
 echo "Terminal service started. You can access it at: http://${SERVER_IP}:8080" 
