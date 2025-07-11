@@ -1,5 +1,16 @@
 [global]
-   server string = Samba Server 1
-   workgroup = WORKGROUP
-   log level = 1
-   include = ./shares.conf
+    server string = Samba Server
+    workgroup = WORKGROUP
+    log level = 1
+    include = ./shares.conf
+    server role = standalone
+    log file = /var/log/samba/log.%m
+    max log size = 1000
+    security = user
+    encrypt passwords = yes
+    guest account = nobody
+    map to guest = Bad User
+    bind interfaces only = no
+    hosts allow = 10.240.150.230
+    hosts deny = ALL
+
