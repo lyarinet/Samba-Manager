@@ -33,55 +33,157 @@ A comprehensive web-based interface for managing Samba file sharing on Linux sys
 
 ## Requirements
 
-- Linux system with Samba installed
+- Linux system (Ubuntu, Debian, Fedora, RHEL, CentOS, Arch Linux, or Manjaro)
 - Python 3.6+
-- Flask and related dependencies
+- Samba server
 - Sudo access (for modifying system Samba configuration)
 - Go (for terminal feature using GoTTY)
 
-## Installation
+## Quick Installation (Recommended)
 
-### 1. Clone the Repository
+### One-line Installation
+
+Install Samba Manager with a single command:
 
 ```bash
-git clone https://github.com/lyarinet/samba-manager.git
-cd samba-manager
+curl -sSL https://github.com/lyarinet/Samba-Manager/blob/main/auto_install.sh | sudo bash
 ```
 
-### 2. Create a Virtual Environment
+Or if you prefer wget:
 
 ```bash
+wget -qO- https://github.com/lyarinet/Samba-Manager/blob/main/auto_install.sh | sudo bash
+```
+
+That's it! The script will automatically:
+- Detect your Linux distribution
+- Install all required dependencies
+- Set up Samba Manager as a system service
+- Configure firewall rules if needed
+- Start the service
+
+After installation, access Samba Manager at: `http://your-server-ip:5000`
+
+## Manual Installation Options
+
+### Option 1: Download and Review the Script First
+
+If you prefer to review the installation script before running it:
+
+1. Download the script:
+   ```bash
+   wget https://github.com/lyarinet/Samba-Manager/blob/main/auto_install.sh
+   ```
+
+2. Make it executable:
+   ```bash
+   chmod +x auto_install.sh
+   ```
+
+3. Run it:
+   ```bash
+   sudo ./auto_install.sh
+   ```
+
+### Option 2: Distribution-Specific Installation
+
+#### Ubuntu/Debian
+```bash
+# Install dependencies
+sudo apt-get update
+sudo apt-get install -y git python3 python3-pip python3-venv samba samba-common smbclient
+
+# Clone the repository
+git clone https://github.com/lyarinet/samba_manager.git
+cd samba_manager
+
+# Run the installation script
+sudo ./install.sh
+```
+
+#### Fedora/RHEL/CentOS
+```bash
+# Install dependencies
+sudo dnf update -y
+sudo dnf install -y git python3 python3-pip samba samba-client
+
+# Clone the repository
+git clone https://github.com/lyarinet/samba_manager.git
+cd samba_manager
+
+# Run the installation script
+sudo ./install_all_distros.sh
+```
+
+#### Arch Linux/Manjaro
+```bash
+# Install dependencies
+sudo pacman -Syu --noconfirm
+sudo pacman -S --noconfirm git python python-pip samba
+
+# Clone the repository
+git clone https://github.com/lyarinet/samba_manager.git
+cd samba_manager
+
+# Run the installation script
+sudo ./install_all_distros.sh
+```
+
+### Option 3: Developer Installation
+
+For development or testing without system-wide installation:
+
+```bash
+# Clone the repository
+git clone https://github.com/lyarinet/samba_manager.git
+cd samba_manager
+
+# Create a virtual environment
 python3 -m venv venv
 source venv/bin/activate
-```
 
-### 3. Install Dependencies
-
-```bash
+# Install dependencies
 pip install -r requirements.txt
-```
 
-### 4. Run in Development Mode (Optional)
-
-This mode uses local configuration files instead of system files, great for testing:
-
-```bash
+# Run in development mode
 python run.py --dev
 ```
 
-### 5. Run in Production Mode
+## After Installation
 
-For actual system configuration management:
+### Access the Web Interface
+Open your browser and navigate to: `http://your-server-ip:5000`
 
+### Default Login Credentials
+- Username: `admin`
+- Password: `admin`
+
+**⚠️ IMPORTANT:** Change the default password immediately after your first login!
+
+### Managing the Service
 ```bash
-./run_with_sudo.sh
+# Start the service
+sudo systemctl start samba-manager.service
+
+# Stop the service
+sudo systemctl stop samba-manager.service
+
+# Restart the service
+sudo systemctl restart samba-manager.service
+
+# Check the status
+sudo systemctl status samba-manager.service
 ```
 
-The web interface will be accessible at http://your-server-ip:5000
+### Running Manually
+You can also run Samba Manager manually:
+```bash
+sudo samba-manager
+```
 
-## Setup
+## Setup Guide
 
-1. **First Login**: The default credentials are username: `admin`, password: `admin` (change immediately after first login)
+1. **First Login**: Log in with the default credentials and change your password
 2. **Global Settings**: Configure your workgroup, security settings, and other global parameters
 3. **Add Users**: Create Samba users that will access your shares
 4. **Create Shares**: Set up the directories you want to share
@@ -123,9 +225,9 @@ For detailed documentation on the terminal feature, please refer to [TERMINAL.md
 
 ## Troubleshooting
 
-If you encounter issues:
+If you encounter issues during installation or usage:
 
-1. **Check Logs**: Review logs in the Maintenance section
+1. **Check Logs**: Review logs in the Maintenance section or in `/opt/samba-manager/logs/`
 2. **Verify Permissions**: Ensure proper file system permissions on shared directories
 3. **Service Status**: Confirm Samba services are running
 4. **Network Access**: Verify network connectivity and firewall settings
