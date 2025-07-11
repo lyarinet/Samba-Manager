@@ -1898,12 +1898,12 @@ def get_active_connections():
         # Parse the process list section (first table with PIDs, Username, etc.)
         processes = []
         in_process_section = False
-        process_headers = []
+        process_headers_found = False
         
         # Parse the connection information (second table with Service, PID, etc.)
         connections = []
         in_connections_section = False
-        connection_headers = []
+        connections_headers_found = False
         
         # Process each line to extract both tables
         for i, line in enumerate(lines):
@@ -1912,26 +1912,35 @@ def get_active_connections():
                 continue
                 
             # Look for the process list section headers
-            if "PID" in line and "Username" in line and not in_process_section:
+            if "PID" in line and "Username" in line and "Group" in line and not process_headers_found:
                 in_process_section = True
-                process_headers = line.split()
+                process_headers_found = True
+                continue
+            
+            # Skip separator lines after headers
+            if in_process_section and not processes and ('----------' in line or '-------' in line):
                 continue
             
             # Look for the connection section headers
-            if "Service" in line and "PID" in line and "Machine" in line:
+            if "Service" in line and "pid" in line and "Machine" in line and not connections_headers_found:
                 in_process_section = False
                 in_connections_section = True
-                connection_headers = line.split()
+                connections_headers_found = True
+                continue
+                
+            # Skip separator lines after headers
+            if in_connections_section and not connections and ('----------' in line or '-------' in line):
+                continue
+                
+            # End of connection section when we hit "Locked files:" or another section
+            if "Locked files:" in line:
+                in_connections_section = False
                 continue
             
             # Parse process list entries
-            if in_process_section and line.strip() and not line.startswith('---'):
-                # Skip separator lines
-                if '---' in line:
-                    continue
-                    
+            if in_process_section and line.strip():
                 # Parse process details
-                parts = line.split(None, len(process_headers))
+                parts = line.split()
                 if len(parts) >= 3:
                     # Validate that PID is numeric
                     pid = parts[0]
@@ -1942,8 +1951,8 @@ def get_active_connections():
                         
                     process = {
                         'pid': pid,
-                        'username': parts[1],
-                        'group': parts[2],
+                        'username': parts[1] if len(parts) > 1 else '',
+                        'group': parts[2] if len(parts) > 2 else '',
                         'machine': parts[3] if len(parts) > 3 else '',
                         'protocol': parts[4] if len(parts) > 4 else '',
                         'version': parts[5] if len(parts) > 5 else '',
@@ -1953,13 +1962,9 @@ def get_active_connections():
                     processes.append(process)
             
             # Parse connection entries
-            if in_connections_section and line.strip() and not line.startswith('---'):
-                # Skip separator lines
-                if '---' in line or line.strip().startswith('-------'):
-                    continue
-                    
-                # Parse connection details
-                parts = line.split(None, len(connection_headers))
+            if in_connections_section and line.strip():
+                # Parse connection details - typically 4 columns: Service, pid, Machine, Connected at
+                parts = line.split(None, 3)  # Split at most 3 times to keep the timestamp as one field
                 if len(parts) >= 3:
                     # Validate that PID is numeric
                     pid = parts[1]
@@ -1972,7 +1977,7 @@ def get_active_connections():
                         'service': parts[0],
                         'pid': pid,
                         'machine': parts[2],
-                        'connected_at': ' '.join(parts[3:]) if len(parts) > 3 else ''
+                        'connected_at': parts[3] if len(parts) > 3 else ''
                     }
                     connections.append(connection)
         

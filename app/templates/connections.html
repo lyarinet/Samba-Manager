@@ -256,42 +256,42 @@
           
           // PID column
           const pidCell = document.createElement('td');
-          pidCell.textContent = process.pid;
+          pidCell.textContent = process.pid || 'N/A';
           row.appendChild(pidCell);
           
           // Username column
           const usernameCell = document.createElement('td');
-          usernameCell.textContent = process.username;
+          usernameCell.textContent = process.username || 'Unknown';
           row.appendChild(usernameCell);
           
           // Group column
           const groupCell = document.createElement('td');
-          groupCell.textContent = process.group;
+          groupCell.textContent = process.group || 'Unknown';
           row.appendChild(groupCell);
           
           // Machine column
           const machineCell = document.createElement('td');
-          machineCell.textContent = process.machine;
+          machineCell.textContent = process.machine || 'Unknown';
           row.appendChild(machineCell);
           
           // Protocol column
           const protocolCell = document.createElement('td');
-          protocolCell.textContent = process.protocol;
+          protocolCell.textContent = process.protocol || '';
           row.appendChild(protocolCell);
           
           // Version column
           const versionCell = document.createElement('td');
-          versionCell.textContent = process.version;
+          versionCell.textContent = process.version || '';
           row.appendChild(versionCell);
           
           // Encryption column
           const encryptionCell = document.createElement('td');
-          encryptionCell.textContent = process.encryption;
+          encryptionCell.textContent = process.encryption || '';
           row.appendChild(encryptionCell);
           
           // Signing column
           const signingCell = document.createElement('td');
-          signingCell.textContent = process.signing;
+          signingCell.textContent = process.signing || '';
           row.appendChild(signingCell);
           
           // Actions column
@@ -337,22 +337,22 @@
           
           // Service column
           const serviceCell = document.createElement('td');
-          serviceCell.textContent = conn.service;
+          serviceCell.textContent = conn.service || 'Unknown';
           row.appendChild(serviceCell);
           
           // PID column
           const pidCell = document.createElement('td');
-          pidCell.textContent = conn.pid;
+          pidCell.textContent = conn.pid || 'N/A';
           row.appendChild(pidCell);
           
           // Machine column
           const machineCell = document.createElement('td');
-          machineCell.textContent = conn.machine;
+          machineCell.textContent = conn.machine || 'Unknown';
           row.appendChild(machineCell);
           
           // Connected At column
           const timeCell = document.createElement('td');
-          timeCell.textContent = conn.connected_at;
+          timeCell.textContent = conn.connected_at || '';
           row.appendChild(timeCell);
           
           // Actions column
