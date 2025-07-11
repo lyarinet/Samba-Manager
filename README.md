@@ -125,5 +125,5 @@ Developed by AsifAgaria by Lyarinet.
 ## Screenshots
 
 ![Dashboard](https://github.com/user-attachments/assets/61670b6f-0d9b-445e-a74e-c57c58342c54)
-![Shares Management](<img width="1600" height="1213" alt="image" src="https://github.com/user-attachments/assets/93449c01-fb18-4adf-ae1a-2453c3b130aa" />)
-![Global Settings](<img width="1600" height="1567" alt="image" src="https://github.com/user-attachments/assets/a8c39754-6574-40e5-8c4f-ad0ed3542265" />)
+![Shares Management](https://github.com/user-attachments/assets/93449c01-fb18-4adf-ae1a-2453c3b130aa)
+![Global Settings](https://github.com/user-attachments/assets/a8c39754-6574-40e5-8c4f-ad0ed3542265)
