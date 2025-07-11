@@ -357,6 +357,10 @@ def write_global_settings(settings):
             for key, value in settings.items():
                 if value:  # Only update if value is not empty
                     global_section[key] = value
+                else:
+                    # For empty values, remove the setting from the configuration
+                    if key in global_section:
+                        del global_section[key]
             
             # Make sure the include statement is present
             if DEV_MODE:
@@ -750,11 +754,11 @@ def save_shares(shares):
             'browseable': 'browseable',
             'read_only': 'read only',
             'guest ok': 'guest ok',
-            'valid_users': 'valid users',
-            'write_list': 'write list',
-            'create_mask': 'create mask',
-            'directory_mask': 'directory mask',
-            'force_group': 'force group'
+            'valid users': 'valid users',
+            'write list': 'write list',
+            'create mask': 'create mask',
+            'directory mask': 'directory mask',
+            'force group': 'force group'
         }
         
         # These fields should always be included in the config, even if empty

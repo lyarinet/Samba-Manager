@@ -52,14 +52,16 @@ def global_settings():
             ('guest_account', 'guest account'),
             ('map_to_guest', 'map to guest'),
             ('interfaces', 'interfaces'),
-            ('bind_interfaces_only', 'bind interfaces only'),
-            ('hosts_allow', 'hosts allow'),
-            ('hosts_deny', 'hosts deny')
+            ('bind_interfaces_only', 'bind interfaces only')
         ]
         
         for form_name, samba_name in optional_fields:
             if form_name in request.form and request.form[form_name]:
                 settings[samba_name] = request.form[form_name]
+        
+        # Always include hosts_allow and hosts_deny, even if empty
+        settings['hosts allow'] = request.form.get('hosts_allow', '')
+        settings['hosts deny'] = request.form.get('hosts_deny', '')
                 
         result = write_global_settings(settings)
         
