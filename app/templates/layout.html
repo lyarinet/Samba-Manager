@@ -182,6 +182,7 @@
     
     .card-body {
       padding: 1.25rem;
+      color: var(--text-primary); 
     }
     
     /* Forms */
@@ -416,6 +417,11 @@
     p {
       color: #d1d8e0 !important; /* Even lighter shade for better readability */
     }
+
+    p .mb-3 {
+      color: #d1d8e0 !important; /* Even lighter shade for better readability */
+      font-size: 0.85rem;
+    }
     
     /* Make span elements visible */
     span:not(.badge) {
@@ -511,8 +517,15 @@
         </li>
         
         <li class="nav-item">
-          <a href="/maintenance" class="nav-link {{ 'active' if request.path == '/maintenance' }}">
+          <a href="/setup" class="nav-link {{ 'active' if request.path == '/setup' }}">
             <i class="bi bi-tools"></i>
+            <span>Setup</span>
+          </a>
+        </li>
+        
+        <li class="nav-item">
+          <a href="/maintenance" class="nav-link {{ 'active' if request.path == '/maintenance' }}">
+            <i class="bi bi-wrench"></i>
             <span>Maintenance</span>
           </a>
         </li>

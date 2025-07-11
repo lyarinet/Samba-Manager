@@ -392,9 +392,8 @@ def write_global_settings(settings):
         
         success = True
         
-        # First, update the local configuration file
         if DEV_MODE:
-            # In dev mode, copy the file to the local config
+            # In dev mode, first update the local configuration file
             local_result = subprocess.run(['cp', temp_path, SMB_CONF], 
                                   capture_output=True, text=True, check=False)
             
@@ -449,12 +448,23 @@ def write_global_settings(settings):
                 # Continue with local config only
         else:
             # In production mode, use sudo for the system config
-            system_result = subprocess.run(['sudo', 'cp', temp_path, SMB_CONF], 
+            system_result = subprocess.run(['sudo', 'cp', temp_path, '/etc/samba/smb.conf'], 
                                   capture_output=True, text=True, check=False)
             
             if system_result.returncode != 0:
                 print(f"Error writing config: {system_result.stderr}")
                 success = False
+            else:
+                print("Updated system Samba configuration")
+                
+                # Also update the local copy for reference
+                try:
+                    local_result = subprocess.run(['cp', temp_path, './smb.conf'], 
+                                      capture_output=True, text=True, check=False)
+                    if local_result.returncode == 0:
+                        print("Updated local copy of Samba configuration")
+                except Exception as e:
+                    print(f"Error updating local copy: {str(e)}")
         
         # Clean up the temporary file
         os.unlink(temp_path)
@@ -469,7 +479,7 @@ def write_global_settings(settings):
                                          capture_output=True, text=True, check=False)
         else:
             # In production mode, validate the system config
-            validate_cmd = subprocess.run(['sudo', 'testparm', '-s', SMB_CONF], 
+            validate_cmd = subprocess.run(['sudo', 'testparm', '-s', '/etc/samba/smb.conf'], 
                                          capture_output=True, text=True, check=False)
         
         if validate_cmd.returncode != 0:
@@ -477,7 +487,7 @@ def write_global_settings(settings):
             if DEV_MODE:
                 subprocess.run(['cp', backup_path, SMB_CONF], check=False)
             else:
-                subprocess.run(['sudo', 'cp', backup_path, SMB_CONF], check=False)
+                subprocess.run(['sudo', 'cp', backup_path, '/etc/samba/smb.conf'], check=False)
             print(f"Invalid configuration: {validate_cmd.stderr}")
             return False
         
@@ -493,9 +503,10 @@ def write_global_settings(settings):
             if restart_cmd.returncode != 0:
                 print(f"Error restarting services: {restart_cmd.stderr}")
                 return False
+            else:
+                print("Restarted system Samba services")
         
         return True
-    
     except Exception as e:
         print(f"Exception in write_global_settings: {str(e)}")
         import traceback
@@ -753,12 +764,12 @@ def save_shares(shares):
             'comment': 'comment',
             'browseable': 'browseable',
             'read_only': 'read only',
-            'guest ok': 'guest ok',
-            'valid users': 'valid users',
-            'write list': 'write list',
-            'create mask': 'create mask',
-            'directory mask': 'directory mask',
-            'force group': 'force group'
+            'guest_ok': 'guest ok',
+            'valid_users': 'valid users',
+            'write_list': 'write list',
+            'create_mask': 'create mask',
+            'directory_mask': 'directory mask',
+            'force_group': 'force group'
         }
         
         # These fields should always be included in the config, even if empty
@@ -805,6 +816,16 @@ def save_shares(shares):
             subprocess.run(['sudo', 'cp', temp_path, SHARE_CONF], check=True)
             # Set proper permissions
             subprocess.run(['sudo', 'chmod', '644', SHARE_CONF], check=True)
+            
+            # If in production mode, also update the local copy for reference
+            if not DEV_MODE:
+                try:
+                    local_path = './shares.conf'
+                    subprocess.run(['cp', temp_path, local_path], check=True)
+                    print(f"Updated local copy at {local_path}")
+                except Exception as e:
+                    print(f"Warning: Could not update local copy: {e}")
+            
             os.unlink(temp_path)  # Remove the temp file
             print(f"Successfully copied configuration to {SHARE_CONF}")
         except Exception as e:
@@ -815,8 +836,16 @@ def save_shares(shares):
         try:
             if os.path.exists(SMB_CONF):
                 print(f"Checking for shares in main config {SMB_CONF}")
-                with open(SMB_CONF, 'r') as f:
-                    content = f.read()
+                
+                # In production mode, we need to read from the system config
+                if not DEV_MODE:
+                    system_conf = '/etc/samba/smb.conf'
+                    result = subprocess.run(['sudo', 'cat', system_conf], 
+                                          capture_output=True, text=True, check=True)
+                    content = result.stdout
+                else:
+                    with open(SMB_CONF, 'r') as f:
+                        content = f.read()
                 
                 # Parse the main config
                 sections = parse_config_content(content)
@@ -847,15 +876,35 @@ def save_shares(shares):
                     
                     # Backup original main config
                     try:
-                        subprocess.run(['sudo', 'cp', SMB_CONF, f"{SMB_CONF}.bak"], check=True)
-                        print(f"Backed up {SMB_CONF} to {SMB_CONF}.bak")
+                        if not DEV_MODE:
+                            system_conf = '/etc/samba/smb.conf'
+                            subprocess.run(['sudo', 'cp', system_conf, f"{system_conf}.bak"], check=True)
+                            print(f"Backed up {system_conf} to {system_conf}.bak")
+                        else:
+                            subprocess.run(['sudo', 'cp', SMB_CONF, f"{SMB_CONF}.bak"], check=True)
+                            print(f"Backed up {SMB_CONF} to {SMB_CONF}.bak")
                     except Exception as e:
                         print(f"Warning: Could not backup main config: {e}")
                     
                     # Use sudo to copy the temporary file to the correct location
-                    subprocess.run(['sudo', 'cp', temp_path, SMB_CONF], check=True)
+                    if not DEV_MODE:
+                        system_conf = '/etc/samba/smb.conf'
+                        subprocess.run(['sudo', 'cp', temp_path, system_conf], check=True)
+                        # Also update local copy
+                        try:
+                            subprocess.run(['cp', temp_path, './smb.conf'], check=True)
+                            print(f"Updated local copy of main config")
+                        except Exception as e:
+                            print(f"Warning: Could not update local copy of main config: {e}")
+                    else:
+                        subprocess.run(['sudo', 'cp', temp_path, SMB_CONF], check=True)
+                    
                     # Set proper permissions
-                    subprocess.run(['sudo', 'chmod', '644', SMB_CONF], check=True)
+                    if not DEV_MODE:
+                        subprocess.run(['sudo', 'chmod', '644', system_conf], check=True)
+                    else:
+                        subprocess.run(['sudo', 'chmod', '644', SMB_CONF], check=True)
+                    
                     os.unlink(temp_path)  # Remove the temp file
                     print(f"Successfully removed shares from main config")
         except Exception as e:
@@ -863,28 +912,50 @@ def save_shares(shares):
         
         # Ensure the include directive exists in the main config
         try:
-            if os.path.exists(SMB_CONF):
-                print(f"Checking for include directive in {SMB_CONF}")
+            # In production mode, we need to read from the system config
+            if not DEV_MODE:
+                system_conf = '/etc/samba/smb.conf'
+                result = subprocess.run(['sudo', 'cat', system_conf], 
+                                      capture_output=True, text=True, check=True)
+                content = result.stdout
+                include_path = '/etc/samba/shares.conf'
+            else:
                 with open(SMB_CONF, 'r') as f:
                     content = f.read()
+                include_path = SHARE_CONF
+            
+            if f"include = {include_path}" not in content:
+                print(f"Adding include directive to main config")
+                # Create a temporary file with updated content
+                with tempfile.NamedTemporaryFile(mode='w', delete=False) as temp_file:
+                    if '[global]' in content:
+                        new_content = content.replace('[global]', f'[global]\n   include = {include_path}')
+                    else:
+                        new_content = f"[global]\n   include = {include_path}\n\n{content}"
+                    temp_file.write(new_content)
+                    temp_path = temp_file.name
                 
-                if f"include = {SHARE_CONF}" not in content:
-                    print(f"Adding include directive to {SMB_CONF}")
-                    # Create a temporary file with updated content
-                    with tempfile.NamedTemporaryFile(mode='w', delete=False) as temp_file:
-                        if '[global]' in content:
-                            new_content = content.replace('[global]', f'[global]\n   include = {SHARE_CONF}')
-                        else:
-                            new_content = f"[global]\n   include = {SHARE_CONF}\n\n{content}"
-                        temp_file.write(new_content)
-                        temp_path = temp_file.name
-                    
-                    # Use sudo to copy the temporary file to the correct location
+                # Use sudo to copy the temporary file to the correct location
+                if not DEV_MODE:
+                    system_conf = '/etc/samba/smb.conf'
+                    subprocess.run(['sudo', 'cp', temp_path, system_conf], check=True)
+                    # Also update local copy
+                    try:
+                        subprocess.run(['cp', temp_path, './smb.conf'], check=True)
+                        print(f"Updated local copy of main config with include directive")
+                    except Exception as e:
+                        print(f"Warning: Could not update local copy of main config: {e}")
+                else:
                     subprocess.run(['sudo', 'cp', temp_path, SMB_CONF], check=True)
-                    # Set proper permissions
+                
+                # Set proper permissions
+                if not DEV_MODE:
+                    subprocess.run(['sudo', 'chmod', '644', system_conf], check=True)
+                else:
                     subprocess.run(['sudo', 'chmod', '644', SMB_CONF], check=True)
-                    os.unlink(temp_path)  # Remove the temp file
-                    print(f"Added include directive to {SMB_CONF}")
+                
+                os.unlink(temp_path)  # Remove the temp file
+                print(f"Added include directive to main config")
         except Exception as e:
             print(f"Warning: Could not update include directive: {e}")
         
