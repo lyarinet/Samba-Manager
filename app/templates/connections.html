@@ -121,6 +121,12 @@
     
     // Function to terminate a connection
     function terminateConnection(pid) {
+      // Check if PID is a valid number
+      if (!pid || isNaN(parseInt(pid))) {
+        showAlert('danger', `Invalid PID: ${pid}. Cannot terminate connection.`);
+        return;
+      }
+      
       fetch(`/api/connections/terminate/${pid}`, {
         method: 'POST',
         headers: {
@@ -169,6 +175,12 @@
     
     // Function to show the terminate confirmation modal
     function showTerminateModal(pid, user, machine, type) {
+      // Validate the PID is numeric
+      if (!pid || isNaN(parseInt(pid))) {
+        showAlert('danger', `Invalid PID: ${pid}. Cannot terminate connection.`);
+        return;
+      }
+      
       // Store the data
       currentPid = pid;
       currentUser = user || 'Unknown';
@@ -239,6 +251,9 @@
         processes.forEach(process => {
           const row = document.createElement('tr');
           
+          // Check if PID is valid and numeric
+          const isPidValid = process.pid && !isNaN(parseInt(process.pid));
+          
           // PID column
           const pidCell = document.createElement('td');
           pidCell.textContent = process.pid;
@@ -281,11 +296,18 @@
           
           // Actions column
           const actionsCell = document.createElement('td');
-          const kickBtn = document.createElement('button');
-          kickBtn.className = 'btn btn-sm btn-danger';
-          kickBtn.innerHTML = '<i class="bi bi-x-circle"></i> Kick';
-          kickBtn.addEventListener('click', () => showTerminateModal(process.pid, process.username, process.machine, 'process'));
-          actionsCell.appendChild(kickBtn);
+          
+          // Only show Kick button if PID is valid
+          if (isPidValid) {
+            const kickBtn = document.createElement('button');
+            kickBtn.className = 'btn btn-sm btn-danger';
+            kickBtn.innerHTML = '<i class="bi bi-x-circle"></i> Kick';
+            kickBtn.addEventListener('click', () => showTerminateModal(process.pid, process.username, process.machine, 'process'));
+            actionsCell.appendChild(kickBtn);
+          } else {
+            actionsCell.textContent = 'N/A';
+          }
+          
           row.appendChild(actionsCell);
           
           tableBody.appendChild(row);
@@ -310,6 +332,9 @@
         connections.forEach(conn => {
           const row = document.createElement('tr');
           
+          // Check if PID is valid and numeric
+          const isPidValid = conn.pid && !isNaN(parseInt(conn.pid));
+          
           // Service column
           const serviceCell = document.createElement('td');
           serviceCell.textContent = conn.service;
@@ -332,11 +357,18 @@
           
           // Actions column
           const actionsCell = document.createElement('td');
-          const kickBtn = document.createElement('button');
-          kickBtn.className = 'btn btn-sm btn-danger';
-          kickBtn.innerHTML = '<i class="bi bi-x-circle"></i> Kick';
-          kickBtn.addEventListener('click', () => showTerminateModal(conn.pid, '', conn.machine, 'connection'));
-          actionsCell.appendChild(kickBtn);
+          
+          // Only show Kick button if PID is valid
+          if (isPidValid) {
+            const kickBtn = document.createElement('button');
+            kickBtn.className = 'btn btn-sm btn-danger';
+            kickBtn.innerHTML = '<i class="bi bi-x-circle"></i> Kick';
+            kickBtn.addEventListener('click', () => showTerminateModal(conn.pid, '', conn.machine, 'connection'));
+            actionsCell.appendChild(kickBtn);
+          } else {
+            actionsCell.textContent = 'N/A';
+          }
+          
           row.appendChild(actionsCell);
           
           tableBody.appendChild(row);

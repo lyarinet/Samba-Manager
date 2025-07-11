@@ -1156,7 +1156,16 @@ def api_terminate_connection(pid):
     if not check_sudo_access():
         return jsonify({"error": "Sudo access required to terminate connections"}), 403
     
-    success, message = terminate_connection(pid)
+    # Validate that PID is numeric
+    try:
+        pid_num = int(pid)
+        if pid_num <= 0:
+            return jsonify({"success": False, "message": f"Invalid PID: {pid} - must be a positive number"}), 400
+    except ValueError:
+        return jsonify({"success": False, "message": f"Invalid PID: {pid} - not a number"}), 400
+    
+    # Now use the numeric PID for termination
+    success, message = terminate_connection(str(pid_num))
     
     if success:
         return jsonify({"success": True, "message": message})

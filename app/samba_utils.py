@@ -1933,8 +1933,15 @@ def get_active_connections():
                 # Parse process details
                 parts = line.split(None, len(process_headers))
                 if len(parts) >= 3:
+                    # Validate that PID is numeric
+                    pid = parts[0]
+                    try:
+                        pid_num = int(pid)
+                    except ValueError:
+                        pid = None
+                        
                     process = {
-                        'pid': parts[0],
+                        'pid': pid,
                         'username': parts[1],
                         'group': parts[2],
                         'machine': parts[3] if len(parts) > 3 else '',
@@ -1954,9 +1961,16 @@ def get_active_connections():
                 # Parse connection details
                 parts = line.split(None, len(connection_headers))
                 if len(parts) >= 3:
+                    # Validate that PID is numeric
+                    pid = parts[1]
+                    try:
+                        pid_num = int(pid)
+                    except ValueError:
+                        pid = None
+                        
                     connection = {
                         'service': parts[0],
-                        'pid': parts[1],
+                        'pid': pid,
                         'machine': parts[2],
                         'connected_at': ' '.join(parts[3:]) if len(parts) > 3 else ''
                     }
@@ -1996,6 +2010,17 @@ def get_share_usage_stats():
 def terminate_connection(pid):
     """Terminate a Samba connection by PID"""
     try:
+        # Validate PID is numeric
+        try:
+            pid_num = int(pid)
+            if pid_num <= 0:
+                return False, f"Invalid PID: {pid} - must be a positive number"
+        except ValueError:
+            return False, f"Invalid PID: {pid} - not a number"
+            
+        # Use the numeric PID for all operations
+        pid = str(pid_num)
+        
         # Verify that the PID belongs to a Samba process
         result = subprocess.run(
             ['sudo', 'ps', '-p', pid, '-o', 'comm='],
