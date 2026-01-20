@@ -1,4 +1,4 @@
-#!/home/fida/samba_manager/venv/bin/python3
+#!/opt/samba-manager/venv/bin/python3
 # -*- coding: utf-8 -*-
 import re
 import sys
