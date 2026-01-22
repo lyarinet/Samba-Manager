@@ -1,0 +1,333 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="page-header">
+  <h2>Mobile Installation</h2>
+  <p class="text-muted mb-0">Install Samba Manager on your mobile device</p>
+</div>
+
+{% if request.host_url.find('github.dev') != -1 or request.host_url.find('app.github.dev') != -1 %}
+<div class="alert alert-warning mb-4">
+  <h6><i class="bi bi-exclamation-triangle me-2"></i>GitHub Codespaces Environment</h6>
+  <p class="mb-0">You're currently using Samba Manager in a GitHub Codespaces environment. PWA installation may have limitations due to the development environment. For full PWA functionality, deploy Samba Manager to a production server with HTTPS.</p>
+</div>
+{% endif %}
+
+<div class="row">
+  <div class="col-lg-8">
+    <div class="card mb-4">
+      <div class="card-header">
+        <h5><i class="bi bi-phone me-2"></i>Progressive Web App (PWA)</h5>
+      </div>
+      <div class="card-body">
+        <p>
+          Samba Manager can be installed as a Progressive Web App on your mobile device, providing
+          a native app-like experience with offline capabilities and home screen integration.
+        </p>
+
+        <div class="alert alert-info">
+          <h6><i class="bi bi-info-circle me-2"></i>Requirements</h6>
+          <ul class="mb-0">
+            <li>Modern mobile browser (Chrome, Safari, Firefox, Edge)</li>
+            <li>HTTPS connection (recommended for security)</li>
+            <li>Sufficient storage space on device</li>
+          </ul>
+        </div>
+
+        <h6>Installation Steps:</h6>
+        <div class="installation-steps">
+          <div class="step mb-3">
+            <div class="step-number">1</div>
+            <div class="step-content">
+              <strong>Open Samba Manager in your mobile browser</strong><br>
+              <small class="text-muted">Navigate to your Samba Manager URL using Chrome, Safari, or your preferred mobile browser</small>
+            </div>
+          </div>
+
+          <div class="step mb-3">
+            <div class="step-number">2</div>
+            <div class="step-content">
+              <strong>Access the browser menu</strong><br>
+              <small class="text-muted">Tap the menu button (three dots) in the top-right corner of your browser</small>
+            </div>
+          </div>
+
+          <div class="step mb-3">
+            <div class="step-number">3</div>
+            <div class="step-content">
+              <strong>Select "Add to Home Screen" or "Install App"</strong><br>
+              <small class="text-muted">Look for the option to add the site to your home screen or install the app</small>
+            </div>
+          </div>
+
+          <div class="step mb-3">
+            <div class="step-number">4</div>
+            <div class="step-content">
+              <strong>Confirm installation</strong><br>
+              <small class="text-muted">Tap "Add" or "Install" to complete the installation process</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="alert alert-success">
+          <i class="bi bi-check-circle me-2"></i>
+          <strong>Installation Complete!</strong> Samba Manager will now appear as an app icon on your home screen.
+        </div>
+      </div>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-header">
+        <h5><i class="bi bi-browser-chrome me-2"></i>Browser-Specific Instructions</h5>
+      </div>
+      <div class="card-body">
+        <div class="accordion" id="browserAccordion">
+
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#chrome">
+                <i class="bi bi-browser-chrome me-2"></i>Google Chrome (Android)
+              </button>
+            </h2>
+            <div id="chrome" class="accordion-collapse collapse show" data-bs-parent="#browserAccordion">
+              <div class="accordion-body">
+                <ol>
+                  <li>Open Samba Manager in Chrome</li>
+                  <li>Tap the three-dot menu (⋮) in the top-right</li>
+                  <li>Select "Add to Home screen"</li>
+                  <li>Tap "Add" to confirm</li>
+                </ol>
+                <p class="text-muted small mb-0">The app icon will appear on your home screen with the Samba Manager logo.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#safari">
+                <i class="bi bi-browser-safari me-2"></i>Safari (iOS)
+              </button>
+            </h2>
+            <div id="safari" class="accordion-collapse collapse" data-bs-parent="#browserAccordion">
+              <div class="accordion-body">
+                <ol>
+                  <li>Open Samba Manager in Safari</li>
+                  <li>Tap the Share button (rectangle with arrow)</li>
+                  <li>Scroll down and tap "Add to Home Screen"</li>
+                  <li>Tap "Add" in the top-right corner</li>
+                </ol>
+                <p class="text-muted small mb-0">Safari will create an app icon that opens directly in Safari without the browser UI.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#firefox">
+                <i class="bi bi-browser-firefox me-2"></i>Firefox (Android)
+              </button>
+            </h2>
+            <div id="firefox" class="accordion-collapse collapse" data-bs-parent="#browserAccordion">
+              <div class="accordion-body">
+                <ol>
+                  <li>Open Samba Manager in Firefox</li>
+                  <li>Tap the three-dot menu (⋮) in the top-right</li>
+                  <li>Select "Add to Home screen"</li>
+                  <li>Tap "Add" to confirm</li>
+                </ol>
+                <p class="text-muted small mb-0">Firefox will add the shortcut to your home screen.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#edge">
+                <i class="bi bi-browser-edge me-2"></i>Microsoft Edge (Android)
+              </button>
+            </h2>
+            <div id="edge" class="accordion-collapse collapse" data-bs-parent="#browserAccordion">
+              <div class="accordion-body">
+                <ol>
+                  <li>Open Samba Manager in Edge</li>
+                  <li>Tap the three-dot menu (⋯) in the bottom-right</li>
+                  <li>Select "Add to phone"</li>
+                  <li>Tap "Add" to confirm</li>
+                </ol>
+                <p class="text-muted small mb-0">Edge will install the PWA and add it to your app drawer.</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-header">
+        <h5><i class="bi bi-gear me-2"></i>Configuration & Permissions</h5>
+      </div>
+      <div class="card-body">
+        <p>After installation, you may need to configure the following permissions for optimal functionality:</p>
+
+        <div class="row">
+          <div class="col-md-6">
+            <h6><i class="bi bi-wifi text-primary me-2"></i>Network Access</h6>
+            <p class="small">The app needs network access to communicate with your Samba server. This is automatically granted during installation.</p>
+          </div>
+          <div class="col-md-6">
+            <h6><i class="bi bi-database text-primary me-2"></i>Storage</h6>
+            <p class="small">For caching and offline functionality, the app may request storage permissions.</p>
+          </div>
+        </div>
+
+        <div class="alert alert-warning">
+          <i class="bi bi-exclamation-triangle me-2"></i>
+          <strong>Security Note:</strong> The mobile app uses the same authentication as the web interface. Ensure your connection is secure (HTTPS) when accessing sensitive Samba management functions.
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card mb-4">
+      <div class="card-header">
+        <h5><i class="bi bi-stars me-2"></i>Features</h5>
+      </div>
+      <div class="card-body">
+        <ul class="list-unstyled">
+          <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i><strong>Offline Access</strong><br><small>Basic functionality works offline</small></li>
+          <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i><strong>Push Notifications</strong><br><small>Receive alerts about server status</small></li>
+          <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i><strong>Native Feel</strong><br><small>App-like experience without browser UI</small></li>
+          <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i><strong>Quick Access</strong><br><small>One-tap access from home screen</small></li>
+          <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i><strong>Responsive Design</strong><br><small>Optimized for mobile screens</small></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="card mb-4">
+      <div class="card-header">
+        <h5><i class="bi bi-question-circle me-2"></i>Troubleshooting</h5>
+      </div>
+      <div class="card-body">
+        <div class="accordion" id="troubleshootingAccordion">
+
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#installFail">
+                Installation fails
+              </button>
+            </h2>
+            <div id="installFail" class="accordion-collapse collapse" data-bs-parent="#troubleshootingAccordion">
+              <div class="accordion-body small">
+                <ul>
+                  <li>Ensure you're using a supported browser</li>
+                  <li>Check that you have sufficient storage space</li>
+                  <li>Try refreshing the page and attempting installation again</li>
+                  <li>Clear browser cache and cookies</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#appNotWorking">
+                App doesn't work after installation
+              </button>
+            </h2>
+            <div id="appNotWorking" class="accordion-collapse collapse" data-bs-parent="#troubleshootingAccordion">
+              <div class="accordion-body small">
+                <ul>
+                  <li>Uninstall and reinstall the app</li>
+                  <li>Check your internet connection</li>
+                  <li>Clear app cache/data in device settings</li>
+                  <li>Ensure the server URL is accessible</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#noNotifications">
+                No push notifications
+              </button>
+            </h2>
+            <div id="noNotifications" class="accordion-collapse collapse" data-bs-parent="#troubleshootingAccordion">
+              <div class="accordion-body small">
+                <ul>
+                  <li>Check notification permissions in device settings</li>
+                  <li>Ensure notifications are enabled for the app</li>
+                  <li>Verify server has notification capabilities enabled</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <h5><i class="bi bi-info-circle me-2"></i>System Requirements</h5>
+      </div>
+      <div class="card-body">
+        <h6>Supported Platforms:</h6>
+        <ul class="small mb-3">
+          <li><strong>iOS:</strong> 11.3+ (Safari)</li>
+          <li><strong>Android:</strong> 5.0+ (Chrome, Firefox, Edge)</li>
+          <li><strong>Desktop:</strong> Windows, macOS, Linux (Chrome, Edge)</li>
+        </ul>
+
+        <h6>Minimum Requirements:</h6>
+        <ul class="small mb-0">
+          <li>100MB free storage</li>
+          <li>Stable internet connection</li>
+          <li>Modern web browser with PWA support</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+.installation-steps {
+  position: relative;
+}
+
+.step {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.step-number {
+  background: var(--primary);
+  color: white;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  flex-shrink: 0;
+}
+
+.step-content {
+  flex: 1;
+}
+
+@media (max-width: 768px) {
+  .step {
+    align-items: flex-start;
+  }
+
+  .step-number {
+    margin-top: 0.25rem;
+  }
+}
+</style>
+{% endblock %}

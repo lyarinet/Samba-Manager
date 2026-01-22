@@ -1,0 +1,6 @@
+<svg width="192" height="192" viewBox="0 0 192 192" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="192" height="192" rx="24" fill="#6366f1"/>
+  <circle cx="96" cy="96" r="48" fill="white"/>
+  <path d="M96 60v36l24 14" stroke="#6366f1" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="96" y="140" text-anchor="middle" fill="#6366f1" font-family="Arial, sans-serif" font-size="16" font-weight="bold">SMB</text>
+</svg>

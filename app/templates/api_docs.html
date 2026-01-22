@@ -2,104 +2,422 @@
 {% block content %}
 <div class="page-header">
   <h2>API Documentation</h2>
+  <p class="text-muted mb-0">Complete REST API reference for Samba Manager</p>
 </div>
 
 <div class="card mb-4">
   <div class="card-header">
-    <h5>Introduction</h5>
+    <h5><i class="bi bi-info-circle me-2"></i>Introduction</h5>
   </div>
   <div class="card-body">
     <p>
-      Samba Manager provides a simple REST API for programmatic access to your Samba server.
-      This API allows you to integrate Samba management with your existing systems and scripts.
+      Samba Manager provides a comprehensive REST API for programmatic access to your Samba server.
+      This API allows you to integrate Samba management with your existing systems, scripts, and mobile applications.
     </p>
-    <p>
-      <strong>Authentication:</strong> All API endpoints require authentication using the same credentials as the web interface.
-      Requests must include the session cookie or other authentication headers.
-    </p>
-  </div>
-</div>
 
-<div class="card mb-4">
-  <div class="card-header">
-    <h5>Available Endpoints</h5>
-  </div>
-  <div class="card-body">
-    <h6 class="mb-3">GET /api/shares</h6>
-    <p>Returns a list of all configured Samba shares.</p>
-    <div class="bg-dark p-3 rounded mb-3">
-      <code class="text-light">curl -X GET http://localhost:5001/api/shares -H "Cookie: session=your_session_cookie"</code>
+    <div class="row">
+      <div class="col-md-6">
+        <h6><i class="bi bi-shield-check text-success me-2"></i>Authentication</h6>
+        <p class="small">All API endpoints require authentication using the same credentials as the web interface. Requests must include session cookies or authentication headers.</p>
+      </div>
+      <div class="col-md-6">
+        <h6><i class="bi bi-code-slash text-primary me-2"></i>Base URL</h6>
+        <p class="small"><code>http://your-server:5001/api/</code></p>
+      </div>
     </div>
-    <p>Example Response:</p>
-    <pre class="bg-dark p-3 rounded text-light">[
+
+    <div class="alert alert-info">
+      <h6><i class="bi bi-lightbulb me-2"></i>API Version</h6>
+      <p class="mb-0">Current API version: <strong>v1.0</strong> - All endpoints are backward compatible.</p>
+    </div>
+  </div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-header">
+    <h5><i class="bi bi-list-check me-2"></i>Available Endpoints</h5>
+  </div>
+  <div class="card-body">
+
+    <!-- Shares API -->
+    <div class="endpoint-section mb-4">
+      <h6 class="mb-3">
+        <span class="badge bg-primary me-2">GET</span>
+        <code>/api/shares</code>
+        <small class="text-muted ms-2">List all Samba shares</small>
+      </h6>
+      <p>Get a list of all configured Samba shares with their configuration details.</p>
+
+      <div class="bg-dark p-3 rounded mb-3">
+        <code class="text-light">curl -X GET http://localhost:5001/api/shares -H "Cookie: session=your_session_cookie"</code>
+      </div>
+
+      <p><strong>Response:</strong></p>
+      <pre class="bg-dark p-3 rounded text-light small">[
   {
-    "name": "share",
-    "path": "/srv/samba/share",
+    "name": "public",
+    "path": "/srv/samba/public",
+    "browseable": true,
+    "read_only": false,
+    "guest_ok": true,
+    "valid_users": "",
+    "max_connections": "0"
+  },
+  {
+    "name": "private",
+    "path": "/srv/samba/private",
     "browseable": true,
     "read_only": false,
     "guest_ok": false,
     "valid_users": "@smbusers",
-    "max_connections": "0"
-  },
-  {
-    "name": "testing",
-    "path": "/var/www/html",
-    "browseable": true,
-    "read_only": false,
-    "guest_ok": false,
-    "valid_users": "root,asif",
-    "max_connections": "0"
+    "max_connections": "10"
   }
 ]</pre>
-    
-    <h6 class="mt-4 mb-3">GET /api/status</h6>
-    <p>Returns the current status of Samba services.</p>
-    <div class="bg-dark p-3 rounded mb-3">
-      <code class="text-light">curl -X GET http://localhost:5001/api/status -H "Cookie: session=your_session_cookie"</code>
     </div>
-    <p>Example Response:</p>
-    <pre class="bg-dark p-3 rounded text-light">{
+
+    <!-- Status API -->
+    <div class="endpoint-section mb-4">
+      <h6 class="mb-3">
+        <span class="badge bg-primary me-2">GET</span>
+        <code>/api/status</code>
+        <small class="text-muted ms-2">Get Samba service status</small>
+      </h6>
+      <p>Check the current status of Samba services (smbd and nmbd).</p>
+
+      <div class="bg-dark p-3 rounded mb-3">
+        <code class="text-light">curl -X GET http://localhost:5001/api/status -H "Cookie: session=your_session_cookie"</code>
+      </div>
+
+      <p><strong>Response:</strong></p>
+      <pre class="bg-dark p-3 rounded text-light small">{
   "smbd": "active",
   "nmbd": "active"
 }</pre>
+    </div>
+
+    <!-- Connections API -->
+    <div class="endpoint-section mb-4">
+      <h6 class="mb-3">
+        <span class="badge bg-primary me-2">GET</span>
+        <code>/api/connections</code>
+        <small class="text-muted ms-2">List active connections</small>
+      </h6>
+      <p>Get a list of all active Samba connections. <strong>Requires sudo access.</strong></p>
+
+      <div class="bg-dark p-3 rounded mb-3">
+        <code class="text-light">curl -X GET http://localhost:5001/api/connections -H "Cookie: session=your_session_cookie"</code>
+      </div>
+
+      <p><strong>Response:</strong></p>
+      <pre class="bg-dark p-3 rounded text-light small">[
+  {
+    "pid": "1234",
+    "user": "john",
+    "machine": "192.168.1.100",
+    "share": "public",
+    "connected_at": "2024-01-22T10:30:00Z"
+  }
+]</pre>
+    </div>
+
+    <!-- Terminate Connection API -->
+    <div class="endpoint-section mb-4">
+      <h6 class="mb-3">
+        <span class="badge bg-danger me-2">POST</span>
+        <code>/api/connections/terminate/&lt;pid&gt;</code>
+        <small class="text-muted ms-2">Terminate connection by PID</small>
+      </h6>
+      <p>Terminate a specific Samba connection by process ID. <strong>Requires sudo access.</strong></p>
+
+      <div class="bg-dark p-3 rounded mb-3">
+        <code class="text-light">curl -X POST http://localhost:5001/api/connections/terminate/1234 -H "Cookie: session=your_session_cookie"</code>
+      </div>
+
+      <p><strong>Response:</strong></p>
+      <pre class="bg-dark p-3 rounded text-light small">{
+  "success": true,
+  "message": "Connection terminated successfully"
+}</pre>
+    </div>
+
+    <!-- Terminate Machine Connections API -->
+    <div class="endpoint-section mb-4">
+      <h6 class="mb-3">
+        <span class="badge bg-danger me-2">POST</span>
+        <code>/api/connections/terminate-machine/&lt;machine&gt;</code>
+        <small class="text-muted ms-2">Terminate all connections from machine</small>
+      </h6>
+      <p>Terminate all Samba connections from a specific machine/IP. <strong>Requires sudo access.</strong></p>
+
+      <div class="bg-dark p-3 rounded mb-3">
+        <code class="text-light">curl -X POST http://localhost:5001/api/connections/terminate-machine/192.168.1.100 -H "Cookie: session=your_session_cookie"</code>
+      </div>
+
+      <p><strong>Response:</strong></p>
+      <pre class="bg-dark p-3 rounded text-light small">{
+  "success": true,
+  "message": "All connections from 192.168.1.100 terminated"
+}</pre>
+    </div>
+
+    <!-- Disk Usage API -->
+    <div class="endpoint-section mb-4">
+      <h6 class="mb-3">
+        <span class="badge bg-primary me-2">GET</span>
+        <code>/api/disk-usage</code>
+        <small class="text-muted ms-2">Get disk usage statistics</small>
+      </h6>
+      <p>Get disk usage statistics for all Samba shares. <strong>Requires sudo access.</strong></p>
+
+      <div class="bg-dark p-3 rounded mb-3">
+        <code class="text-light">curl -X GET http://localhost:5001/api/disk-usage -H "Cookie: session=your_session_cookie"</code>
+      </div>
+
+      <p><strong>Response:</strong></p>
+      <pre class="bg-dark p-3 rounded text-light small">[
+  {
+    "share": "public",
+    "path": "/srv/samba/public",
+    "total_size": "1.2G",
+    "used": "850M",
+    "available": "380M",
+    "usage_percent": "69%"
+  }
+]</pre>
+    </div>
+
+    <!-- Backups API -->
+    <div class="endpoint-section mb-4">
+      <h6 class="mb-3">
+        <span class="badge bg-primary me-2">GET</span>
+        <code>/api/backups</code>
+        <small class="text-muted ms-2">List available backups</small>
+      </h6>
+      <p>Get a list of all available Samba configuration backups. <strong>Requires sudo access.</strong></p>
+
+      <div class="bg-dark p-3 rounded mb-3">
+        <code class="text-light">curl -X GET http://localhost:5001/api/backups -H "Cookie: session=your_session_cookie"</code>
+      </div>
+
+      <p><strong>Response:</strong></p>
+      <pre class="bg-dark p-3 rounded text-light small">[
+  {
+    "filename": "smb.conf.backup.20240122_103000",
+    "created": "2024-01-22T10:30:00Z",
+    "size": "2456"
+  }
+]</pre>
+    </div>
+
+    <!-- Browse Directory API -->
+    <div class="endpoint-section mb-4">
+      <h6 class="mb-3">
+        <span class="badge bg-primary me-2">GET</span>
+        <code>/api/browse-directory</code>
+        <small class="text-muted ms-2">Browse server directories</small>
+      </h6>
+      <p>Browse server directories for share path selection. Useful for finding available directories when creating shares.</p>
+
+      <div class="bg-dark p-3 rounded mb-3">
+        <code class="text-light">curl -X GET "http://localhost:5001/api/browse-directory?path=/srv" -H "Cookie: session=your_session_cookie"</code>
+      </div>
+
+      <p><strong>Parameters:</strong></p>
+      <ul class="small">
+        <li><code>path</code> (string): Directory path to browse (default: "/")</li>
+      </ul>
+
+      <p><strong>Response:</strong></p>
+      <pre class="bg-dark p-3 rounded text-light small">{
+  "success": true,
+  "path": "/srv",
+  "contents": [
+    {
+      "name": "samba",
+      "type": "directory",
+      "size": 0,
+      "modified": "2024-01-22T09:15:30"
+    },
+    {
+      "name": "www",
+      "type": "directory",
+      "size": 0,
+      "modified": "2024-01-22T08:45:12"
+    }
+  ]
+}</pre>
+    </div>
+
   </div>
 </div>
 
 <div class="card mb-4">
   <div class="card-header">
-    <h5>Using the API in Scripts</h5>
+    <h5><i class="bi bi-code-square me-2"></i>Using the API in Scripts</h5>
   </div>
   <div class="card-body">
+
     <h6>Python Example</h6>
-    <pre class="bg-dark p-3 rounded text-light">import requests
+    <pre class="bg-dark p-3 rounded text-light small">import requests
 import json
 
-# Login to get session cookie
+# Create a session for cookie management
 session = requests.Session()
-login_data = {"username": "admin", "password": "your_password"}
-session.post("http://localhost:5001/login", data=login_data)
 
-# Get all shares
-response = session.get("http://localhost:5001/api/shares")
-shares = response.json()
+# Login to get session cookie
+login_data = {
+    "username": "admin",
+    "password": "your_password"
+}
+response = session.post("http://localhost:5001/login", data=login_data)
 
-# Print share names
-for share in shares:
-    print(f"Share: {share['name']} - Path: {share['path']}")</pre>
+if response.status_code == 200:
+    # Get all shares
+    shares_response = session.get("http://localhost:5001/api/shares")
+    shares = shares_response.json()
+
+    # Print share information
+    for share in shares:
+        print(f"Share: {share['name']} - Path: {share['path']}")
+
+    # Get service status
+    status_response = session.get("http://localhost:5001/api/status")
+    status = status_response.json()
+    print(f"Samba Status - smbd: {status['smbd']}, nmbd: {status['nmbd']}")
+else:
+    print("Login failed")</pre>
 
     <h6 class="mt-4">Bash Example</h6>
-    <pre class="bg-dark p-3 rounded text-light"># Login and save cookie
+    <pre class="bg-dark p-3 rounded text-light small"># Login and save cookie
 cookie=$(curl -s -c - -X POST http://localhost:5001/login \
   -d "username=admin&password=your_password" | grep session | awk '{print $7}')
 
-# Get all shares
-curl -s -X GET "http://localhost:5001/api/shares" \
-  -H "Cookie: session=$cookie" | jq .</pre>
+# Check if login was successful
+if [ -n "$cookie" ]; then
+    echo "Login successful"
+
+    # Get all shares
+    echo "Shares:"
+    curl -s -X GET "http://localhost:5001/api/shares" \
+      -H "Cookie: session=$cookie" | jq -r '.[] | "\(.name): \(.path)"'
+
+    # Get service status
+    echo -e "\nService Status:"
+    curl -s -X GET "http://localhost:5001/api/status" \
+      -H "Cookie: session=$cookie" | jq .
+else
+    echo "Login failed"
+fi</pre>
+
+    <h6 class="mt-4">JavaScript/Node.js Example</h6>
+    <pre class="bg-dark p-3 rounded text-light small">const axios = require('axios');
+const tough = require('tough-cookie');
+const axiosCookieJarSupport = require('axios-cookiejar-support');
+
+axiosCookieJarSupport(axios);
+const cookieJar = new tough.CookieJar();
+
+async function sambaManagerAPI() {
+    try {
+        // Login
+        const loginResponse = await axios.post('http://localhost:5001/login', {
+            username: 'admin',
+            password: 'your_password'
+        }, {
+            jar: cookieJar,
+            withCredentials: true
+        });
+
+        // Get shares
+        const sharesResponse = await axios.get('http://localhost:5001/api/shares', {
+            jar: cookieJar,
+            withCredentials: true
+        });
+
+        console.log('Shares:', sharesResponse.data);
+
+        // Get status
+        const statusResponse = await axios.get('http://localhost:5001/api/status', {
+            jar: cookieJar,
+            withCredentials: true
+        });
+
+        console.log('Status:', statusResponse.data);
+
+    } catch (error) {
+        console.error('API call failed:', error.message);
+    }
+}
+
+sambaManagerAPI();</pre>
   </div>
 </div>
 
-<div class="alert alert-info">
-  <i class="bi bi-info-circle me-2"></i>
-  <strong>Note:</strong> This API is currently read-only. Future versions may include endpoints for creating, updating, and deleting shares, users, and other resources.
+<div class="card mb-4">
+  <div class="card-header">
+    <h5><i class="bi bi-exclamation-triangle me-2"></i>Error Handling</h5>
+  </div>
+  <div class="card-body">
+    <p>The API returns standard HTTP status codes and JSON error responses:</p>
+
+    <div class="table-responsive">
+      <table class="table table-sm">
+        <thead>
+          <tr>
+            <th>Status Code</th>
+            <th>Description</th>
+            <th>Example Response</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>200</code></td>
+            <td>Success</td>
+            <td><code>{"success": true, "data": {...}}</code></td>
+          </tr>
+          <tr>
+            <td><code>400</code></td>
+            <td>Bad Request</td>
+            <td><code>{"error": "Invalid parameters"}</code></td>
+          </tr>
+          <tr>
+            <td><code>401</code></td>
+            <td>Unauthorized</td>
+            <td><code>{"error": "Authentication required"}</code></td>
+          </tr>
+          <tr>
+            <td><code>403</code></td>
+            <td>Forbidden</td>
+            <td><code>{"error": "Sudo access required"}</code></td>
+          </tr>
+          <tr>
+            <td><code>404</code></td>
+            <td>Not Found</td>
+            <td><code>{"error": "Endpoint not found"}</code></td>
+          </tr>
+          <tr>
+            <td><code>500</code></td>
+            <td>Server Error</td>
+            <td><code>{"error": "Internal server error"}</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-header">
+    <h5><i class="bi bi-lightbulb me-2"></i>Best Practices</h5>
+  </div>
+  <div class="card-body">
+    <ul class="mb-0">
+      <li><strong>Rate Limiting:</strong> The API includes rate limiting. Avoid making excessive requests.</li>
+      <li><strong>Session Management:</strong> Keep sessions alive by making periodic requests or implementing proper session handling.</li>
+      <li><strong>Error Handling:</strong> Always check response status codes and handle errors gracefully.</li>
+      <li><strong>Security:</strong> Use HTTPS in production and store credentials securely.</li>
+      <li><strong>Permissions:</strong> Some endpoints require sudo access - ensure your application has appropriate permissions.</li>
+    </ul>
+  </div>
 </div>
 {% endblock %} 

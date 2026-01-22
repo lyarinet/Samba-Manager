@@ -4,6 +4,19 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Samba Manager</title>
+
+  <!-- PWA Meta Tags -->
+  <meta name="description" content="Comprehensive web-based interface for managing Samba file sharing servers">
+  <meta name="theme-color" content="#6366f1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Samba Manager">
+  <meta name="mobile-web-app-capable" content="yes">
+  {% if request.host_url.find('github.dev') == -1 and request.host_url.find('app.github.dev') == -1 %}
+  <link rel="manifest" href="/static/manifest.json">
+  {% endif %}
+  <link rel="apple-touch-icon" href="/static/icon-192.svg">
+
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -663,6 +676,13 @@
           </a>
         </li>
         
+        <li class="nav-item">
+          <a href="/mobile-install" class="nav-link {{ 'active' if request.path == '/mobile-install' }}">
+            <i class="bi bi-phone"></i>
+            <span>Mobile Install</span>
+          </a>
+        </li>
+        
         {% if current_user.is_admin %}
         <li class="nav-item">
           <a href="{{ url_for('main.api_docs') }}" class="nav-link {{ 'active' if request.path == '/api/docs' }}">
@@ -806,6 +826,60 @@
         console.error('Error opening terminal:', error);
         alert('Failed to open terminal. Please check if the terminal service is running.');
       }
+    }
+  </script>
+
+  <!-- Service Worker Registration for PWA -->
+  <script>
+    // Only register service worker if not in problematic environments
+    function shouldRegisterServiceWorker() {
+      // Check if we're in GitHub Codespaces (has specific hostname pattern)
+      if (window.location.hostname.includes('github.dev') ||
+          window.location.hostname.includes('app.github.dev')) {
+        console.log('Service Worker: Skipping registration in GitHub Codespaces environment');
+        return false;
+      }
+
+      // Check if we're in an HTTPS environment (required for service workers)
+      if (window.location.protocol !== 'https:' && window.location.hostname !== 'localhost') {
+        console.log('Service Worker: HTTPS required for service worker registration');
+        return false;
+      }
+
+      return true;
+    }
+
+    if ('serviceWorker' in navigator && shouldRegisterServiceWorker()) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/static/sw.js', { scope: '/' })
+          .then(function(registration) {
+            console.log('ServiceWorker registration successful with scope: ', registration.scope);
+
+            // Handle service worker updates
+            registration.addEventListener('updatefound', function() {
+              const newWorker = registration.installing;
+              if (newWorker) {
+                newWorker.addEventListener('statechange', function() {
+                  if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                    // New version available
+                    console.log('New service worker version available');
+                    // Optionally show update prompt to user
+                  }
+                });
+              }
+            });
+          })
+          .catch(function(err) {
+            console.log('ServiceWorker registration failed: ', err);
+          });
+      });
+
+      // Listen for messages from service worker
+      navigator.serviceWorker.addEventListener('message', function(event) {
+        console.log('Message from service worker:', event.data);
+      });
+    } else {
+      console.log('Service Worker: Registration skipped');
     }
   </script>
 </body>

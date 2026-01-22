@@ -525,6 +525,14 @@ def disable_samba_user(username):
         flash(f"Invalid username: {message}", "error")
         return redirect("/users")
 
+    # Check if user exists in Samba first
+    samba_users = get_samba_users()
+    user_exists = any(user["username"] == username for user in samba_users)
+
+    if not user_exists:
+        flash(f"User {username} is not a Samba user", "error")
+        return redirect("/users")
+
     try:
         # Use smbpasswd to disable the user
         result = subprocess.run(
@@ -559,6 +567,14 @@ def enable_samba_user(username):
         flash(f"Invalid username: {message}", "error")
         return redirect("/users")
 
+    # Check if user exists in Samba first
+    samba_users = get_samba_users()
+    user_exists = any(user["username"] == username for user in samba_users)
+
+    if not user_exists:
+        flash(f"User {username} is not a Samba user", "error")
+        return redirect("/users")
+
     try:
         # Use smbpasswd to enable the user
         result = subprocess.run(
@@ -591,6 +607,14 @@ def delete_samba_user(username):
     valid, message = validate_username(username)
     if not valid:
         flash(f"Invalid username: {message}", "error")
+        return redirect("/users")
+
+    # Check if user exists in Samba first
+    samba_users = get_samba_users()
+    user_exists = any(user["username"] == username for user in samba_users)
+
+    if not user_exists:
+        flash(f"User {username} is not a Samba user", "error")
         return redirect("/users")
 
     try:
@@ -1473,6 +1497,30 @@ def disk_usage():
 def api_docs():
     """API documentation page"""
     return render_template("api_docs.html")
+
+
+@bp.route("/mobile-install")
+@login_required
+def mobile_install():
+    """Mobile installation guide page"""
+    return render_template("mobile_install.html")
+
+
+@bp.route("/static/<path:filename>")
+def static_files(filename):
+    """Serve static files with CORS headers for PWA support"""
+    from flask import send_from_directory, make_response
+
+    response = make_response(send_from_directory('static', filename))
+
+    # Add CORS headers for PWA manifest and service worker
+    if filename.endswith('.json') or filename.endswith('.js'):
+        response.headers['Access-Control-Allow-Origin'] = '*'
+        response.headers['Access-Control-Allow-Methods'] = 'GET, OPTIONS'
+        response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+        response.headers['Cache-Control'] = 'public, max-age=3600'
+
+    return response
 
 
 @bp.route("/api/browse-directory")
