@@ -539,7 +539,7 @@
         </li>
         
         <li class="nav-item">
-          <a href="#" onclick="window.open('http://' + window.location.hostname + ':8080', '_blank', 'width=800,height=600'); return false;" class="nav-link">
+          <a href="#" onclick="openTerminal(); return false;" class="nav-link">
             <i class="bi bi-terminal"></i>
             <span>Terminal</span>
           </a>
@@ -634,6 +634,25 @@
         });
       }
     });
+
+    function openTerminal() {
+      // Check if we're in a GitHub Codespace environment
+      var hostname = window.location.hostname;
+      var isGitHubCodespace = hostname.includes('.app.github.dev');
+      
+      var terminalUrl;
+      if (isGitHubCodespace) {
+        // For GitHub Codespaces, replace the port in the hostname
+        // e.g., vigilant-zebra-5rxrv6v3vpq7-5000.app.github.dev -> vigilant-zebra-5rxrv6v3vpq7-8080.app.github.dev
+        var baseName = hostname.replace(/-5000\.app\.github\.dev$/, '');
+        terminalUrl = 'https://' + baseName + '-8080.app.github.dev';
+      } else {
+        // For regular environments, use the same hostname with port 8080
+        terminalUrl = 'http://' + hostname + ':8080';
+      }
+      
+      window.open(terminalUrl, '_blank', 'width=800,height=600');
+    }
   </script>
 </body>
 </html>
