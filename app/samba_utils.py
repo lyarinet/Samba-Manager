@@ -566,13 +566,25 @@ def write_global_settings(settings):
 
         # Validate the configuration
         if DEV_MODE:
-            # In dev mode, validate the local config
-            validate_cmd = subprocess.run(
-                ["testparm", "-s", SMB_CONF],
-                capture_output=True,
-                text=True,
-                check=False,
+            # In dev mode, check if testparm is available
+            testparm_check = subprocess.run(
+                ["which", "testparm"], capture_output=True, text=True, check=False
             )
+            if testparm_check.returncode == 0:
+                # testparm is available, validate the local config
+                validate_cmd = subprocess.run(
+                    ["testparm", "-s", SMB_CONF],
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                )
+                if validate_cmd.returncode != 0:
+                    # If validation fails, restore the backup
+                    subprocess.run(["cp", backup_path, SMB_CONF], check=False)
+                    print(f"Invalid configuration: {validate_cmd.stderr}")
+                    return False
+            else:
+                print("testparm not available, skipping configuration validation in dev mode")
         else:
             # In production mode, validate the system config
             validate_cmd = subprocess.run(
@@ -582,16 +594,13 @@ def write_global_settings(settings):
                 check=False,
             )
 
-        if validate_cmd.returncode != 0:
-            # If validation fails, restore the backup
-            if DEV_MODE:
-                subprocess.run(["cp", backup_path, SMB_CONF], check=False)
-            else:
+            if validate_cmd.returncode != 0:
+                # If validation fails, restore the backup
                 subprocess.run(
                     ["sudo", "cp", backup_path, "/etc/samba/smb.conf"], check=False
                 )
-            print(f"Invalid configuration: {validate_cmd.stderr}")
-            return False
+                print(f"Invalid configuration: {validate_cmd.stderr}")
+                return False
 
         # Restart Samba services
         if DEV_MODE:
