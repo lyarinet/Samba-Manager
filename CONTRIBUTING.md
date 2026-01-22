@@ -1,6 +1,10 @@
-# Contributing to Samba Manager
+# Contributing to Samba Manager 🚀
 
-Thank you for your interest in contributing to Samba Manager! This document provides guidelines and instructions for contributing to this project.
+Thank you for your interest in contributing to **Samba Manager**! We welcome contributions from everyone. 
+
+To maintain code quality and a smooth workflow, please follow these guidelines.
+
+---
 
 ## Code of Conduct
 
@@ -36,15 +40,19 @@ By participating in this project, you agree to maintain a respectful and inclusi
 5. **Update Documentation**: Update relevant documentation.
 6. **Submit a Pull Request**: Include a clear description of the changes and any related issues.
 
-## Development Setup
+## 🛠 Set Up Development Environment
 
-1. **Clone the Repository**:
+Follow these steps to set up the project on your local machine:
+
+1. **Fork** the repository and **Clone** it to your system.
+
+2. Create and activate a virtual environment:
    ```bash
    git clone https://github.com/lyarinet/samba-manager.git
    cd samba-manager
    ```
 
-2. **Set Up Development Environment**:
+3. **Set Up Development Environment**:
    ```bash
    python3 -m venv venv
    source venv/bin/activate
