@@ -455,6 +455,12 @@
       font-weight: 600;
     }
     
+    /* Footer styling */
+    footer {
+      z-index: 1020;
+      position: relative;
+    }
+    
     /* Mobile responsive */
     @media (max-width: 768px) {
       .sidebar {
@@ -496,9 +502,14 @@
         visibility: visible;
       }
       
-      /* Footer adjustments for mobile */
+      /* Ensure footer stays visible and at bottom on mobile */
       footer {
         padding: 1rem 0;
+        z-index: 1050; /* Higher than sidebar (1040) and overlay (1030) */
+        position: relative;
+        margin-top: auto;
+        background-color: var(--bg-card);
+        border-top: 1px solid var(--border-color);
       }
       
       footer .row {
