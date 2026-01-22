@@ -1488,40 +1488,82 @@ def validate_share_path(path):
 
 
 def export_config():
+    """Export the complete Samba configuration as a single file"""
     try:
-        with open(SMB_CONF, "r") as f1, open(SHARE_CONF, "r") as f2:
-            return f1.read() + "\n" + f2.read()
+        # Read the main config
+        with open(SMB_CONF, "r") as f:
+            main_config = f.read()
+
+        # Read the shares config
+        shares_config = ""
+        if os.path.exists(SHARE_CONF):
+            with open(SHARE_CONF, "r") as f:
+                shares_config = f.read()
+
+        # Combine them into a single valid configuration
+        # Remove any include statements from main config and append shares
+        lines = main_config.split('\n')
+        filtered_lines = []
+        for line in lines:
+            if not line.strip().startswith('include'):
+                filtered_lines.append(line)
+
+        combined_config = '\n'.join(filtered_lines)
+        if shares_config.strip():
+            combined_config += '\n' + shares_config
+
+        return combined_config
     except Exception as e:
         return f"Error exporting configuration: {str(e)}"
 
 
 def import_config(data):
+    """Import a complete Samba configuration file"""
     try:
-        parts = data.split("[global]")
-        if len(parts) >= 2:
-            global_conf = "[global]" + parts[1].split("[", 1)[0]
-            rest = "[" + parts[1].split("[", 1)[1]
+        # Parse the configuration to separate global and shares
+        lines = data.split('\n')
+        global_section = []
+        shares_section = []
+        current_section = None
 
-            # Backup original files
-            if os.path.exists(SMB_CONF):
-                with open(f"{SMB_CONF}.bak", "w") as f_bak:
-                    with open(SMB_CONF, "r") as f_orig:
-                        f_bak.write(f_orig.read())
+        for line in lines:
+            stripped = line.strip()
+            if stripped.startswith('[global]'):
+                current_section = 'global'
+                global_section.append(line)
+            elif stripped.startswith('[') and stripped.endswith(']') and stripped != '[global]':
+                current_section = 'shares'
+                shares_section.append(line)
+            else:
+                if current_section == 'global':
+                    global_section.append(line)
+                elif current_section == 'shares':
+                    shares_section.append(line)
+                else:
+                    # Lines before any section go to global
+                    global_section.append(line)
 
-            if os.path.exists(SHARE_CONF):
-                with open(f"{SHARE_CONF}.bak", "w") as f_bak:
-                    with open(SHARE_CONF, "r") as f_orig:
-                        f_bak.write(f_orig.read())
+        # Backup original files
+        if os.path.exists(SMB_CONF):
+            with open(f"{SMB_CONF}.bak", "w") as f_bak:
+                with open(SMB_CONF, "r") as f_orig:
+                    f_bak.write(f_orig.read())
 
-            # Write new configuration
-            with open(SMB_CONF, "w") as f1:
-                f1.write(global_conf.strip() + "\n")
-            with open(SHARE_CONF, "w") as f2:
-                f2.write(rest.strip() + "\n")
+        if os.path.exists(SHARE_CONF):
+            with open(f"{SHARE_CONF}.bak", "w") as f_bak:
+                with open(SHARE_CONF, "r") as f_orig:
+                    f_bak.write(f_orig.read())
 
-            # Restart Samba service
-            return restart_samba_service()
-        return False
+        # Write the global section
+        with open(SMB_CONF, "w") as f:
+            f.write('\n'.join(global_section))
+
+        # Write the shares section
+        with open(SHARE_CONF, "w") as f:
+            f.write('\n'.join(shares_section))
+
+        # Restart Samba service
+        return restart_samba_service()
     except Exception as e:
         print(f"Error importing configuration: {e}")
         return False
@@ -1625,11 +1667,9 @@ def get_samba_users():
                         )
             return users
 
-        # If all else fails, try to get system users that might be Samba users
-        system_users = list_system_users()
-        return [
-            {"username": user, "enabled": True, "flags": "U"} for user in system_users
-        ]
+        # If all else fails, return empty list instead of system users
+        # System users are not necessarily Samba users
+        return []
     except Exception as e:
         print(f"Error getting Samba users: {e}")
         return []

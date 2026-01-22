@@ -543,7 +543,14 @@ def disable_samba_user(username):
         )
 
         if result.returncode != 0:
-            flash(f"Failed to disable user: {result.stderr}", "error")
+            error_msg = result.stderr.strip()
+            # Check for specific error messages
+            if "Failed to find entry for user" in error_msg:
+                flash(f"User {username} does not exist in Samba database", "error")
+            elif "Account is already disabled" in error_msg or "already disabled" in error_msg.lower():
+                flash(f"User {username} is already disabled", "warning")
+            else:
+                flash(f"Failed to disable user: {error_msg}", "error")
         else:
             flash(f"User {username} disabled successfully", "success")
 
@@ -1116,13 +1123,28 @@ def service_action(action):
             status = get_samba_status()
             return jsonify(status)
         elif action == "enable":
-            subprocess.run(
-                ["sudo", "systemctl", "enable", "smbd", "nmbd"],
-                capture_output=True,
-                text=True,
-                check=False,
-            )
-            flash("Samba services enabled to start on boot", "success")
+            # Enable Samba services (only enable what's available)
+            services_to_enable = []
+            for service in ["smbd", "nmbd"]:
+                check_result = subprocess.run(
+                    ["systemctl", "list-units", "--type=service", f"{service}.service"],
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                )
+                if check_result.returncode == 0 and service in check_result.stdout:
+                    services_to_enable.append(service)
+            
+            if services_to_enable:
+                subprocess.run(
+                    ["sudo", "systemctl", "enable"] + services_to_enable,
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                )
+                flash(f"Samba services enabled to start on boot: {', '.join(services_to_enable)}", "success")
+            else:
+                flash("No Samba services found to enable", "warning")
         else:
             result = subprocess.run(
                 ["sudo", "systemctl", action, "smbd", "nmbd"],
