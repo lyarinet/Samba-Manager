@@ -1126,37 +1126,89 @@ def service_action(action):
             # Enable Samba services (only enable what's available)
             services_to_enable = []
             for service in ["smbd", "nmbd"]:
-                check_result = subprocess.run(
-                    ["systemctl", "list-units", "--type=service", f"{service}.service"],
-                    capture_output=True,
-                    text=True,
-                    check=False,
-                )
-                if check_result.returncode == 0 and service in check_result.stdout:
-                    services_to_enable.append(service)
+                # Try systemctl first, then service command
+                try:
+                    check_result = subprocess.run(
+                        ["systemctl", "list-units", "--type=service", f"{service}.service"],
+                        capture_output=True,
+                        text=True,
+                        check=False,
+                    )
+                    if check_result.returncode == 0 and service in check_result.stdout:
+                        services_to_enable.append(service)
+                except Exception:
+                    # Fallback to service command check
+                    try:
+                        check_result = subprocess.run(
+                            ["service", service, "status"],
+                            capture_output=True,
+                            text=True,
+                            check=False,
+                        )
+                        if check_result.returncode == 0:
+                            services_to_enable.append(service)
+                    except Exception:
+                        pass
             
             if services_to_enable:
-                subprocess.run(
-                    ["sudo", "systemctl", "enable"] + services_to_enable,
-                    capture_output=True,
-                    text=True,
-                    check=False,
-                )
-                flash(f"Samba services enabled to start on boot: {', '.join(services_to_enable)}", "success")
+                # Try systemctl first, then service command
+                try:
+                    result = subprocess.run(
+                        ["sudo", "systemctl", "enable"] + services_to_enable,
+                        capture_output=True,
+                        text=True,
+                        check=False,
+                    )
+                    if result.returncode != 0:
+                        raise Exception("systemctl enable failed")
+                    flash(f"Samba services enabled to start on boot: {', '.join(services_to_enable)}", "success")
+                except Exception:
+                    # Fallback to service command (may not support enable)
+                    flash(f"Samba services are available: {', '.join(services_to_enable)} (enable not supported in this environment)", "info")
             else:
                 flash("No Samba services found to enable", "warning")
         else:
-            result = subprocess.run(
-                ["sudo", "systemctl", action, "smbd", "nmbd"],
-                capture_output=True,
-                text=True,
-                check=False,
-            )
+            # Try systemctl first, fallback to service command
+            try:
+                result = subprocess.run(
+                    ["systemctl", action, "smbd", "nmbd"],
+                    capture_output=True,
+                    text=True,
+                    check=False,
+                )
+                # If systemctl fails, try service command
+                if result.returncode != 0:
+                    raise Exception("systemctl failed")
+            except Exception:
+                # Fallback to service command for non-systemd environments
+                try:
+                    smbd_result = subprocess.run(
+                        ["sudo", "service", "smbd", action],
+                        capture_output=True,
+                        text=True,
+                        check=False,
+                    )
+                    nmbd_result = subprocess.run(
+                        ["sudo", "service", "nmbd", action],
+                        capture_output=True,
+                        text=True,
+                        check=False,
+                    )
+                    # Use the results from service commands
+                    if smbd_result.returncode == 0 or nmbd_result.returncode == 0:
+                        result = smbd_result if smbd_result.returncode == 0 else nmbd_result
+                    else:
+                        result = smbd_result
+                except Exception as e:
+                    result = subprocess.CompletedProcess(args=[], returncode=1, stdout="", stderr=str(e))
 
             if result.returncode != 0:
                 flash(f"Error {action} Samba services: {result.stderr}", "error")
             else:
                 flash(f"Successfully {action}ed Samba services", "success")
+                # Small delay to allow service status to update
+                import time
+                time.sleep(1)
 
         return redirect("/maintenance")
 

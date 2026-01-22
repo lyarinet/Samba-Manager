@@ -10,9 +10,14 @@
     <div class="card h-100">
       <div class="card-header d-flex justify-content-between align-items-center">
         <h5 class="mb-0">Service Management</h5>
-        <span class="badge {% if status.smbd == 'active' %}bg-success{% else %}bg-danger{% endif %}">
-          {{ 'Running' if status.smbd == 'active' else 'Stopped' }}
-        </span>
+        <div>
+          <span class="badge {% if status.smbd == 'active' %}bg-success{% else %}bg-danger{% endif %} me-1">
+            smbd: {{ 'Running' if status.smbd == 'active' else 'Stopped' }}
+          </span>
+          <span class="badge {% if status.nmbd == 'active' %}bg-success{% else %}bg-warning{% endif %}">
+            nmbd: {{ 'Running' if status.nmbd == 'active' else 'Stopped' }}
+          </span>
+        </div>
       </div>
       <div class="card-body">
         <p>Control the Samba service (smbd and nmbd)</p>

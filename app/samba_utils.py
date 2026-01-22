@@ -234,13 +234,36 @@ def get_samba_status():
     if DEV_MODE:
         return {"smbd": "active (dev)", "nmbd": "active (dev)"}
     try:
+        # Try systemctl first (for systemd systems)
         smbd = subprocess.run(
             ["systemctl", "is-active", "smbd"], capture_output=True, text=True
         )
         nmbd = subprocess.run(
             ["systemctl", "is-active", "nmbd"], capture_output=True, text=True
         )
-        return {"smbd": smbd.stdout.strip(), "nmbd": nmbd.stdout.strip()}
+        
+        # If systemctl works and doesn't give the container error, return the results
+        smbd_output = smbd.stdout.strip()
+        nmbd_output = nmbd.stdout.strip()
+        if not smbd_output.startswith('"systemd" is not running'):
+            return {"smbd": smbd_output, "nmbd": nmbd_output}
+    except Exception:
+        pass
+    
+    # Fallback to service command for non-systemd environments (like containers)
+    try:
+        smbd_service = subprocess.run(
+            ["service", "smbd", "status"], capture_output=True, text=True
+        )
+        nmbd_service = subprocess.run(
+            ["service", "nmbd", "status"], capture_output=True, text=True
+        )
+        
+        # Parse service command output - return code 0 means running
+        smbd_status = "active" if smbd_service.returncode == 0 else "inactive"
+        nmbd_status = "active" if nmbd_service.returncode == 0 else "inactive"
+        
+        return {"smbd": smbd_status, "nmbd": nmbd_status}
     except Exception:
         return {"smbd": "unknown", "nmbd": "unknown"}
 
