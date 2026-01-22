@@ -42,6 +42,7 @@
       min-height: 100vh;
       display: flex;
       flex-direction: column;
+      padding-bottom: 4rem; /* Space for fixed footer */
     }
 
     .modal-title{
@@ -151,6 +152,7 @@
     .content {
       margin-left: 250px;
       padding: 1.5rem;
+      padding-bottom: 5rem; /* Space for fixed footer */
       transition: all 0.3s;
       flex: 1;
     }
@@ -458,7 +460,11 @@
     /* Footer styling */
     footer {
       z-index: 1020;
-      position: relative;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      width: 100%;
     }
     
     /* Mobile responsive */
@@ -476,6 +482,7 @@
       .content {
         margin-left: 0;
         padding-top: 4rem; /* Space for mobile toggle button */
+        padding-bottom: 5rem; /* Extra space for fixed footer on mobile */
       }
       
       .content.active {
@@ -502,12 +509,10 @@
         visibility: visible;
       }
       
-      /* Ensure footer stays visible and at bottom on mobile */
+      /* Footer adjustments for mobile - now fixed positioned */
       footer {
         padding: 1rem 0;
-        z-index: 1050; /* Higher than sidebar (1040) and overlay (1030) */
-        position: relative;
-        margin-top: auto;
+        z-index: 1050; /* Higher than sidebar and overlay */
         background-color: var(--bg-card);
         border-top: 1px solid var(--border-color);
       }
@@ -722,7 +727,7 @@
   </div>
   
   <!-- Footer -->
-  <footer class="bg-light border-top mt-auto py-3">
+  <footer class="bg-light border-top py-3" style="position: fixed; bottom: 0; left: 0; right: 0; z-index: 1020;">
     <div class="container-fluid">
       <div class="row align-items-center">
         <div class="col-md-6">
