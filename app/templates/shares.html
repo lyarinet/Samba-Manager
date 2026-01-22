@@ -84,6 +84,7 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <form action="/edit-share" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
         <div class="modal-body">
           <input type="hidden" name="original_name" value="{{ share.name }}">
           
@@ -197,6 +198,7 @@
       <div class="modal-footer">
         <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
         <form action="/delete-share" method="post" class="d-inline">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
           <input type="hidden" name="name" value="{{ share.name }}">
           <button type="submit" class="btn btn-danger">Delete Share</button>
         </form>
@@ -228,6 +230,7 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <form action="/add-share" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
         <div class="modal-body">
           <div class="mb-3">
             <label for="name" class="form-label">Share Name</label>
