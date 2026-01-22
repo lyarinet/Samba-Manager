@@ -398,9 +398,18 @@ document.addEventListener('DOMContentLoaded', function() {
       </div>
     `;
     
-    fetch('/api/browse-directory?path=' + encodeURIComponent(path))
-      .then(response => response.json())
+    fetch('/api/browse-directory?path=' + encodeURIComponent(path), {
+      credentials: 'same-origin'
+    })
+      .then(response => {
+        console.log('API Response status:', response.status);
+        if (!response.ok) {
+          throw new Error('HTTP error! status: ' + response.status);
+        }
+        return response.json();
+      })
       .then(data => {
+        console.log('API Response data:', data);
         if (data.success) {
           displayDirectoryContents(data.contents, path);
         } else {
