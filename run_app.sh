@@ -48,12 +48,10 @@ echo "Starting terminal service..."
 # Check if app is running with sudo
 if [ "$EUID" -eq 0 ]; then
   echo "Running in production mode with sudo..."
-  # Set DEV_MODE to False in samba_utils.py
-  sed -i 's/DEV_MODE = True/DEV_MODE = False/g' app/samba_utils.py
+  export SAMBA_MANAGER_DEV_MODE=0
 else
   echo "Running in development mode..."
-  # Set DEV_MODE to True in samba_utils.py
-  sed -i 's/DEV_MODE = False/DEV_MODE = True/g' app/samba_utils.py
+  export SAMBA_MANAGER_DEV_MODE=1
 fi
 
 # Run the application
