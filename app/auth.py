@@ -1,5 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, request, flash, session
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
+from flask_limiter import Limiter
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
 import json
@@ -9,15 +10,10 @@ bp = Blueprint('auth', __name__)
 # Path to store user data
 USERS_FILE = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'users.json')
 
-# Ensure users file exists
+# Ensure users file exists (but don't create default admin)
 if not os.path.exists(USERS_FILE):
     with open(USERS_FILE, 'w') as f:
-        json.dump({
-            "admin": {
-                "password": generate_password_hash("admin"),
-                "is_admin": True
-            }
-        }, f)
+        json.dump({}, f)  # Start with empty users
 
 class User(UserMixin):
     def __init__(self, username, is_admin=False):
@@ -67,17 +63,20 @@ class User(UserMixin):
 
 @bp.route('/login', methods=['GET', 'POST'])
 def login():
+    from flask import current_app
+    limiter = getattr(current_app, 'limiter', None)
+
     if current_user.is_authenticated:
         return redirect(url_for('main.index'))
-    
+
     if request.method == 'POST':
         username = request.form.get('username')
         password = request.form.get('password')
-        
+
         if not username or not password:
             flash('Please fill in all fields', 'error')
             return render_template('login.html')
-        
+
         if User.verify_password(username, password):
             user = User.get(username)
             login_user(user)
@@ -85,7 +84,7 @@ def login():
             return redirect(next_page or url_for('main.index'))
         else:
             flash('Invalid username or password', 'error')
-    
+
     return render_template('login.html')
 
 @bp.route('/logout')

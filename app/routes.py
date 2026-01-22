@@ -12,6 +12,56 @@ import pwd, grp
 
 bp = Blueprint('main', __name__)
 
+def validate_share_name(name):
+    """Validate share name for security and Samba compatibility"""
+    if not name:
+        return False, "Share name cannot be empty"
+
+    if len(name) > 80:
+        return False, "Share name too long (max 80 characters)"
+
+    # Samba share names can contain letters, numbers, underscores, hyphens
+    # Must not contain spaces or special characters that could cause issues
+    if not re.match(r'^[a-zA-Z0-9_-]+$', name):
+        return False, "Share name can only contain letters, numbers, underscores, and hyphens"
+
+    # Reserved names
+    reserved_names = ['global', 'homes', 'printers', 'print$']
+    if name.lower() in reserved_names:
+        return False, "Share name is reserved by Samba"
+
+    return True, "Valid"
+
+def validate_share_path(path):
+    """Enhanced path validation for security"""
+    if not path:
+        return False, "Path cannot be empty"
+
+    # Convert to absolute path
+    abs_path = os.path.abspath(path)
+
+    # Check for directory traversal attempts
+    if ".." in abs_path or not abs_path.startswith("/"):
+        return False, "Invalid path - directory traversal not allowed"
+
+    # Check if path exists and is a directory
+    if not os.path.exists(abs_path):
+        return False, "Path does not exist"
+    elif not os.path.isdir(abs_path):
+        return False, "Path must be a directory"
+
+    # Check if path is within reasonable system limits
+    if len(abs_path) > 4096:  # PATH_MAX on most systems
+        return False, "Path too long"
+
+    # Avoid sensitive system directories
+    sensitive_paths = ["/etc", "/var", "/usr", "/bin", "/sbin", "/boot", "/sys", "/proc", "/dev"]
+    for sensitive in sensitive_paths:
+        if abs_path.startswith(sensitive):
+            return False, f"Cannot use system directory: {sensitive}"
+
+    return True, f"Path validated: {abs_path}"
+
 @bp.route('/')
 @login_required
 def index():
@@ -97,19 +147,10 @@ def shares():
     has_sudo = check_sudo_access()
     all_shares = load_shares()
     
-    # Debug logging
-    print(f"Loaded {len(all_shares)} shares from configuration")
-    for share in all_shares:
-        print(f"Share: {share.get('name', 'unknown')} - Path: {share.get('path', 'unknown')}")
-        print(f"  valid_users: '{share.get('valid_users', '<missing>')}', write_list: '{share.get('write_list', '<missing>')}'")
-        print(f"  create_mask: '{share.get('create_mask', '<missing>')}', directory_mask: '{share.get('directory_mask', '<missing>')}'")
-    
     # Sort shares: system shares first, then local shares
     system_shares = [s for s in all_shares if s['name'] in ['secure-share', 'share']]
     local_shares = [s for s in all_shares if s['name'] not in ['secure-share', 'share']]
     sorted_shares = system_shares + local_shares
-    
-    print(f"Sending {len(sorted_shares)} shares to template")
     
     return render_template('shares.html', 
                           shares=sorted_shares, 
@@ -128,6 +169,12 @@ def add_share():
     name = request.form['name']
     path = request.form['path']
     
+    # Validate share name
+    valid_name, name_message = validate_share_name(name)
+    if not valid_name:
+        flash(f'Invalid share name: {name_message}', 'error')
+        return redirect('/shares')
+    
     # Check if share name already exists
     all_shares = load_shares()
     if any(s['name'] == name for s in all_shares):
@@ -144,8 +191,6 @@ def add_share():
     if not valid:
         flash(f'Invalid path: {message}', 'error')
         return redirect('/shares')
-    else:
-        print(f"Path validation successful: {message}")
     
     # Process users and groups
     valid_users = request.form.get('valid_users', '')
@@ -182,13 +227,8 @@ def add_share():
         'create_mask': request.form.get('create_mask', '0744'),
         'directory_mask': request.form.get('directory_mask', '0755'),
         'force_group': 'smbusers',
-        'max_connections': request.form.get('max_connections', '0')
+        'max_connections': request.form.get('max_connections', '10')
     }
-    
-    # Debug log the share data
-    print(f"Adding share: {name}")
-    for key, value in share.items():
-        print(f"  {key}: {value}")
     
     result = add_or_update_share(share)
     if result:
@@ -265,13 +305,8 @@ def edit_share():
         'create_mask': request.form.get('create_mask', '0744'),
         'directory_mask': request.form.get('directory_mask', '0755'),
         'force_group': 'smbusers',
-        'max_connections': request.form.get('max_connections', '0')
+        'max_connections': request.form.get('max_connections', '10')
     }
-    
-    # Debug log the share data
-    print(f"Updating share: {name}")
-    for key, value in share.items():
-        print(f"  {key}: {value}")
     
     # If name was changed, delete the old share first
     if original_name != name:

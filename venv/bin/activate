@@ -36,17 +36,17 @@ deactivate () {
 deactivate nondestructive
 
 # on Windows, a path can contain colons and backslashes and has to be converted:
-if [ "${OSTYPE:-}" = "cygwin" ] || [ "${OSTYPE:-}" = "msys" ] ; then
+if [ "$OSTYPE" = "cygwin" ] || [ "$OSTYPE" = "msys" ] ; then
     # transform D:\path\to\venv to /d/path/to/venv on MSYS
     # and to /cygdrive/d/path/to/venv on Cygwin
-    export VIRTUAL_ENV=$(cygpath /home/fida/samba_manager/venv)
+    export VIRTUAL_ENV=$(cygpath "/workspaces/Samba-Manager/venv")
 else
     # use the path as-is
-    export VIRTUAL_ENV=/home/fida/samba_manager/venv
+    export VIRTUAL_ENV="/workspaces/Samba-Manager/venv"
 fi
 
 _OLD_VIRTUAL_PATH="$PATH"
-PATH="$VIRTUAL_ENV/"bin":$PATH"
+PATH="$VIRTUAL_ENV/bin:$PATH"
 export PATH
 
 # unset PYTHONHOME if set
@@ -59,9 +59,9 @@ fi
 
 if [ -z "${VIRTUAL_ENV_DISABLE_PROMPT:-}" ] ; then
     _OLD_VIRTUAL_PS1="${PS1:-}"
-    PS1='(venv) '"${PS1:-}"
+    PS1="(venv) ${PS1:-}"
     export PS1
-    VIRTUAL_ENV_PROMPT='(venv) '
+    VIRTUAL_ENV_PROMPT="(venv) "
     export VIRTUAL_ENV_PROMPT
 fi
 
