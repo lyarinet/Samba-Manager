@@ -2,6 +2,9 @@
 
 A comprehensive web-based interface for managing Samba file sharing on Linux systems.
 
+<img width="4478" height="1974" alt="image" src="https://github.com/user-attachments/assets/42c386e0-ebbf-4fba-9125-c0476b148c9e" />
+
+
 ![Samba Manager](https://github.com/user-attachments/assets/42226894-8711-4779-91f4-ba145adcac67)
 
 ## Features
