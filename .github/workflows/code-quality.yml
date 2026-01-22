@@ -1,4 +1,4 @@
-name: Code Quality
+name: Code Quality - Style Checks
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 jobs:
-  quality:
+  style-checks:
     runs-on: ubuntu-latest
 
     steps:
