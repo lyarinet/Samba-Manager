@@ -1,6 +1,3 @@
 {
-    "admin": {
-        "password": "scrypt:32768:8:1$Ix2f0WAtWHBH5c09$4a7a9935c34463a4e5c3b09e54f680d76fa6a204b6b9ab812d8132f8a7df014179a7f2656fa2d114ae395822e909da8c0c6b5288434ce12db6174b02fd46c2d7",
-        "is_admin": true
-    }
+    
 }
