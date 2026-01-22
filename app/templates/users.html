@@ -46,12 +46,14 @@
                 
                 {% if user.enabled %}
                 <form action="/users/disable/{{ user.username }}" method="post" class="d-inline">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                   <button type="submit" class="btn btn-sm btn-outline-warning" {% if not has_sudo %}disabled{% endif %}>
                     <i class="bi bi-slash-circle"></i>
                   </button>
                 </form>
                 {% else %}
                 <form action="/users/enable/{{ user.username }}" method="post" class="d-inline">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                   <button type="submit" class="btn btn-sm btn-outline-success" {% if not has_sudo %}disabled{% endif %}>
                     <i class="bi bi-check-circle"></i>
                   </button>
@@ -79,6 +81,7 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <form action="/users/reset-password/{{ user.username }}" method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <div class="modal-body">
               <div class="mb-3">
                 <label for="password{{ user.username }}" class="form-label">New Password</label>
@@ -103,6 +106,7 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <form action="/users/delete/{{ user.username }}" method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             <div class="modal-body">
               <p>Are you sure you want to delete the user <strong>{{ user.username }}</strong>?</p>
               <p class="text-danger"><i class="bi bi-exclamation-triangle me-2"></i>This action cannot be undone.</p>

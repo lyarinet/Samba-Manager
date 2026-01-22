@@ -23,6 +23,7 @@
       </div>
       <div class="card-body">
         <form id="settingsForm" method="POST" action="/global-settings">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
           <div class="row g-3">
             <div class="col-md-6">
               <div class="mb-3">

@@ -75,6 +75,7 @@
       <div class="card-body">
         <p>Restore a previously exported configuration or upload a Samba config file</p>
         <form action="{{ url_for('main.import_conf') }}" method="post" enctype="multipart/form-data">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
           <div class="input-group">
             <input type="file" class="form-control" name="config_file" accept=".json,.conf">
             <button type="submit" class="btn btn-primary">
@@ -96,6 +97,7 @@
       <div class="card-body">
         <p>Fix permissions on share directories to ensure proper access</p>
         <form action="{{ url_for('main.fix_permissions') }}" method="post">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
           <button type="submit" class="btn btn-warning text-white">
             <i class="bi bi-shield-check me-1"></i> Fix Share Permissions
           </button>
