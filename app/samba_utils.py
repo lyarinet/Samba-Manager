@@ -409,8 +409,14 @@ def write_global_settings(settings):
 
         # Create a backup of the current config
         backup_path = SMB_CONF + ".bak"
-        with open(backup_path, "w") as f:
-            f.write(config_content)
+        try:
+            with open(backup_path, "w") as f:
+                f.write(config_content)
+        except FileNotFoundError:
+            # If the config file doesn't exist, ensure the directory exists
+            os.makedirs(os.path.dirname(backup_path), exist_ok=True)
+            with open(backup_path, "w") as f:
+                f.write(config_content)
 
         # Parse the configuration into sections
         sections = parse_config_content(config_content)
@@ -586,21 +592,28 @@ def write_global_settings(settings):
             else:
                 print("testparm not available, skipping configuration validation in dev mode")
         else:
-            # In production mode, validate the system config
-            validate_cmd = subprocess.run(
-                ["sudo", "testparm", "-s", "/etc/samba/smb.conf"],
-                capture_output=True,
-                text=True,
-                check=False,
+            # In production mode, check if testparm is available
+            testparm_check = subprocess.run(
+                ["which", "testparm"], capture_output=True, text=True, check=False
             )
-
-            if validate_cmd.returncode != 0:
-                # If validation fails, restore the backup
-                subprocess.run(
-                    ["sudo", "cp", backup_path, "/etc/samba/smb.conf"], check=False
+            if testparm_check.returncode == 0:
+                # testparm is available, validate the system config
+                validate_cmd = subprocess.run(
+                    ["sudo", "testparm", "-s", "/etc/samba/smb.conf"],
+                    capture_output=True,
+                    text=True,
+                    check=False,
                 )
-                print(f"Invalid configuration: {validate_cmd.stderr}")
-                return False
+
+                if validate_cmd.returncode != 0:
+                    # If validation fails, restore the backup
+                    subprocess.run(
+                        ["sudo", "cp", backup_path, "/etc/samba/smb.conf"], check=False
+                    )
+                    print(f"Invalid configuration: {validate_cmd.stderr}")
+                    return False
+            else:
+                print("testparm not available, skipping configuration validation in production mode")
 
         # Restart Samba services
         if DEV_MODE:
