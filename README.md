@@ -4,7 +4,7 @@ A comprehensive web-based interface for managing Samba file sharing on Linux sys
 
 ![Samba Manager](image.png)
 
-![Terminal](image-4.png)
+![Terminal](image-5.png)
 
 
 ## Features

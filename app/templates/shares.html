@@ -238,7 +238,7 @@
             <label for="path" class="form-label">Path</label>
             <div class="input-group">
               <input type="text" class="form-control" id="path" name="path" required>
-              <button type="button" class="btn btn-outline-secondary" id="browsePathBtn" title="Browse directories" data-bs-toggle="modal" data-bs-target="#directoryBrowserModal">
+              <button type="button" class="btn btn-outline-secondary" id="browsePathBtn" title="Browse directories">
                 <i class="bi bi-folder2-open"></i>
               </button>
             </div>
@@ -331,7 +331,7 @@
 {% endblock %}
 
 <!-- Directory Browser Modal -->
-<div class="modal fade" id="directoryBrowserModal" tabindex="-1" aria-labelledby="directoryBrowserModalLabel" aria-hidden="true">
+<div class="modal fade" id="directoryBrowserModal" tabindex="-1" aria-labelledby="directoryBrowserModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
   <div class="modal-dialog modal-lg">
     <div class="modal-content">
       <div class="modal-header">
@@ -369,11 +369,24 @@ document.addEventListener('DOMContentLoaded', function() {
   let currentPath = '/';
   
   // Directory browser functionality
-  const directoryBrowserModal = new bootstrap.Modal(document.getElementById('directoryBrowserModal'));
+  let directoryBrowserModal = null;
   const currentPathInput = document.getElementById('currentPath');
   const directoryContents = document.getElementById('directoryContents');
   const goBtn = document.getElementById('goBtn');
   const selectDirectoryBtn = document.getElementById('selectDirectoryBtn');
+  const browsePathBtn = document.getElementById('browsePathBtn');
+  
+  // Browse button handler
+  browsePathBtn.addEventListener('click', function() {
+    // Initialize modal only when needed
+    if (!directoryBrowserModal) {
+      directoryBrowserModal = new bootstrap.Modal(document.getElementById('directoryBrowserModal'), {
+        backdrop: 'static',
+        keyboard: false
+      });
+    }
+    directoryBrowserModal.show();
+  });
   
   // Load directory contents
   function loadDirectory(path) {
@@ -480,7 +493,9 @@ document.addEventListener('DOMContentLoaded', function() {
   selectDirectoryBtn.addEventListener('click', function() {
     const pathInput = document.getElementById('path');
     pathInput.value = currentPath;
-    directoryBrowserModal.hide();
+    if (directoryBrowserModal) {
+      directoryBrowserModal.hide();
+    }
   });
   
   // Show modal handler
