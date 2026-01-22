@@ -1,8 +1,9 @@
+import os
+
 from flask import Flask
-from flask_login import LoginManager
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-import os
+from flask_login import LoginManager
 
 
 def create_app():

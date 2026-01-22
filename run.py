@@ -4,10 +4,11 @@ Samba Manager - Web interface for managing Samba shares
 Run this script to start the web application
 """
 
-from app import create_app
+import argparse
 import os
 import sys
-import argparse
+
+from app import create_app
 
 
 def main():
