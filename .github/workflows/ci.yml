@@ -33,7 +33,15 @@ jobs:
 
     - name: Check imports
       run: |
-        python -c "import flask; print('Flask version:', flask.__version__)"
+        python -c "
+        import importlib.metadata
+        try:
+            flask_version = importlib.metadata.version('flask')
+            print('Flask version:', flask_version)
+        except:
+            import flask
+            print('Flask imported (version check failed)')
+        "
         python -c "import flask_login; print('Flask-Login imported successfully')"
         python -c "import flask_wtf; print('Flask-WTF imported successfully')"
 
