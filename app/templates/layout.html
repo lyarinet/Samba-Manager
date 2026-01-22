@@ -105,6 +105,8 @@
       text-decoration: none;
       display: flex;
       align-items: center;
+      justify-content: space-between;
+      width: 100%;
     }
     
     .sidebar-brand i {
@@ -457,6 +459,8 @@
     @media (max-width: 768px) {
       .sidebar {
         margin-left: -250px;
+        z-index: 1040;
+        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
       }
       
       .sidebar.active {
@@ -465,21 +469,102 @@
       
       .content {
         margin-left: 0;
+        padding-top: 4rem; /* Space for mobile toggle button */
       }
       
       .content.active {
         margin-left: 250px;
       }
+      
+      /* Mobile overlay when sidebar is active */
+      .content::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        z-index: 1030;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.3s;
+      }
+      
+      .content.active::before {
+        opacity: 1;
+        visibility: visible;
+      }
+      
+      /* Footer adjustments for mobile */
+      footer {
+        padding: 1rem 0;
+      }
+      
+      footer .row {
+        flex-direction: column;
+        text-align: center;
+        gap: 0.5rem;
+      }
+      
+      footer .col-md-6 {
+        margin-bottom: 0.5rem;
+      }
+      
+      footer .text-md-end {
+        text-align: center !important;
+      }
+      
+      /* Page header adjustments */
+      .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+      }
+      
+      .page-header h2 {
+        margin-bottom: 0;
+      }
+      
+      /* Card adjustments */
+      .card {
+        margin-bottom: 1rem;
+      }
+      
+      /* Table responsiveness */
+      .table-responsive {
+        font-size: 0.875rem;
+      }
+      
+      /* Button adjustments */
+      .btn-group {
+        flex-direction: column;
+        width: 100%;
+      }
+      
+      .btn-group .btn {
+        margin-bottom: 0.25rem;
+      }
     }
   </style>
 </head>
 <body>
+  <!-- Mobile Sidebar Toggle -->
+  <button class="btn btn-primary sidebar-toggle d-md-none position-fixed" style="top: 1rem; left: 1rem; z-index: 1050;" type="button">
+    <i class="bi bi-list"></i>
+  </button>
+  
   <!-- Sidebar -->
   <nav class="sidebar">
     <div class="sidebar-header">
       <a href="/" class="sidebar-brand">
-        <i class="bi bi-hdd-network"></i>
-        <span>Samba Manager</span>
+        <span>
+          <i class="bi bi-hdd-network"></i>
+          <span>Samba Manager</span>
+        </span>
+        <button class="btn btn-sm btn-outline-secondary d-md-none sidebar-close" type="button">
+          <i class="bi bi-x-lg"></i>
+        </button>
       </a>
     </div>
     
@@ -648,10 +733,37 @@
     document.addEventListener('DOMContentLoaded', function() {
       // Mobile sidebar toggle
       const sidebarToggle = document.querySelector('.sidebar-toggle');
+      const sidebarClose = document.querySelector('.sidebar-close');
+      const sidebar = document.querySelector('.sidebar');
+      const content = document.querySelector('.content');
+      
+      function toggleSidebar() {
+        sidebar.classList.toggle('active');
+        content.classList.toggle('active');
+      }
+      
+      function closeSidebar() {
+        sidebar.classList.remove('active');
+        content.classList.remove('active');
+      }
+      
       if (sidebarToggle) {
-        sidebarToggle.addEventListener('click', function() {
-          document.querySelector('.sidebar').classList.toggle('active');
-          document.querySelector('.content').classList.toggle('active');
+        sidebarToggle.addEventListener('click', toggleSidebar);
+      }
+      
+      if (sidebarClose) {
+        sidebarClose.addEventListener('click', function(e) {
+          e.preventDefault();
+          closeSidebar();
+        });
+      }
+      
+      // Close sidebar when clicking on overlay
+      if (content) {
+        content.addEventListener('click', function(e) {
+          if (e.target === content && window.innerWidth <= 768) {
+            closeSidebar();
+          }
         });
       }
     });
