@@ -30,6 +30,12 @@ A comprehensive web-based interface for managing Samba file sharing on Linux sys
 - **Log Viewing**: View Samba logs directly from the web interface
 - **Import/Export**: Backup and restore your Samba configuration
 - **Setup Wizard**: Easy initial configuration for new installations
+- **Security Features**:
+  - CSRF protection on all forms
+  - Rate limiting for login attempts
+  - Input validation and sanitization
+  - Secure password hashing
+  - No default credentials
 - **Multi-Mode Operation**:
   - Development mode for testing without system modifications
   - Production mode for actual system configuration management
@@ -202,11 +208,32 @@ Note: The uninstall script will NOT remove Samba itself or your Samba configurat
 ### Access the Web Interface
 Open your browser and navigate to: `http://your-server-ip:5000`
 
-### Default Login Credentials
-- Username: `admin`
-- Password: `admin`
+### First-Time Setup
 
-**⚠️ IMPORTANT:** Change the default password immediately after your first login!
+**No default credentials are provided for security reasons.**
+
+1. **Access the Web Interface**: Open your browser and navigate to: `http://your-server-ip:5000`
+
+2. **First-Time Registration**: 
+   - You'll be redirected to the login page
+   - Click on "Register" or navigate to `/register`
+   - Create your first admin user account
+   - Check the "Admin" checkbox to grant administrator privileges
+   - The first user created will automatically become the system administrator
+
+3. **Login**: Use your newly created credentials to log in
+
+4. **Secure Your Account**: 
+   - Change your password regularly
+   - Use strong, unique passwords
+   - Consider enabling additional security measures
+
+### User Management
+
+- **Admin Users**: Can create, modify, and delete other users
+- **Regular Users**: Can access shares based on permissions set by administrators
+- **User Registration**: Only administrators can create new user accounts after the initial setup
+- **Password Management**: Administrators can reset user passwords
 
 ### Managing the Service
 ```bash
@@ -248,9 +275,9 @@ After running this script, you should be able to access Samba Manager from any c
 
 ## Setup Guide
 
-1. **First Login**: Log in with the default credentials and change your password
+1. **First-Time Setup**: Access the web interface and create your first admin user account
 2. **Global Settings**: Configure your workgroup, security settings, and other global parameters
-3. **Add Users**: Create Samba users that will access your shares
+3. **Add Users**: Create additional Samba users that will access your shares (admin users can create accounts)
 4. **Create Shares**: Set up the directories you want to share
 5. **Configure Permissions**: Set appropriate permissions for each share
 6. **Restart Service**: Apply changes by restarting the Samba service
@@ -281,12 +308,17 @@ For detailed documentation on the terminal feature, please refer to [TERMINAL.md
 
 ## Security Considerations
 
-- **Change Default Password**: Immediately change the default admin password
+- **No Default Credentials**: The application starts with no pre-configured users for enhanced security
+- **First-Time Setup**: Secure initial administrator account creation process
+- **Strong Passwords**: Use complex passwords and change them regularly
 - **Network Security**: Restrict access to the web interface using a firewall
 - **Sudo Access**: The application requires sudo access to modify system configuration files
 - **Custom Sudo Rules**: Consider setting up specific sudo rules for production environments
 - **HTTPS**: For production use, configure a proper HTTPS setup using a reverse proxy
 - **Terminal Security**: The terminal feature provides full system access - restrict application access accordingly
+- **CSRF Protection**: All forms are protected against Cross-Site Request Forgery attacks
+- **Rate Limiting**: Login attempts are rate-limited to prevent brute force attacks
+- **Input Validation**: All user inputs are validated to prevent command injection attacks
 
 ## Troubleshooting
 
