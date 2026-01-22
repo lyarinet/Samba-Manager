@@ -27,8 +27,6 @@ def parse_share_section(content):
     shares = []
     lines = content.split("\n")
 
-    print(f"Parsing content with {len(lines)} lines")
-
     current_share = None
     for line_num, line in enumerate(lines):
         line = line.strip()
@@ -45,22 +43,17 @@ def parse_share_section(content):
         ):
             if current_share:
                 shares.append(current_share)
-                print(f"Added share: {current_share['name']}")
             share_name = line[1:-1]
-            print(f"Found share section at line {line_num+1}: {share_name}")
             current_share = {"name": share_name}
         # Check for parameters within a share
         elif current_share and "=" in line:
             key, value = [x.strip() for x in line.split("=", 1)]
             current_share[key] = value
-            print(f"  Parameter: {key} = {value}")
 
     # Add the last share if exists
     if current_share:
         shares.append(current_share)
-        print(f"Added final share: {current_share['name']}")
 
-    print(f"Parsed {len(shares)} shares from content")
     return shares
 
 

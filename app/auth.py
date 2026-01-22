@@ -1,5 +1,6 @@
 import json
 import os
+import fcntl
 
 from flask import Blueprint, flash, redirect, render_template, request, session, url_for
 from flask_limiter import Limiter
@@ -42,13 +43,24 @@ class User(UserMixin):
     def get_users():
         if os.path.exists(USERS_FILE):
             with open(USERS_FILE, "r") as f:
-                return json.load(f)
+                fcntl.flock(f.fileno(), fcntl.LOCK_SH)  # Shared lock for reading
+                try:
+                    return json.load(f)
+                finally:
+                    fcntl.flock(f.fileno(), fcntl.LOCK_UN)
         return {}
 
     @staticmethod
     def save_users(users):
+        # Create directory if it doesn't exist
+        os.makedirs(os.path.dirname(USERS_FILE), exist_ok=True)
+        
         with open(USERS_FILE, "w") as f:
-            json.dump(users, f, indent=4)
+            fcntl.flock(f.fileno(), fcntl.LOCK_EX)  # Exclusive lock for writing
+            try:
+                json.dump(users, f, indent=4)
+            finally:
+                fcntl.flock(f.fileno(), fcntl.LOCK_UN)
 
     @staticmethod
     def add_user(username, password, is_admin=False):

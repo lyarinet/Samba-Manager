@@ -5,6 +5,7 @@ import json
 import os
 import pwd
 import re
+import shlex
 import subprocess
 import tempfile
 
@@ -45,6 +46,31 @@ def validate_share_name(name):
     reserved_names = ["global", "homes", "printers", "print$"]
     if name.lower() in reserved_names:
         return False, "Share name is reserved by Samba"
+
+    return True, "Valid"
+
+
+def validate_username(username):
+    """Validate username for security - prevent command injection"""
+    if not username:
+        return False, "Username cannot be empty"
+
+    if len(username) > 32:
+        return False, "Username too long (max 32 characters)"
+
+    # Only allow safe characters for usernames (letters, numbers, underscore, hyphen)
+    # This prevents command injection attacks
+    if not re.match(r"^[a-zA-Z0-9_-]+$", username):
+        return (
+            False,
+            "Username can only contain letters, numbers, underscores, and hyphens",
+        )
+
+    # Prevent common shell metacharacters that could be used for injection
+    dangerous_chars = [';', '&', '|', '`', '$', '(', ')', '<', '>', ' ', '\t', '\n', '\r']
+    for char in dangerous_chars:
+        if char in username:
+            return False, f"Username contains invalid character: {char}"
 
     return True, "Valid"
 
@@ -450,6 +476,12 @@ def reset_samba_password(username):
         flash("Error: Sudo access is required to reset passwords", "error")
         return redirect("/users")
 
+    # Validate username to prevent command injection
+    valid, message = validate_username(username)
+    if not valid:
+        flash(f"Invalid username: {message}", "error")
+        return redirect("/users")
+
     password = request.form.get("password")
     if not password:
         flash("Password is required", "error")
@@ -487,6 +519,12 @@ def disable_samba_user(username):
         flash("Error: Sudo access is required to disable users", "error")
         return redirect("/users")
 
+    # Validate username to prevent command injection
+    valid, message = validate_username(username)
+    if not valid:
+        flash(f"Invalid username: {message}", "error")
+        return redirect("/users")
+
     try:
         # Use smbpasswd to disable the user
         result = subprocess.run(
@@ -515,6 +553,12 @@ def enable_samba_user(username):
         flash("Error: Sudo access is required to enable users", "error")
         return redirect("/users")
 
+    # Validate username to prevent command injection
+    valid, message = validate_username(username)
+    if not valid:
+        flash(f"Invalid username: {message}", "error")
+        return redirect("/users")
+
     try:
         # Use smbpasswd to enable the user
         result = subprocess.run(
@@ -541,6 +585,12 @@ def delete_samba_user(username):
     """Delete a Samba user"""
     if not check_sudo_access():
         flash("Error: Sudo access is required to delete users", "error")
+        return redirect("/users")
+
+    # Validate username to prevent command injection
+    valid, message = validate_username(username)
+    if not valid:
+        flash(f"Invalid username: {message}", "error")
         return redirect("/users")
 
     try:
