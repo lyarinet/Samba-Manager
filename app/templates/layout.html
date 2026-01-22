@@ -11,7 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      /* Modern color palette */
+      /* Modern light color palette */
       --primary: #6366f1;      /* Indigo */
       --primary-light: #818cf8;
       --primary-dark: #4f46e5;
@@ -26,13 +26,13 @@
       --warning: #f59e0b;      /* Amber */
       --info: #3b82f6;         /* Blue */
       
-      --bg-dark: #0f172a;      /* Slate 900 */
-      --bg-card: #1e293b;      /* Slate 800 */
-      --bg-sidebar: #1e293b;   /* Slate 800 */
-      --text-primary: #f8fafc; /* Slate 50 */
-      --text-secondary: #cbd5e1; /* Slate 300 */
-      --text-muted: #94a3b8;   /* Slate 400 */
-      --border-color: #334155; /* Slate 700 */
+      --bg-dark: #ffffff;      /* White */
+      --bg-card: #f8fafc;      /* Light gray */
+      --bg-sidebar: #f1f5f9;   /* Light slate */
+      --text-primary: #1e293b; /* Dark slate */
+      --text-secondary: #475569; /* Medium slate */
+      --text-muted: #64748b;   /* Light slate */
+      --border-color: #e2e8f0; /* Light border */
     }
     
     body {
@@ -187,13 +187,13 @@
     
     /* Forms */
     .form-control, .form-select {
-      background-color: #1a2234;
+      background-color: #ffffff;
       color: var(--text-primary);
       border-color: var(--border-color);
     }
     
     .form-control:focus, .form-select:focus {
-      background-color: #141b2d;
+      background-color: #ffffff;
       color: var(--text-primary);
       border-color: var(--primary);
       box-shadow: 0 0 0 0.25rem rgba(99, 102, 241, 0.25);
@@ -211,52 +211,53 @@
     /* Tables */
     .table {
       color: var(--text-primary);
-      background-color: var(--bg-card); /* Dark background for tables */
+      background-color: var(--bg-card);
     }
     
     .table thead th {
-      background-color: #2d3748; /* Darker header background */
-      color: #e4e4e4; /* Brighter text for headers */
+      background-color: #e2e8f0;
+      color: var(--text-primary);
       font-weight: 600;
       border-bottom: 1px solid var(--border-color);
     }
     
     .table tbody td {
       border-color: var(--border-color);
-      color: #1f1e1e; /* Bright white text for maximum visibility */
+      color: var(--text-primary);
     }
     
     .table tbody tr {
-      background-color: #1e293b; /* Visible background for rows */
+      background-color: var(--bg-card);
     }
     
     .table tbody tr:nth-child(odd) {
-      background-color: #273344; /* Alternating row color for better visibility */
+      background-color: #f8fafc;
     }
     
     .table-hover tbody tr:hover {
-      background-color: rgba(99, 102, 241, 0.3); /* More visible hover effect */
-      color: #ffffff;
+      background-color: rgba(99, 102, 241, 0.1);
+      color: var(--text-primary);
     }
     
     /* List Group Styles for groups.html */
     .list-group-item {
-      background-color: #1e293b; /* Match table row background */
-      color: #e4e4e4; /* Light text color for visibility */
+      background-color: var(--bg-card);
+      color: var(--text-primary);
       border-color: var(--border-color);
     }
     
     .list-group-item:nth-child(odd) {
-      background-color: #273344; /* Alternating color for better visibility */
+      background-color: #f8fafc;
+    }
     }
     
     .list-group-item:hover {
-      background-color: rgba(99, 102, 241, 0.3); /* Hover effect */
+      background-color: rgba(99, 102, 241, 0.1);
     }
     
     .card-header.bg-light {
-      background-color: #2d3748 !important; /* Match table header background */
-      color: #e4e4e4; /* Match table header text color */
+      background-color: #e2e8f0 !important;
+      color: var(--text-primary);
     }
     
     /* Buttons */
@@ -373,7 +374,7 @@
     
     /* Utilities */
     .text-muted {
-      color: #b0b8c4 !important; /* Lighter shade for better visibility */
+      color: var(--text-muted) !important;
     }
     
     .border-bottom {
@@ -410,22 +411,22 @@
     
     /* Small text */
     small, .small {
-      color: #b0b8c4 !important; /* Lighter shade for better visibility */
+      color: var(--text-muted) !important;
     }
     
     /* Paragraphs */
     p {
-      color: #d1d8e0 !important; /* Even lighter shade for better readability */
+      color: var(--text-secondary) !important;
     }
 
     p .mb-3 {
-      color: #d1d8e0 !important; /* Even lighter shade for better readability */
+      color: var(--text-secondary) !important;
       font-size: 0.85rem;
     }
     
     /* Make span elements visible */
     span:not(.badge) {
-      color: #d1d8e0 !important;
+      color: var(--text-secondary) !important;
     }
     
     /* Fix visibility for margin-bottom classes with text */
