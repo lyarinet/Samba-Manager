@@ -1,0 +1,69 @@
+name: Security Check
+
+on:
+  schedule:
+    # Run weekly on Mondays at 9 AM UTC
+    - cron: '0 9 * * 1'
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  security:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.8'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Install security tools
+      run: |
+        pip install safety bandit
+
+    - name: Run Safety check
+      run: |
+        safety check --full-report
+      continue-on-error: true
+
+    - name: Run Bandit security scan
+      run: |
+        bandit -r . -f json -o bandit-report.json || true
+        # Show summary of issues found
+        if [ -f bandit-report.json ]; then
+          python -c "
+          import json
+          with open('bandit-report.json', 'r') as f:
+              data = json.load(f)
+          print(f'Bandit scan completed. Found {len(data.get(\"results\", []))} files with potential issues.')
+          for result in data.get('results', []):
+              filename = result.get('filename', 'unknown')
+              issues = len(result.get('test_results', []))
+              print(f'  {filename}: {issues} issues')
+          "
+        fi
+      continue-on-error: true
+
+    - name: Check for outdated dependencies
+      run: |
+        pip install pip-tools
+        pip list --outdated --format=json | python -c "
+        import json
+        import sys
+        try:
+            data = json.load(sys.stdin)
+            if data:
+                print('Outdated packages found:')
+                for pkg in data:
+                    print(f'  {pkg[\"name\"]}: {pkg[\"version\"]} -> {pkg[\"latest_version\"]}')
+            else:
+                print('All packages are up to date')
+        except:
+            print('No outdated packages or unable to parse output')
+        " || echo "Could not check for outdated packages"

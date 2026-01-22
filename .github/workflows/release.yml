@@ -1,0 +1,80 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.8'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Run tests
+      run: |
+        python -c "
+        import sys
+        sys.path.insert(0, '.')
+        from app import create_app
+        app = create_app()
+        print('App created successfully for release')
+        "
+
+    - name: Create release archive
+      run: |
+        # Create a clean archive without venv and logs
+        tar -czf samba-manager-${{ github.ref_name }}.tar.gz \
+          --exclude='venv' \
+          --exclude='logs' \
+          --exclude='__pycache__' \
+          --exclude='.git' \
+          --exclude='.github' \
+          --exclude='*.pyc' \
+          --exclude='.pytest_cache' \
+          .
+
+    - name: Create Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        body: |
+          ## Samba Manager ${{ github.ref_name }}
+
+          ### Changes
+          - Automated release created from tag ${{ github.ref_name }}
+
+          ### Installation
+          Download the `samba-manager-${{ github.ref_name }}.tar.gz` file and follow the installation instructions in the README.
+
+          ### What's New
+          See RELEASE_NOTES.md for detailed changes.
+        draft: false
+        prerelease: false
+
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./samba-manager-${{ github.ref_name }}.tar.gz
+        asset_name: samba-manager-${{ github.ref_name }}.tar.gz
+        asset_content_type: application/gzip

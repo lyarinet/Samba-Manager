@@ -1,0 +1,129 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.8'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+
+    - name: Check Python syntax
+      run: |
+        python -m py_compile run.py
+        python -m py_compile app/__init__.py
+        python -m py_compile app/routes.py
+        python -m py_compile app/auth.py
+        python -m py_compile app/samba_utils.py
+
+    - name: Check imports
+      run: |
+        python -c "import flask; print('Flask version:', flask.__version__)"
+        python -c "import flask_login; print('Flask-Login imported successfully')"
+        python -c "import flask_wtf; print('Flask-WTF imported successfully')"
+
+    - name: Test app initialization
+      run: |
+        python -c "
+        import sys
+        sys.path.insert(0, '.')
+        try:
+            from app import create_app
+            app = create_app()
+            print('App created successfully')
+            print('App name:', app.name)
+            print('Debug mode:', app.debug)
+        except Exception as e:
+            print('Error creating app:', e)
+            sys.exit(1)
+        "
+
+    - name: Check template syntax
+      run: |
+        python -c "
+        from jinja2 import Environment, FileSystemLoader
+        import os
+        
+        env = Environment(loader=FileSystemLoader('app/templates'))
+        template_files = []
+        for root, dirs, files in os.walk('app/templates'):
+            for file in files:
+                if file.endswith('.html'):
+                    template_files.append(os.path.join(root, file))
+        
+        errors = []
+        for template_file in template_files:
+            try:
+                template = env.get_template(template_file.replace('app/templates/', ''))
+                print(f'✓ {template_file}')
+            except Exception as e:
+                errors.append(f'✗ {template_file}: {e}')
+        
+        if errors:
+            print('Template errors found:')
+            for error in errors:
+                print(error)
+            exit(1)
+        else:
+            print(f'All {len(template_files)} templates are valid')
+        "
+
+    - name: Check configuration files
+      run: |
+        # Check if required files exist
+        required_files=('requirements.txt' 'run.py' 'app/__init__.py' 'app/routes.py' 'app/auth.py' 'app/samba_utils.py')
+        for file in "${required_files[@]}"; do
+          if [ ! -f "$file" ]; then
+            echo "Missing required file: $file"
+            exit 1
+          fi
+        done
+        echo "All required files present"
+
+    - name: Validate JSON files
+      run: |
+        python -c "
+        import json
+        import os
+        
+        json_files = ['users.json']
+        for json_file in json_files:
+            if os.path.exists(json_file):
+                try:
+                    with open(json_file, 'r') as f:
+                        json.load(f)
+                    print(f'✓ {json_file} is valid JSON')
+                except Exception as e:
+                    print(f'✗ {json_file} has invalid JSON: {e}')
+                    exit(1)
+        "
+
+    - name: Check shell scripts syntax
+      run: |
+        # Check shell scripts for basic syntax errors
+        shell_scripts=('install.sh' 'install_all_distros.sh' 'auto_install.sh' 'run_app.sh' 'uninstall.sh')
+        for script in "${shell_scripts[@]}"; do
+          if [ -f "$script" ]; then
+            if bash -n "$script"; then
+              echo "✓ $script syntax OK"
+            else
+              echo "✗ $script has syntax errors"
+              exit 1
+            fi
+          fi
+        done
