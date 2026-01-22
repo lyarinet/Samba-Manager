@@ -17,7 +17,6 @@ import typing as t
 from gettext import gettext as _
 from io import StringIO
 from pathlib import Path
-from shutil import which
 from types import TracebackType
 
 from ._compat import _default_text_stdout
@@ -235,8 +234,6 @@ class ProgressBar(t.Generic[V]):
         ).rstrip()
 
     def render_progress(self) -> None:
-        import shutil
-
         if self.hidden:
             return
 
@@ -250,6 +247,8 @@ class ProgressBar(t.Generic[V]):
         buf = []
         # Update width in case the terminal has been resized
         if self.autowidth:
+            import shutil
+
             old_width = self.width
             self.width = 0
             clutter_length = term_len(self.format_progress_line())
@@ -421,14 +420,20 @@ def _pipepager(
     # Split the command into the invoked CLI and its parameters.
     if not cmd_parts:
         return False
+
+    import shutil
+
     cmd = cmd_parts[0]
     cmd_params = cmd_parts[1:]
 
-    cmd_filepath = which(cmd)
+    cmd_filepath = shutil.which(cmd)
     if not cmd_filepath:
         return False
-    # Resolves symlinks and produces a normalized absolute path string.
-    cmd_path = Path(cmd_filepath).resolve()
+
+    # Produces a normalized absolute path string.
+    # multi-call binaries such as busybox derive their identity from the symlink
+    # less -> busybox. resolve() causes them to misbehave. (eg. less becomes busybox)
+    cmd_path = Path(cmd_filepath).absolute()
     cmd_name = cmd_path.name
 
     import subprocess
@@ -448,7 +453,7 @@ def _pipepager(
 
     c = subprocess.Popen(
         [str(cmd_path)] + cmd_params,
-        shell=True,
+        shell=False,
         stdin=subprocess.PIPE,
         env=env,
         errors="replace",
@@ -510,13 +515,18 @@ def _tempfilepager(
     # Split the command into the invoked CLI and its parameters.
     if not cmd_parts:
         return False
+
+    import shutil
+
     cmd = cmd_parts[0]
 
-    cmd_filepath = which(cmd)
+    cmd_filepath = shutil.which(cmd)
     if not cmd_filepath:
         return False
-    # Resolves symlinks and produces a normalized absolute path string.
-    cmd_path = Path(cmd_filepath).resolve()
+    # Produces a normalized absolute path string.
+    # multi-call binaries such as busybox derive their identity from the symlink
+    # less -> busybox. resolve() causes them to misbehave. (eg. less becomes busybox)
+    cmd_path = Path(cmd_filepath).absolute()
 
     import subprocess
     import tempfile
@@ -573,6 +583,9 @@ class Editor:
                 return rv
         if WIN:
             return "notepad"
+
+        from shutil import which
+
         for editor in "sensible-editor", "vim", "nano":
             if which(editor) is not None:
                 return editor
@@ -616,7 +629,7 @@ class Editor:
         import tempfile
 
         if text is None:
-            data = b""
+            data: bytes | bytearray = b""
         elif isinstance(text, (bytes, bytearray)):
             data = text
         else:

@@ -423,7 +423,7 @@ class App(Scaffold):
             )
 
     @cached_property
-    def name(self) -> str:  # type: ignore
+    def name(self) -> str:
         """The name of the application.  This is usually the import name
         with the difference that it's guessed from the run file if the
         import name is main.  This name is used as a display name when
@@ -521,7 +521,7 @@ class App(Scaffold):
         return os.path.join(prefix, "var", f"{self.name}-instance")
 
     def create_global_jinja_loader(self) -> DispatchingJinjaLoader:
-        """Creates the loader for the Jinja2 environment.  Can be used to
+        """Creates the loader for the Jinja environment.  Can be used to
         override just the loader and keeping the rest unchanged.  It's
         discouraged to override this function.  Instead one should override
         the :meth:`jinja_loader` function instead.

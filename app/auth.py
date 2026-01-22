@@ -121,9 +121,12 @@ def logout():
 
 
 @bp.route("/register", methods=["GET", "POST"])
-@login_required
 def register():
-    if not current_user.is_admin:
+    # Allow access if no users exist (first-time setup) or if user is admin
+    users = User.get_users()
+    is_first_user_setup = len(users) == 0
+    
+    if not is_first_user_setup and (not current_user.is_authenticated or not current_user.is_admin):
         flash("You do not have permission to register new users", "error")
         return redirect(url_for("main.index"))
 
@@ -138,12 +141,15 @@ def register():
 
         if User.add_user(username, password, is_admin):
             flash(f"User {username} created successfully", "success")
+            if is_first_user_setup:
+                flash("First admin user created! You can now log in.", "success")
+                return redirect(url_for("auth.login"))
             return redirect(url_for("auth.register"))
         else:
             flash(f"User {username} already exists", "error")
 
     users = User.get_users()
-    return render_template("register.html", users=users)
+    return render_template("register.html", users=users, is_first_user_setup=is_first_user_setup)
 
 
 @bp.route("/reset-password/<username>", methods=["POST"])

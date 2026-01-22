@@ -85,7 +85,7 @@ class EnvironBuilder(werkzeug.test.EnvironBuilder):
         self.app = app
         super().__init__(path, base_url, *args, **kwargs)
 
-    def json_dumps(self, obj: t.Any, **kwargs: t.Any) -> str:  # type: ignore
+    def json_dumps(self, obj: t.Any, **kwargs: t.Any) -> str:
         """Serialize ``obj`` to a JSON-formatted string.
 
         The serialization will be configured according to the config associated
@@ -240,10 +240,10 @@ class FlaskClient(Client):
         response.json_module = self.application.json  # type: ignore[assignment]
 
         # Re-push contexts that were preserved during the request.
-        while self._new_contexts:
-            cm = self._new_contexts.pop()
+        for cm in self._new_contexts:
             self._context_stack.enter_context(cm)
 
+        self._new_contexts.clear()
         return response
 
     def __enter__(self) -> FlaskClient:
