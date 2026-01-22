@@ -1476,7 +1476,7 @@ def delete_backup_route(filename):
         return redirect("/backups")
 
     try:
-        os.remove(backup_file)
+        subprocess.run(["sudo", "rm", backup_file], check=True)
         flash(f"Backup {filename} deleted successfully", "success")
     except Exception as e:
         flash(f"Failed to delete backup: {str(e)}", "error")

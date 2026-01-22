@@ -2609,9 +2609,10 @@ def list_backups():
     try:
         backup_dir = "/var/lib/samba_manager/backups"
 
-        # Create backup directory if it doesn't exist
+        # Create backup directory if it doesn't exist (with sudo)
         if not os.path.exists(backup_dir):
-            os.makedirs(backup_dir, exist_ok=True)
+            subprocess.run(["sudo", "mkdir", "-p", backup_dir], check=True)
+            subprocess.run(["sudo", "chmod", "755", backup_dir], check=True)
             return []
 
         # Get a list of all backup files
@@ -2661,9 +2662,10 @@ def create_backup():
         backup_dir = "/var/lib/samba_manager/backups"
         backup_file = f"{backup_dir}/samba_backup_{timestamp}.tar.gz"
 
-        # Create backup directory if it doesn't exist
-        if not os.path.exists(backup_dir):
-            os.makedirs(backup_dir, exist_ok=True)
+        # Create backup directory if it doesn't exist (with sudo)
+        subprocess.run(["sudo", "mkdir", "-p", backup_dir], check=True)
+        # Set proper permissions on the backup directory
+        subprocess.run(["sudo", "chmod", "755", backup_dir], check=True)
 
         # Files to backup
         backup_files = [
