@@ -2,10 +2,8 @@
 
 A comprehensive web-based interface for managing Samba file sharing on Linux systems.
 
-<img width="4478" height="1974" alt="image" src="https://github.com/user-attachments/assets/42c386e0-ebbf-4fba-9125-c0476b148c9e" />
+![Samba Manager](image.png)
 
-
-![Samba Manager](https://github.com/user-attachments/assets/42226894-8711-4779-91f4-ba145adcac67)
 
 ## Features
 
@@ -355,6 +353,7 @@ Developed by AsifAgaria by Lyarinet.
 
 ## Screenshots
 
-![Dashboard](https://github.com/user-attachments/assets/61670b6f-0d9b-445e-a74e-c57c58342c54)
-![Shares Management](https://github.com/user-attachments/assets/93449c01-fb18-4adf-ae1a-2453c3b130aa)
-![Global Settings](https://github.com/user-attachments/assets/a8c39754-6574-40e5-8c4f-ad0ed3542265)
+
+![Maintenance](image-3.png)
+![Shares Management](image-2.png)
+![Global Settings](image-1.png)
