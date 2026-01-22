@@ -422,6 +422,22 @@ document.addEventListener('DOMContentLoaded', function() {
       });
   }
   
+  // Directory click handler function
+  function handleDirectoryClick() {
+    const itemPath = this.getAttribute('data-path');
+    const itemType = this.getAttribute('data-type');
+    
+    if (itemType === 'directory') {
+      // Add loading state
+      this.innerHTML = '<i class="bi bi-hourglass me-2"></i><span>Loading...</span>';
+      this.disabled = true;
+      
+      currentPath = itemPath;
+      currentPathInput.value = currentPath;
+      loadDirectory(currentPath);
+    }
+  }
+  
   // Display directory contents
   function displayDirectoryContents(contents, path) {
     if (!contents || contents.length === 0) {
@@ -444,13 +460,14 @@ document.addEventListener('DOMContentLoaded', function() {
     contents.forEach(item => {
       const icon = item.type === 'directory' ? 'bi-folder' : 'bi-file-earmark';
       const itemPath = path === '/' ? `/${item.name}` : `${path}/${item.name}`;
+      const isClickable = item.type === 'directory' ? 'directory-item' : '';
       
       html += `
-        <button type="button" class="list-group-item list-group-item-action d-flex align-items-center directory-item ${item.type === 'directory' ? '' : 'text-muted'}" 
-                data-path="${itemPath}" data-type="${item.type}">
+        <button type="button" class="list-group-item list-group-item-action d-flex align-items-center ${isClickable} ${item.type === 'directory' ? '' : 'text-muted'}" 
+                data-path="${itemPath}" data-type="${item.type}" ${item.type !== 'directory' ? 'disabled' : ''}>
           <i class="bi ${icon} me-2"></i>
           <span>${item.name}</span>
-          ${item.type === 'directory' ? '<small class="text-muted ms-auto">directory</small>' : ''}
+          ${item.type === 'directory' ? '<small class="text-muted ms-auto">directory</small>' : '<small class="text-muted ms-auto">file</small>'}
         </button>
       `;
     });
@@ -458,18 +475,14 @@ document.addEventListener('DOMContentLoaded', function() {
     html += '</div>';
     directoryContents.innerHTML = html;
     
-    // Add click handlers
+    // Remove existing event handlers to prevent duplicates
     document.querySelectorAll('.directory-item').forEach(item => {
-      item.addEventListener('click', function() {
-        const itemPath = this.getAttribute('data-path');
-        const itemType = this.getAttribute('data-type');
-        
-        if (itemType === 'directory') {
-          currentPath = itemPath;
-          currentPathInput.value = currentPath;
-          loadDirectory(currentPath);
-        }
-      });
+      item.removeEventListener('click', handleDirectoryClick);
+    });
+    
+    // Add click handlers only to directories
+    document.querySelectorAll('.directory-item').forEach(item => {
+      item.addEventListener('click', handleDirectoryClick);
     });
   }
   
