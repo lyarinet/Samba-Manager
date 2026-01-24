@@ -1,0 +1,119 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="page-header">
+  <h2>Edit Configuration</h2>
+  <button type="submit" form="configForm" class="btn btn-primary">
+    <i class="bi bi-save me-1"></i> Save Changes
+  </button>
+</div>
+
+{% if not has_sudo %}
+<div class="alert alert-warning mb-4">
+  <i class="bi bi-shield-exclamation me-2"></i>
+  <strong>Warning:</strong> Sudo access is required to edit Samba configuration.
+  Run this application with sudo privileges to enable full functionality.
+</div>
+{% endif %}
+
+<form id="configForm" method="POST" action="/edit-config">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+  <div class="row">
+    <div class="col-lg-6">
+      <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">Main Configuration</h5>
+          <span class="badge bg-secondary">smb.conf</span>
+        </div>
+        <div class="card-body">
+          <div class="mb-3">
+            <textarea class="form-control font-monospace" name="main_config" rows="15" {% if not has_sudo %}disabled{% endif %}>{{ main_config }}</textarea>
+            <div class="form-text">Edit the main Samba configuration file</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="col-lg-6">
+      <div class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">Share Configuration</h5>
+          <span class="badge bg-secondary">shares.conf</span>
+        </div>
+        <div class="card-body">
+          <div class="mb-3">
+            <textarea class="form-control font-monospace" name="share_config" rows="15" {% if not has_sudo %}disabled{% endif %}>{{ share_config }}</textarea>
+            <div class="form-text">Edit the Samba shares configuration file</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="row">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0">Configuration Help</h5>
+        </div>
+        <div class="card-body">
+          <div class="alert alert-info">
+            <i class="bi bi-info-circle me-2"></i>
+            <strong>Tip:</strong> After saving changes, the Samba service will be automatically restarted to apply the new configuration.
+          </div>
+          
+          <h6 class="mb-2">Common Configuration Parameters</h6>
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>Parameter</th>
+                  <th>Description</th>
+                  <th>Example</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>workgroup</code></td>
+                  <td>Windows workgroup name</td>
+                  <td><code>workgroup = WORKGROUP</code></td>
+                </tr>
+                <tr>
+                  <td><code>server string</code></td>
+                  <td>Server description</td>
+                  <td><code>server string = Samba Server</code></td>
+                </tr>
+                <tr>
+                  <td><code>security</code></td>
+                  <td>Security mode</td>
+                  <td><code>security = user</code></td>
+                </tr>
+                <tr>
+                  <td><code>guest ok</code></td>
+                  <td>Allow guest access</td>
+                  <td><code>guest ok = yes</code></td>
+                </tr>
+                <tr>
+                  <td><code>read only</code></td>
+                  <td>Read-only access</td>
+                  <td><code>read only = no</code></td>
+                </tr>
+                <tr>
+                  <td><code>browseable</code></td>
+                  <td>Visible in network browse list</td>
+                  <td><code>browseable = yes</code></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Add syntax highlighting or other editor enhancements here if needed
+</script>
+{% endblock %} 

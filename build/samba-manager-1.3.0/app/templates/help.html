@@ -1,0 +1,498 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="page-header">
+  <h2>Help & Documentation</h2>
+  <p class="text-muted mb-0">Comprehensive guide for using Samba Manager</p>
+</div>
+
+<div class="row">
+  <div class="col-lg-3">
+    <div class="list-group mb-4 sticky-top" style="top: 2rem;">
+      <a href="#overview" class="list-group-item list-group-item-action">Overview</a>
+      <a href="#getting-started" class="list-group-item list-group-item-action">Getting Started</a>
+      <a href="#shares" class="list-group-item list-group-item-action">Managing Shares</a>
+      <a href="#users" class="list-group-item list-group-item-action">User Management</a>
+      <a href="#groups" class="list-group-item list-group-item-action">System Groups</a>
+      <a href="#settings" class="list-group-item list-group-item-action">Global Settings</a>
+      <a href="#backups" class="list-group-item list-group-item-action">Backups & Restore</a>
+      <a href="#maintenance" class="list-group-item list-group-item-action">Maintenance</a>
+      <a href="#monitoring" class="list-group-item list-group-item-action">Monitoring</a>
+      <a href="#terminal" class="list-group-item list-group-item-action">Terminal Access</a>
+      <a href="#api" class="list-group-item list-group-item-action">API Documentation</a>
+      <a href="#mobile" class="list-group-item list-group-item-action">Mobile Installation</a>
+      <a href="#security" class="list-group-item list-group-item-action">Security Features</a>
+      <a href="#troubleshooting" class="list-group-item list-group-item-action">Troubleshooting</a>
+      <a href="#faq" class="list-group-item list-group-item-action">FAQ</a>
+    </div>
+  </div>
+  <div class="col-lg-9">
+    <div class="card mb-4">
+      <div class="card-body">
+        <h3 id="overview">Overview</h3>
+        <p>
+          Samba Manager is a comprehensive web-based interface for managing Samba file sharing servers on Linux systems.
+          It provides an intuitive, secure way to manage shares, users, groups, and server configuration without
+          manually editing configuration files.
+        </p>
+
+        <div class="row mb-4">
+          <div class="col-md-6">
+            <h5>Key Features</h5>
+            <ul class="list-unstyled">
+              <li><i class="bi bi-folder text-primary me-2"></i>Share Management</li>
+              <li><i class="bi bi-people text-primary me-2"></i>User & Group Management</li>
+              <li><i class="bi bi-gear text-primary me-2"></i>Global Configuration</li>
+              <li><i class="bi bi-shield text-primary me-2"></i>Security & Permissions</li>
+              <li><i class="bi bi-terminal text-primary me-2"></i>Terminal Access</li>
+              <li><i class="bi bi-graph-up text-primary me-2"></i>System Monitoring</li>
+            </ul>
+          </div>
+          <div class="col-md-6">
+            <h5>Advanced Features</h5>
+            <ul class="list-unstyled">
+              <li><i class="bi bi-file-earmark-zip text-success me-2"></i>Backup & Restore</li>
+              <li><i class="bi bi-code-square text-success me-2"></i>REST API</li>
+              <li><i class="bi bi-upload text-success me-2"></i>Import/Export</li>
+              <li><i class="bi bi-phone text-success me-2"></i>Mobile Responsive</li>
+              <li><i class="bi bi-lock text-success me-2"></i>CSRF Protection</li>
+              <li><i class="bi bi-tools text-success me-2"></i>Maintenance Tools</li>
+            </ul>
+          </div>
+        </div>
+
+        <h3 id="getting-started">Getting Started</h3>
+        <div class="alert alert-info">
+          <h5><i class="bi bi-info-circle me-2"></i>First-Time Setup</h5>
+          <p class="mb-0">If this is your first time using Samba Manager, start with the Setup section to install and configure Samba on your system.</p>
+        </div>
+
+        <h4>Installation & Setup</h4>
+        <ol>
+          <li><strong>Access Setup:</strong> Navigate to the "Setup" section in the sidebar</li>
+          <li><strong>Install Samba:</strong> Click "Install Samba" to install the required packages</li>
+          <li><strong>Configure Basic Settings:</strong> Use "Quick Setup" for basic configuration or manually configure shares</li>
+          <li><strong>Create Admin User:</strong> Set up your first administrator account</li>
+          <li><strong>Start Services:</strong> Use the service controls to start Samba (smbd and nmbd)</li>
+        </ol>
+
+        <h4>System Requirements</h4>
+        <ul>
+          <li><strong>Operating System:</strong> Linux (Ubuntu, CentOS, Debian, etc.)</li>
+          <li><strong>Web Browser:</strong> Modern browser with JavaScript enabled</li>
+          <li><strong>Permissions:</strong> Sudo access for installation and configuration</li>
+          <li><strong>Network:</strong> Ports 139 and 445 available for Samba traffic</li>
+        </ul>
+
+        <h3 id="shares">Managing Shares</h3>
+        <p>
+          Shares are the directories you want to make available over the network. Samba Manager provides
+          an intuitive interface for creating and managing shares with advanced features.
+        </p>
+
+        <h4>Creating a New Share</h4>
+        <ol>
+          <li>Navigate to the "Shares" section</li>
+          <li>Click the "Add Share" button</li>
+          <li><strong>Share Name:</strong> Enter a unique name for the share</li>
+          <li><strong>Path:</strong> Click "Browse" to select a directory or enter the path manually</li>
+          <li><strong>Description:</strong> Optional description of the share</li>
+          <li><strong>Permissions:</strong> Configure read/write access and user restrictions</li>
+          <li><strong>Advanced Options:</strong> Set browseable status, guest access, etc.</li>
+        </ol>
+
+        <div class="alert alert-tip">
+          <h6><i class="bi bi-lightbulb me-2"></i>Directory Browser</h6>
+          <p class="mb-0">Use the built-in directory browser to easily navigate your filesystem and select share paths without typing full paths.</p>
+        </div>
+
+        <h4>Share Permissions</h4>
+        <ul>
+          <li><strong>Valid Users:</strong> Users who can access the share (comma-separated list)</li>
+          <li><strong>Write List:</strong> Users who can write to the share</li>
+          <li><strong>Read List:</strong> Users with read-only access</li>
+          <li><strong>Admin Users:</strong> Users with full administrative access</li>
+          <li><strong>Guest Access:</strong> Allow unauthenticated access</li>
+        </ul>
+
+        <h4>Advanced Share Options</h4>
+        <ul>
+          <li><strong>Browseable:</strong> Whether the share appears in network listings</li>
+          <li><strong>Public:</strong> Allow guest access without authentication</li>
+          <li><strong>Writable:</strong> Allow write operations by default</li>
+          <li><strong>Create Mask:</strong> Default permissions for new files</li>
+          <li><strong>Directory Mask:</strong> Default permissions for new directories</li>
+        </ul>
+
+        <h3 id="users">User Management</h3>
+        <p>
+          Manage Samba users and their access permissions. Samba users are separate from system users
+          and are specifically created for file sharing access.
+        </p>
+
+        <h4>User Operations</h4>
+        <ul>
+          <li><strong>Add User:</strong> Create new Samba users with username and password</li>
+          <li><strong>Reset Password:</strong> Change user passwords securely</li>
+          <li><strong>Enable/Disable:</strong> Temporarily restrict user access without deletion</li>
+          <li><strong>Delete User:</strong> Permanently remove users from the Samba server</li>
+          <li><strong>Administrator Rights:</strong> Grant admin privileges for full system access</li>
+        </ul>
+
+        <div class="alert alert-warning">
+          <h6><i class="bi bi-exclamation-triangle me-2"></i>Security Note</h6>
+          <p class="mb-0">Samba user passwords are stored separately from system passwords. Always use strong passwords and regularly update them.</p>
+        </div>
+
+        <h3 id="groups">System Groups</h3>
+        <p>
+          System groups allow you to manage permissions for multiple users simultaneously,
+          making access control more efficient and scalable.
+        </p>
+
+        <h4>Group Management</h4>
+        <ul>
+          <li><strong>Create Groups:</strong> Add new system groups for organizing users</li>
+          <li><strong>Delete Groups:</strong> Remove unused groups</li>
+          <li><strong>Group Membership:</strong> Add/remove users from groups using system tools</li>
+          <li><strong>Share Permissions:</strong> Use groups in share configuration with "@groupname" syntax</li>
+        </ul>
+
+        <h4>Best Practices</h4>
+        <ul>
+          <li>Use descriptive group names (e.g., "accounting", "developers", "guests")</li>
+          <li>Assign users to appropriate groups based on their access needs</li>
+          <li>Use groups for department-based access control</li>
+          <li>Regularly review and update group memberships</li>
+        </ul>
+
+        <h3 id="settings">Global Settings</h3>
+        <p>
+          Configure server-wide Samba settings that affect all shares and users.
+        </p>
+
+        <h4>Basic Configuration</h4>
+        <ul>
+          <li><strong>Server String:</strong> Description that appears in network browsers</li>
+          <li><strong>Workgroup:</strong> Windows workgroup or domain name</li>
+          <li><strong>Server Role:</strong> Standalone server or domain member</li>
+          <li><strong>NetBIOS Name:</strong> Server name on the network</li>
+        </ul>
+
+        <h4>Security Settings</h4>
+        <ul>
+          <li><strong>Security Mode:</strong> User-level or share-level security</li>
+          <li><strong>Authentication:</strong> Password encryption and guest access policies</li>
+          <li><strong>Domain Settings:</strong> Active Directory integration options</li>
+        </ul>
+
+        <h3 id="backups">Backups & Restore</h3>
+        <p>
+          Create and manage backups of your Samba configuration and restore them when needed.
+        </p>
+
+        <h4>Creating Backups</h4>
+        <ul>
+          <li>Navigate to the "Backups" section</li>
+          <li>Click "Create Backup" to generate a new backup</li>
+          <li>Backups include all shares, users, and global settings</li>
+          <li>Automatic timestamping for easy identification</li>
+        </ul>
+
+        <h4>Restoring from Backup</h4>
+        <ul>
+          <li>Select a backup from the available list</li>
+          <li>Click "Restore" to apply the backup configuration</li>
+          <li>Review changes before applying</li>
+          <li>Automatic service restart after restore</li>
+        </ul>
+
+        <div class="alert alert-danger">
+          <h6><i class="bi bi-exclamation-triangle me-2"></i>Warning</h6>
+          <p class="mb-0">Restoring a backup will overwrite your current configuration. Always create a fresh backup before restoring an older one.</p>
+        </div>
+
+        <h3 id="maintenance">Maintenance</h3>
+        <p>
+          Tools and utilities for maintaining your Samba server and troubleshooting issues.
+        </p>
+
+        <h4>Available Tools</h4>
+        <ul>
+          <li><strong>Fix Permissions:</strong> Correct file and directory permissions on shares</li>
+          <li><strong>Import Configuration:</strong> Load settings from JSON or conf files</li>
+          <li><strong>Export Configuration:</strong> Save current configuration for backup</li>
+          <li><strong>View Logs:</strong> Monitor Samba service logs for troubleshooting</li>
+          <li><strong>Service Control:</strong> Start, stop, and restart Samba services</li>
+        </ul>
+
+        <h4>Permission Fixing</h4>
+        <p>
+          The "Fix Share Permissions" tool ensures that share directories have correct permissions
+          for Samba access. This is useful when files become inaccessible due to permission issues.
+        </p>
+
+        <h3 id="monitoring">Monitoring</h3>
+        <p>
+          Monitor your system's disk usage and Samba server performance.
+        </p>
+
+        <h4>Disk Usage</h4>
+        <ul>
+          <li>View storage utilization across all mounted filesystems</li>
+          <li>Monitor available space for share directories</li>
+          <li>Identify large files and directories</li>
+          <li>Plan storage capacity and cleanup operations</li>
+        </ul>
+
+        <h3 id="terminal">Terminal Access</h3>
+        <p>
+          Direct terminal access to your server for advanced configuration and troubleshooting.
+        </p>
+
+        <h4>Using Terminal Access</h4>
+        <ul>
+          <li>Click "Terminal" in the sidebar to open a web-based terminal</li>
+          <li>Full shell access with your current user permissions</li>
+          <li>Useful for manual Samba configuration and debugging</li>
+          <li>Works in both regular and GitHub Codespaces environments</li>
+        </ul>
+
+        <div class="alert alert-info">
+          <h6><i class="bi bi-info-circle me-2"></i>Terminal Environment</h6>
+          <p class="mb-0">The terminal automatically detects your environment and opens the appropriate connection (local or Codespaces).</p>
+        </div>
+
+        <h3 id="api">API Documentation</h3>
+        <p>
+          Samba Manager provides a REST API for programmatic access to server management functions.
+        </p>
+
+        <h4>API Features</h4>
+        <ul>
+          <li><strong>Share Management:</strong> Create, read, update, delete shares</li>
+          <li><strong>User Management:</strong> User CRUD operations</li>
+          <li><strong>Configuration:</strong> Access and modify settings</li>
+          <li><strong>Monitoring:</strong> System status and metrics</li>
+          <li><strong>Authentication:</strong> Secure API access with tokens</li>
+        </ul>
+
+        <h4>API Access</h4>
+        <p>API documentation is available in the "API Docs" section (admin users only).</p>
+
+        <h3 id="mobile">Mobile Installation</h3>
+        <p>
+          Samba Manager can be installed as a Progressive Web App (PWA) on mobile devices for a native app experience.
+        </p>
+
+        <h4>Installation Methods</h4>
+        <ul>
+          <li><strong>Progressive Web App:</strong> Install directly from your mobile browser</li>
+          <li><strong>Home Screen Shortcut:</strong> Add to home screen for quick access</li>
+          <li><strong>Offline Support:</strong> Basic functionality works without internet</li>
+        </ul>
+
+        <h4>Supported Platforms</h4>
+        <ul>
+          <li><strong>iOS:</strong> Safari browser (iOS 11.3+)</li>
+          <li><strong>Android:</strong> Chrome, Firefox, Edge (Android 5.0+)</li>
+          <li><strong>Requirements:</strong> Modern browser with PWA support</li>
+        </ul>
+
+        <div class="alert alert-info">
+          <h6><i class="bi bi-info-circle me-2"></i>Mobile Access</h6>
+          <p class="mb-0">For detailed installation instructions, visit the "Mobile Install" section from the sidebar menu.</p>
+        </div>
+
+        <h3 id="security">Security Features</h3>
+        <p>
+          Samba Manager implements multiple security measures to protect your server and data.
+        </p>
+
+        <h4>Implemented Security</h4>
+        <ul>
+          <li><strong>CSRF Protection:</strong> All forms include CSRF tokens to prevent cross-site request forgery</li>
+          <li><strong>Secure Authentication:</strong> Password hashing and session management</li>
+          <li><strong>Input Validation:</strong> Sanitization of all user inputs</li>
+          <li><strong>Rate Limiting:</strong> Protection against brute force attacks</li>
+          <li><strong>Access Control:</strong> Role-based permissions (admin vs regular users)</li>
+          <li><strong>HTTPS Ready:</strong> Designed to work with SSL/TLS encryption</li>
+        </ul>
+
+        <h3 id="troubleshooting">Troubleshooting</h3>
+        <p>
+          Common issues and their solutions for Samba Manager and Samba server problems.
+        </p>
+
+        <h4>Connection Issues</h4>
+        <ul>
+          <li><strong>Service Status:</strong> Check that smbd and nmbd services are running</li>
+          <li><strong>Firewall:</strong> Ensure ports 139 and 445 are open</li>
+          <li><strong>Network:</strong> Verify network connectivity and DNS resolution</li>
+          <li><strong>Permissions:</strong> Use "Fix Permissions" tool for share access issues</li>
+        </ul>
+
+        <h4>Performance Issues</h4>
+        <ul>
+          <li><strong>Resource Usage:</strong> Monitor system resources in Disk Usage section</li>
+          <li><strong>Log Analysis:</strong> Check Samba logs for performance bottlenecks</li>
+          <li><strong>Configuration:</strong> Optimize global settings for your use case</li>
+          <li><strong>Network:</strong> Consider Gigabit networking for high-performance needs</li>
+        </ul>
+
+        <h4>Common Error Messages</h4>
+        <ul>
+          <li><strong>"Access Denied":</strong> Check user permissions and share configuration</li>
+          <li><strong>"Network Path Not Found":</strong> Verify service status and network connectivity</li>
+          <li><strong>"Invalid Password":</strong> Reset user password or check authentication settings</li>
+          <li><strong>"Disk Full":</strong> Monitor disk usage and free up space</li>
+        </ul>
+
+        <h3 id="faq">Frequently Asked Questions</h3>
+        <div class="accordion" id="faqAccordion">
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq1">
+                Why can't I access my share from another computer?
+              </button>
+            </h2>
+            <div id="faq1" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+              <div class="accordion-body">
+                <p>Check the following:</p>
+                <ul>
+                  <li>Samba services (smbd and nmbd) are running</li>
+                  <li>Firewall allows Samba traffic (ports 139 and 445)</li>
+                  <li>User has proper permissions for the share</li>
+                  <li>Share is configured as "browseable"</li>
+                  <li>Network connectivity between computers</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2">
+                How do I reset a user's password?
+              </button>
+            </h2>
+            <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+              <div class="accordion-body">
+                Go to "Samba Users" section, find the user, click the key icon to reset password.
+                Enter the new password and submit. The user can immediately use the new password.
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3">
+                What's the difference between "valid users" and "write list"?
+              </button>
+            </h2>
+            <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+              <div class="accordion-body">
+                <p><strong>Valid Users:</strong> Defines which users can access the share at all. If a user is not in this list, they cannot connect to the share.</p>
+                <p><strong>Write List:</strong> Defines which users have write permission to the share. Users in this list can modify files, while other valid users will have read-only access.</p>
+                <p><strong>Example:</strong> If valid_users = "alice, bob" and write_list = "alice", then Alice can read and write, while Bob can only read.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4">
+                How do I use system groups for access control?
+              </button>
+            </h2>
+            <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+              <div class="accordion-body">
+                <ol>
+                  <li>Create a system group in the "System Groups" section</li>
+                  <li>Add users to the group using system commands (sudo usermod -aG groupname username)</li>
+                  <li>In share permissions, reference the group with "@groupname" (e.g., valid_users = @developers)</li>
+                  <li>All users in that group will inherit the share permissions</li>
+                </ol>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq5">
+                How do I backup and restore my configuration?
+              </button>
+            </h2>
+            <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+              <div class="accordion-body">
+                <p><strong>Creating Backup:</strong> Go to "Backups" section and click "Create Backup". This saves all shares, users, and settings.</p>
+                <p><strong>Restoring:</strong> Select a backup from the list and click "Restore". This will overwrite your current configuration.</p>
+                <p><strong>Best Practice:</strong> Always create a fresh backup before restoring an older one.</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq6">
+                Why is the mobile interface not working properly?
+              </button>
+            </h2>
+            <div id="faq6" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+              <div class="accordion-body">
+                <p>Samba Manager is fully responsive. If you're having mobile issues:</p>
+                <ul>
+                  <li>Ensure your browser is updated</li>
+                  <li>Try refreshing the page</li>
+                  <li>Check that JavaScript is enabled</li>
+                  <li>Use the hamburger menu (☰) to access navigation on mobile</li>
+                  <li>The interface automatically adapts to screen sizes</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq7">
+                How do I access the terminal?
+              </button>
+            </h2>
+            <div id="faq7" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+              <div class="accordion-body">
+                <p>Click "Terminal" in the sidebar menu. This opens a web-based terminal that:</p>
+                <ul>
+                  <li>Provides full shell access to your server</li>
+                  <li>Automatically detects your environment (local or Codespaces)</li>
+                  <li>Allows advanced Samba configuration and troubleshooting</li>
+                  <li>Opens in a new window/tab for convenience</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="accordion-item">
+            <h2 class="accordion-header">
+              <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq8">
+                What security features are implemented?
+              </button>
+            </h2>
+            <div id="faq8" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+              <div class="accordion-body">
+                <p>Samba Manager includes comprehensive security:</p>
+                <ul>
+                  <li><strong>CSRF Protection:</strong> All forms protected against cross-site request forgery</li>
+                  <li><strong>Secure Authentication:</strong> Proper password hashing and session management</li>
+                  <li><strong>Input Validation:</strong> All user inputs are sanitized</li>
+                  <li><strong>Rate Limiting:</strong> Protection against brute force attacks</li>
+                  <li><strong>Role-Based Access:</strong> Admin and regular user permissions</li>
+                  <li><strong>HTTPS Ready:</strong> Designed to work with SSL/TLS</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} 

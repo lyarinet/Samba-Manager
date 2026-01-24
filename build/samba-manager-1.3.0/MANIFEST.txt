@@ -1,0 +1,27 @@
+Samba Manager Release Package Manifest
+======================================
+
+Core Application:
+  app/                    - Main Flask application package
+  run.py                  - Application entry point
+  version.py              - Version information
+  requirements.txt        - Python dependencies
+  pyproject.toml          - Project configuration
+
+Documentation:
+  README.md               - Main documentation and features
+  INSTALL.md              - Installation instructions
+  CONTRIBUTING.md         - Contribution guidelines
+  TROUBLESHOOTING.md      - Troubleshooting guide
+  TERMINAL.md             - Terminal feature documentation
+
+Installation & Deployment:
+  install.sh              - Installation script
+  run_with_sudo.sh        - Run with sudo permissions
+  Dockerfile              - Docker container definition
+  smb.conf.template       - Samba configuration template
+
+License:
+  LICENSE                 - MIT License
+
+This package includes everything needed to deploy Samba Manager.

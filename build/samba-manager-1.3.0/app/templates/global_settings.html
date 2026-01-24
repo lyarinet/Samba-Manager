@@ -1,0 +1,344 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="page-header">
+<h2>Global Settings</h2>
+  <button type="submit" form="settingsForm" class="btn btn-primary" {% if not has_sudo %}disabled{% endif %}>
+    <i class="bi bi-save me-1"></i> Save Changes
+  </button>
+</div>
+
+{% if not has_sudo %}
+<div class="alert alert-warning mb-4">
+  <i class="bi bi-shield-exclamation me-2"></i>
+  <strong>Warning:</strong> Sudo access is required to modify Samba global settings.
+  Run this application with sudo privileges to enable full functionality.
+</div>
+{% endif %}
+
+<div class="row">
+  <div class="col-lg-8">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0">Samba Configuration</h5>
+      </div>
+      <div class="card-body">
+        <form id="settingsForm" method="POST" action="/global-settings">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="workgroup" class="form-label">Workgroup</label>
+                <input type="text" class="form-control" id="workgroup" name="workgroup" value="{{ global_settings.workgroup }}" {% if not has_sudo %}disabled{% endif %}>
+                <div class="form-text">Windows workgroup name</div>
+              </div>
+            </div>
+            
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="server_string" class="form-label">Server Description</label>
+                <input type="text" class="form-control" id="server_string" name="server_string" value="{{ global_settings.server_string }}" {% if not has_sudo %}disabled{% endif %}>
+                <div class="form-text">Description for your Samba server</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="server_role" class="form-label">Server Role</label>
+                <select class="form-select" id="server_role" name="server_role" {% if not has_sudo %}disabled{% endif %}>
+                  <option value="standalone" {% if global_settings.server_role == 'standalone' %}selected{% endif %}>Standalone Server</option>
+                  <option value="member server" {% if global_settings.server_role == 'member server' %}selected{% endif %}>Member Server</option>
+                  <option value="domain controller" {% if global_settings.server_role == 'domain controller' %}selected{% endif %}>Domain Controller</option>
+                </select>
+                <div class="form-text">Role of this server in the network</div>
+              </div>
+            </div>
+            
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="log_level" class="form-label">Log Level</label>
+                <select class="form-select" id="log_level" name="log_level" {% if not has_sudo %}disabled{% endif %}>
+                  <option value="0" {% if global_settings.log_level == '0' %}selected{% endif %}>None (0)</option>
+                  <option value="1" {% if global_settings.log_level == '1' %}selected{% endif %}>Minimal (1)</option>
+                  <option value="2" {% if global_settings.log_level == '2' %}selected{% endif %}>Normal (2)</option>
+                  <option value="3" {% if global_settings.log_level == '3' %}selected{% endif %}>Full (3)</option>
+                  <option value="10" {% if global_settings.log_level == '10' %}selected{% endif %}>Debug (10)</option>
+                </select>
+                <div class="form-text">Amount of information logged</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="log_file" class="form-label">Log File</label>
+                <input type="text" class="form-control" id="log_file" name="log_file" value="{{ global_settings.log_file }}" {% if not has_sudo %}disabled{% endif %}>
+                <div class="form-text">Path to Samba log file</div>
+              </div>
+            </div>
+            
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="max_log_size" class="form-label">Max Log Size (KB)</label>
+                <input type="number" class="form-control" id="max_log_size" name="max_log_size" value="{{ global_settings.max_log_size }}" {% if not has_sudo %}disabled{% endif %}>
+                <div class="form-text">Maximum size before log rotation</div>
+              </div>
+            </div>
+          </div>
+          
+          <hr class="my-4">
+          
+          <h5 class="mb-3">Security Settings</h5>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="security" class="form-label">Security Mode</label>
+                <select class="form-select" id="security" name="security" {% if not has_sudo %}disabled{% endif %}>
+                  <option value="user" {% if global_settings.security == 'user' %}selected{% endif %}>User</option>
+                  <option value="domain" {% if global_settings.security == 'domain' %}selected{% endif %}>Domain</option>
+                  <option value="ads" {% if global_settings.security == 'ads' %}selected{% endif %}>Active Directory</option>
+                </select>
+                <div class="form-text">Authentication method</div>
+              </div>
+            </div>
+            
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="encrypt_passwords" class="form-label">Password Encryption</label>
+                <select class="form-select" id="encrypt_passwords" name="encrypt_passwords" {% if not has_sudo %}disabled{% endif %}>
+                  <option value="yes" {% if global_settings.encrypt_passwords == 'yes' %}selected{% endif %}>Yes</option>
+                  <option value="no" {% if global_settings.encrypt_passwords == 'no' %}selected{% endif %}>No</option>
+                </select>
+                <div class="form-text">Use encrypted passwords</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="guest_account" class="form-label">Guest Account</label>
+                <input type="text" class="form-control" id="guest_account" name="guest_account" value="{{ global_settings.guest_account }}" {% if not has_sudo %}disabled{% endif %}>
+                <div class="form-text">Username for guest access</div>
+              </div>
+            </div>
+            
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="map_to_guest" class="form-label">Map to Guest</label>
+                <select class="form-select" id="map_to_guest" name="map_to_guest" {% if not has_sudo %}disabled{% endif %}>
+                  <option value="Never" {% if global_settings.map_to_guest == 'Never' %}selected{% endif %}>Never</option>
+                  <option value="Bad User" {% if global_settings.map_to_guest == 'Bad User' %}selected{% endif %}>Bad User</option>
+                  <option value="Bad Password" {% if global_settings.map_to_guest == 'Bad Password' %}selected{% endif %}>Bad Password</option>
+                </select>
+                <div class="form-text">When to map users to the guest account</div>
+              </div>
+            </div>
+          </div>
+          
+          <hr class="my-4">
+          
+          <h5 class="mb-3">Network Settings</h5>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="interfaces" class="form-label">Network Interfaces</label>
+                <input type="text" class="form-control" id="interfaces" name="interfaces" value="{{ global_settings.interfaces }}" {% if not has_sudo %}disabled{% endif %}>
+                <div class="form-text">List of network interfaces to bind to (e.g., eth0, lo)</div>
+              </div>
+            </div>
+            
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="bind_interfaces_only" class="form-label">Bind to Interfaces Only</label>
+                <select class="form-select" id="bind_interfaces_only" name="bind_interfaces_only" {% if not has_sudo %}disabled{% endif %}>
+                  <option value="yes" {% if global_settings.bind_interfaces_only == 'yes' %}selected{% endif %}>Yes</option>
+                  <option value="no" {% if global_settings.bind_interfaces_only == 'no' %}selected{% endif %}>No</option>
+                </select>
+                <div class="form-text">Bind only to specified interfaces</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="row g-3">
+            <div class="col-md-6">
+  <div class="mb-3">
+                <label for="hosts_allow" class="form-label">Allowed Hosts</label>
+                <input type="text" class="form-control" id="hosts_allow" name="hosts_allow" value="{{ global_settings.hosts_allow }}" {% if not has_sudo %}disabled{% endif %}>
+                <div class="form-text">List of hosts allowed to connect (e.g., 192.168.1. 127.)</div>
+              </div>
+  </div>
+            
+            <div class="col-md-6">
+  <div class="mb-3">
+                <label for="hosts_deny" class="form-label">Denied Hosts</label>
+                <input type="text" class="form-control" id="hosts_deny" name="hosts_deny" value="{{ global_settings.hosts_deny }}" {% if not has_sudo %}disabled{% endif %}>
+                <div class="form-text">List of hosts denied from connecting</div>
+              </div>
+            </div>
+          </div>
+          
+          <hr class="my-4">
+          
+          <h5 class="mb-3">Advanced Settings</h5>
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="unix_charset" class="form-label">UNIX Charset</label>
+                <input type="text" class="form-control" id="unix_charset" name="unix_charset" value="{{ global_settings.unix_charset|default('UTF-8') }}" {% if not has_sudo %}disabled{% endif %}>
+                <div class="form-text">Character set for UNIX systems</div>
+              </div>
+            </div>
+            
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="dos_charset" class="form-label">DOS Charset</label>
+                <input type="text" class="form-control" id="dos_charset" name="dos_charset" value="{{ global_settings.dos_charset|default('CP850') }}" {% if not has_sudo %}disabled{% endif %}>
+                <div class="form-text">Character set for DOS clients</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="deadtime" class="form-label">Dead Time (minutes)</label>
+                <input type="number" class="form-control" id="deadtime" name="deadtime" value="{{ global_settings.deadtime|default('15') }}" {% if not has_sudo %}disabled{% endif %}>
+                <div class="form-text">Disconnect inactive clients after this many minutes</div>
+              </div>
+            </div>
+            
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="keepalive" class="form-label">Keepalive (seconds)</label>
+                <input type="number" class="form-control" id="keepalive" name="keepalive" value="{{ global_settings.keepalive|default('300') }}" {% if not has_sudo %}disabled{% endif %}>
+                <div class="form-text">How often to check if connections are alive</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="max_connections" class="form-label">Max Connections</label>
+                <input type="number" class="form-control" id="max_connections" name="max_connections" value="{{ global_settings.max_connections|default('0') }}" {% if not has_sudo %}disabled{% endif %}>
+                <div class="form-text">Maximum number of connections (0 = unlimited)</div>
+              </div>
+            </div>
+            
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="socket_options" class="form-label">Socket Options</label>
+                <input type="text" class="form-control" id="socket_options" name="socket_options" value="{{ global_settings.socket_options|default('TCP_NODELAY IPTOS_LOWDELAY') }}" {% if not has_sudo %}disabled{% endif %}>
+                <div class="form-text">Socket options for performance tuning</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="row g-3">
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="dns_proxy" class="form-label">DNS Proxy</label>
+                <select class="form-select" id="dns_proxy" name="dns_proxy" {% if not has_sudo %}disabled{% endif %}>
+                  <option value="yes" {% if global_settings.dns_proxy == 'yes' %}selected{% endif %}>Yes</option>
+                  <option value="no" {% if global_settings.dns_proxy == 'no' %}selected{% endif %}>No</option>
+                </select>
+                <div class="form-text">Resolve NetBIOS names via DNS</div>
+              </div>
+            </div>
+            
+            <div class="col-md-6">
+              <div class="mb-3">
+                <label for="usershare_allow_guests" class="form-label">Allow Guest User Shares</label>
+                <select class="form-select" id="usershare_allow_guests" name="usershare_allow_guests" {% if not has_sudo %}disabled{% endif %}>
+                  <option value="yes" {% if global_settings.usershare_allow_guests == 'yes' %}selected{% endif %}>Yes</option>
+                  <option value="no" {% if global_settings.usershare_allow_guests == 'no' %}selected{% endif %}>No</option>
+                </select>
+                <div class="form-text">Allow guests to access user-defined shares</div>
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-lg-4">
+    <div class="card mb-4">
+      <div class="card-header">
+        <h5 class="mb-0">Service Status</h5>
+      </div>
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <div>
+            <h6 class="mb-1">SMBD Service</h6>
+            <p class="text-muted small mb-0">File sharing service</p>
+          </div>
+          <div>
+            {% if status.smbd == 'active' %}
+            <span class="badge bg-success">Running</span>
+            {% else %}
+            <span class="badge bg-danger">Stopped</span>
+            {% endif %}
+          </div>
+        </div>
+        
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h6 class="mb-1">NMBD Service</h6>
+            <p class="text-muted small mb-0">NetBIOS name service</p>
+          </div>
+          <div>
+            {% if status.nmbd == 'active' %}
+            <span class="badge bg-success">Running</span>
+            {% else %}
+            <span class="badge bg-danger">Stopped</span>
+            {% endif %}
+          </div>
+        </div>
+        
+        {% if has_sudo %}
+        <div class="d-grid gap-2 mt-4">
+          <a href="/restart" class="btn btn-warning">
+            <i class="bi bi-arrow-repeat me-2"></i> Restart Services
+          </a>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+    
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0">Configuration File</h5>
+      </div>
+      <div class="card-body">
+        <p class="mb-3">You can directly edit the Samba configuration file if you need advanced options not available in this interface.</p>
+        
+        <div class="d-grid">
+          <a href="/edit-config" class="btn btn-outline-primary">
+            <i class="bi bi-file-earmark-code me-2"></i> Edit smb.conf
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Fix for select elements in dark mode
+    document.querySelectorAll('select.form-select').forEach(function(select) {
+      select.addEventListener('mousedown', function(e) {
+        if (!this.disabled) {
+          // This helps ensure the dropdown opens properly
+          e.stopPropagation();
+        }
+      });
+    });
+  });
+</script>
+{% endblock %}

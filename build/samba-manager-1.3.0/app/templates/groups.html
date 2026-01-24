@@ -1,0 +1,123 @@
+{% extends 'layout.html' %}
+
+{% block title %}System Groups - Samba Manager{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <h1 class="h3 mb-0">System Groups</h1>
+  <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addGroupModal">
+    <i class="bi bi-plus-lg me-1"></i> Add Group
+  </button>
+</div>
+
+{% if groups %}
+<div class="card">
+  <div class="card-header bg-light">
+    <div class="row">
+      <div class="col-md-6">
+        <strong>Group Name</strong>
+      </div>
+      <div class="col-md-6 text-end">
+        <strong>Actions</strong>
+      </div>
+    </div>
+  </div>
+  <div class="list-group list-group-flush">
+    {% for group in groups %}
+    <div class="list-group-item">
+      <div class="row align-items-center">
+        <div class="col-md-6">
+          <div class="d-flex align-items-center">
+            <i class="bi bi-people-fill me-2 text-primary"></i>
+            <span class="text-light">{{ group }}</span>
+          </div>
+        </div>
+        <div class="col-md-6 text-end">
+          <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteGroupModal{{ group }}">
+            <i class="bi bi-trash me-1"></i> Delete
+          </button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Delete Group Modal -->
+    <div class="modal fade" id="deleteGroupModal{{ group }}" tabindex="-1" aria-labelledby="deleteGroupModalLabel{{ group }}" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="deleteGroupModalLabel{{ group }}">Delete Group</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <p>Are you sure you want to delete the group <strong>{{ group }}</strong>?</p>
+            <div class="alert alert-warning">
+              <i class="bi bi-exclamation-triangle me-2"></i>
+              <strong>Warning:</strong>
+              <ul class="mb-0">
+                <li>This action cannot be undone</li>
+                <li>If this is a primary group for any user, the system will attempt to change their primary group to 'users'</li>
+                <li>Deleting this group may affect users and shares that use it</li>
+              </ul>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+            <form action="/groups/delete/{{ group }}" method="post" class="d-inline">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+              <button type="submit" class="btn btn-danger">Delete Group</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+{% else %}
+<div class="card">
+  <div class="card-body text-center py-5">
+    <i class="bi bi-people-fill display-4 text-muted mb-3"></i>
+    <h4>No System Groups Found</h4>
+    <p class="text-muted">You haven't created any system groups yet.</p>
+    <button type="button" class="btn btn-primary mt-2" data-bs-toggle="modal" data-bs-target="#addGroupModal">
+      <i class="bi bi-plus-lg me-1"></i> Add First Group
+    </button>
+  </div>
+</div>
+{% endif %}
+
+<!-- Add Group Modal -->
+<div class="modal fade" id="addGroupModal" tabindex="-1" aria-labelledby="addGroupModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addGroupModalLabel">Add New System Group</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form action="/groups/add" method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="group_name" class="form-label">Group Name</label>
+            <input type="text" class="form-control" id="group_name" name="group_name" pattern="^[a-z][\w-]*$" required>
+            <div class="form-text">
+              <p>Group name requirements:</p>
+              <ul class="mb-0">
+                <li>Must start with a lowercase letter</li>
+                <li>Can contain lowercase letters, numbers, hyphens, and underscores</li>
+                <li>No spaces or special characters</li>
+                <li>Examples: users, dev-team, backup_admins</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Add Group</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %} 

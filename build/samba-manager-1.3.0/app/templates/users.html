@@ -1,0 +1,184 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="page-header">
+  <h2>Samba Users</h2>
+  <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
+    <i class="bi bi-person-plus me-2"></i> Add User
+  </button>
+</div>
+
+{% if not has_sudo %}
+<div class="alert alert-warning mb-4">
+  <i class="bi bi-shield-exclamation me-2"></i>
+  <strong>Warning:</strong> Sudo access is required to manage Samba users.
+  Run this application with sudo privileges to enable full functionality.
+</div>
+{% endif %}
+
+<div class="card">
+  <div class="card-body p-0">
+    {% if users %}
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for user in users %}
+          <tr>
+            <td class="align-middle">{{ user.username }}</td>
+            <td class="align-middle">
+              {% if user.enabled %}
+              <span class="badge bg-success">Enabled</span>
+              {% else %}
+              <span class="badge bg-danger">Disabled</span>
+              {% endif %}
+            </td>
+            <td class="align-middle">
+              <div class="btn-group">
+                <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#resetPasswordModal{{ user.username }}">
+                  <i class="bi bi-key"></i>
+                </button>
+                
+                {% if user.enabled %}
+                <form action="/users/disable/{{ user.username }}" method="post" class="d-inline">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                  <button type="submit" class="btn btn-sm btn-outline-warning" {% if not has_sudo %}disabled{% endif %}>
+                    <i class="bi bi-slash-circle"></i>
+                  </button>
+                </form>
+                {% else %}
+                <form action="/users/enable/{{ user.username }}" method="post" class="d-inline">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                  <button type="submit" class="btn btn-sm btn-outline-success" {% if not has_sudo %}disabled{% endif %}>
+                    <i class="bi bi-check-circle"></i>
+                  </button>
+                </form>
+                {% endif %}
+                
+                <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteUserModal{{ user.username }}">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    
+    <!-- Reset Password Modals -->
+    {% for user in users %}
+    <div class="modal fade" id="resetPasswordModal{{ user.username }}" tabindex="-1" aria-labelledby="resetPasswordModalLabel{{ user.username }}" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="resetPasswordModalLabel{{ user.username }}">Reset Password: {{ user.username }}</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <form action="/users/reset-password/{{ user.username }}" method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <div class="modal-body">
+              <div class="mb-3">
+                <label for="password{{ user.username }}" class="form-label">New Password</label>
+                <input type="password" class="form-control" id="password{{ user.username }}" name="password" required>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn btn-primary" {% if not has_sudo %}disabled{% endif %}>Reset Password</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Delete User Modals -->
+    <div class="modal fade" id="deleteUserModal{{ user.username }}" tabindex="-1" aria-labelledby="deleteUserModalLabel{{ user.username }}" aria-hidden="true">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="deleteUserModalLabel{{ user.username }}">Delete User</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <form action="/users/delete/{{ user.username }}" method="post">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            <div class="modal-body">
+              <p>Are you sure you want to delete the user <strong>{{ user.username }}</strong>?</p>
+              <p class="text-danger"><i class="bi bi-exclamation-triangle me-2"></i>This action cannot be undone.</p>
+              
+              <div class="form-check mb-3">
+                <input class="form-check-input" type="checkbox" id="deleteSystemUser{{ user.username }}" name="delete_system_user">
+                <label class="form-check-label" for="deleteSystemUser{{ user.username }}">
+                  Also delete system user (if exists)
+                </label>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="submit" class="btn btn-danger" {% if not has_sudo %}disabled{% endif %}>Delete User</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+    
+    {% else %}
+    <div class="text-center py-5">
+      <i class="bi bi-people display-4 text-muted mb-3"></i>
+      <h4>No Samba Users Found</h4>
+      <p class="text-muted">You haven't added any Samba users yet.</p>
+      <button type="button" class="btn btn-primary mt-2" data-bs-toggle="modal" data-bs-target="#addUserModal">
+        <i class="bi bi-person-plus me-2"></i> Add First User
+      </button>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Add User Modal -->
+<div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="addUserModalLabel">Add Samba User</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form action="/users/add" method="post">
+        <div class="modal-body">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+          <div class="mb-3">
+            <label for="username" class="form-label">Username</label>
+            <input type="text" class="form-control" id="username" name="username" required>
+          </div>
+          
+          <div class="mb-3">
+            <label for="password" class="form-label">Password</label>
+            <input type="password" class="form-control" id="password" name="password" required>
+          </div>
+          
+          <div class="form-check mb-3">
+            <input class="form-check-input" type="checkbox" id="createSystemUser" name="create_system_user">
+            <label class="form-check-label" for="createSystemUser">
+              Create system user
+            </label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary" {% if not has_sudo %}disabled{% endif %}>Add User</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+{% endblock %} 

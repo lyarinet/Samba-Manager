@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Samba Manager - Login</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      /* Light Professional Theme */
+      --primary: #2563eb;      /* Blue 600 */
+      --primary-light: #3b82f6; /* Blue 500 */
+      --primary-dark: #1d4ed8;  /* Blue 700 */
+      --secondary: #64748b;    /* Slate 500 */
+      --secondary-light: #94a3b8; /* Slate 400 */
+      --secondary-dark: #475569; /* Slate 600 */
+      --accent: #f59e0b;       /* Amber 500 */
+      --accent-light: #fbbf24; /* Amber 400 */
+      --accent-dark: #d97706;  /* Amber 600 */
+      --danger: #dc2626;       /* Red 600 */
+      --success: #16a34a;      /* Green 600 */
+      --warning: #d97706;      /* Amber 600 */
+      --info: #2563eb;         /* Blue 600 */
+      
+      --bg-dark: #ffffff;      /* White */
+      --bg-card: #f8fafc;      /* Gray 50 */
+      --bg-sidebar: #f1f5f9;   /* Slate 100 */
+      --text-primary: #0f172a; /* Slate 900 */
+      --text-secondary: #475569; /* Slate 600 */
+      --text-muted: #64748b;   /* Slate 500 */
+      --border-color: #e2e8f0; /* Slate 200 */
+    }
+    
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .login-container {
+      width: 100%;
+      max-width: 400px;
+      padding: 2rem;
+    }
+    
+    .card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 0.5rem;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+    
+    .card-header {
+      border-bottom: 1px solid var(--border-color);
+      padding: 1.5rem;
+    }
+    
+    .card-body {
+      padding: 1.5rem;
+    }
+    
+    .form-control {
+      background-color: #ffffff;
+      color: var(--text-primary);
+      border-color: var(--border-color);
+    }
+    
+    .form-control:focus {
+      background-color: #ffffff;
+      color: var(--text-primary);
+      border-color: var(--primary);
+      box-shadow: 0 0 0 0.25rem rgba(37, 99, 235, 0.1);
+    }
+    
+    .btn-primary {
+      background-color: var(--primary);
+      border-color: var(--primary-dark);
+    }
+    
+    .btn-primary:hover {
+      background-color: var(--primary-dark);
+      border-color: var(--primary-dark);
+    }
+    
+    .logo {
+      max-width: 80px;
+      margin-bottom: 1rem;
+    }
+    
+    .alert {
+      border-radius: 0.5rem;
+    }
+    
+    .alert-danger {
+      background-color: #fef2f2;
+      border-color: #fecaca;
+      color: #dc2626;
+    }
+    
+    .alert-success {
+      background-color: #f0fdf4;
+      border-color: #bbf7d0;
+      color: #16a34a;
+    }
+    
+    /* Improved text visibility for light theme */
+    .text-muted {
+      color: var(--text-muted) !important;
+    }
+    
+    p {
+      color: var(--text-secondary) !important;
+    }
+    
+    span:not(.badge) {
+      color: var(--text-secondary) !important;
+    }
+    
+    small, .small {
+      color: var(--text-muted) !important;
+    }
+    
+    .form-label {
+      color: var(--text-primary) !important;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <div class="text-center mb-4">
+      <i class="bi bi-hdd-network display-1 text-primary"></i>
+      <h1 class="h3 mt-3">Samba Manager</h1>
+      <p class="text-muted">Sign in to continue</p>
+    </div>
+    
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show mb-4" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+    
+    <div class="card">
+      <div class="card-body">
+        <form method="POST" action="{{ url_for('auth.login') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+          <div class="mb-3">
+            <label for="username" class="form-label">Username</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-person"></i></span>
+              <input type="text" class="form-control" id="username" name="username" placeholder="Enter your username" required autofocus>
+            </div>
+          </div>
+          
+          <div class="mb-4">
+            <label for="password" class="form-label">Password</label>
+            <div class="input-group">
+              <span class="input-group-text"><i class="bi bi-lock"></i></span>
+              <input type="password" class="form-control" id="password" name="password" placeholder="Enter your password" required>
+            </div>
+          </div>
+          
+          <div class="d-grid">
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-box-arrow-in-right me-2"></i> Sign In
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+    
+    <div class="text-center mt-4">
+      <p class="text-muted small">
+        &copy; <span id="currentYear"></span> Samba Manager
+      </p>
+    </div>
+  </div>
+  
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    document.getElementById('currentYear').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html> 
