@@ -47,10 +47,32 @@ A comprehensive web-based interface for managing Samba file sharing on Linux sys
 - Samba server
 - Sudo access (for modifying system Samba configuration)
 - Go (for terminal feature using GoTTY)
+- Docker 20.10+ (for Docker deployment - optional)
 
-## Quick Installation (Recommended)
+## Installation Methods
 
-### Option 1: Authentication-enabled Installation (Recommended)
+### Docker Deployment (Recommended for Testing)
+
+Quickest way to try Samba Manager:
+
+#### Option A: Using Docker Compose (Local)
+```bash
+cd releases/docker
+docker-compose up
+```
+
+#### Option B: Using Docker Hub (Pre-built)
+```bash
+docker run -d -p 5000:5000 lyarinet/samba-manager:1.3.0
+```
+
+**Docker Hub**: https://hub.docker.com/r/lyarinet/samba-manager
+
+Access at: `http://localhost:5000`
+
+### Quick Installation (Recommended)
+
+#### Option 1: Authentication-enabled Installation (Recommended)
 
 If you're encountering authentication issues with GitHub, use this installation method:
 
@@ -71,7 +93,7 @@ This script will:
 - Allow you to enter a custom repository URL if needed
 - Handle all installation steps automatically
 
-### Option 2: One-line Installation
+#### Option 2: One-line Installation
 
 If you have direct access to the repository, install Samba Manager with a single command:
 
@@ -94,9 +116,9 @@ That's it! The script will automatically:
 
 After installation, access Samba Manager at: `http://your-server-ip:5000`
 
-## Manual Installation Options
+### Manual Installation Options
 
-### Option 1: Download and Review the Script First
+#### Option 3: Download and Review the Script First
 
 If you prefer to review the installation script before running it:
 
@@ -115,7 +137,7 @@ If you prefer to review the installation script before running it:
    sudo ./auto_install.sh
    ```
 
-### Option 2: Distribution-Specific Installation
+#### Option 4: Distribution-Specific Installation
 
 #### Ubuntu/Debian
 ```bash
@@ -159,7 +181,7 @@ cd Samba-Manager
 sudo ./install_all_distros.sh
 ```
 
-### Option 3: Developer Installation
+#### Option 5: Developer Installation
 
 For development or testing without system-wide installation:
 
@@ -178,6 +200,52 @@ pip install -r requirements.txt
 # Run in development mode
 python run.py --dev
 ```
+
+## Docker Deployment
+
+Samba Manager includes production-ready Docker support for easy containerized deployment:
+
+### Docker Features
+- **Pre-configured** - All dependencies included
+- **Production-ready** - Based on Python 3.12 Debian Bookworm
+- **Services included** - Samba Manager (5000) + Samba daemon (139, 445)
+- **Persistent storage** - Volumes for configuration and logs
+- **Auto-restart** - Process supervision with automatic restart
+- **Health checks** - Built-in monitoring and health endpoints
+
+### Quick Docker Start
+```bash
+cd releases/docker
+docker-compose up
+```
+
+For more details, see the [releases/docker/](releases/docker/) directory.
+
+## Release Management System
+
+Samba Manager includes a comprehensive release management system with automated tools:
+
+### Release Tools
+- **build_release.sh** - Create tar.gz and zip packages with SHA-256 checksums
+- **validate_release.sh** - Validate release integrity (15+ checks)
+- **publish_release.sh** - Publish to GitHub with automated uploads
+- **generate_changelog.sh** - Generate changelog from git commits
+
+### Building a Release
+```bash
+./build_release.sh    # Build packages
+./validate_release.sh # Verify integrity
+./publish_release.sh  # Publish to GitHub
+```
+
+### Release Documentation
+- **[START_HERE.md](START_HERE.md)** - Quick start guide
+- **[RELEASE_PACK.md](RELEASE_PACK.md)** - Quick reference commands
+- **[RELEASE_WORKFLOW.md](RELEASE_WORKFLOW.md)** - Complete guide (500+ lines)
+- **[RELEASE_PACK_OVERVIEW.md](RELEASE_PACK_OVERVIEW.md)** - Comprehensive overview
+- **[releases/README.md](releases/README.md)** - Distribution guide
+
+For complete release details, see [RELEASE_WORKFLOW.md](RELEASE_WORKFLOW.md).
 
 ## Uninstalling Samba Manager
 
@@ -330,6 +398,7 @@ If you encounter issues during installation or usage:
 4. **Network Access**: Verify network connectivity and firewall settings
 5. **Terminal Issues**: If the terminal doesn't appear, check that GoTTY is installed and running on port 8080
 6. **See the Troubleshooting Guide**: Refer to [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for common issues
+7. **Release Build Issues**: For release management help, see [RELEASE_WORKFLOW.md](RELEASE_WORKFLOW.md#troubleshooting)
 
 ## Advanced Configuration
 
@@ -339,9 +408,26 @@ If you encounter issues during installation or usage:
 - **User Management**: Create specific users for Samba access
 - **Terminal Configuration**: Customize terminal settings in `~/.gotty/config.toml`
 
+## Documentation
+
+### Setup & Installation
+- [INSTALL.md](INSTALL.md) - Detailed installation for all distributions
+- [TROUBLESHOOTING.md](TROUBLESHOOTING.md) - Common issues and solutions
+- [TERMINAL.md](TERMINAL.md) - Terminal feature guide
+
+### Release Management
+- [START_HERE.md](START_HERE.md) - Release pack quick start
+- [RELEASE_PACK.md](RELEASE_PACK.md) - Release commands reference
+- [RELEASE_WORKFLOW.md](RELEASE_WORKFLOW.md) - Complete release process
+- [RELEASE_PACK_OVERVIEW.md](RELEASE_PACK_OVERVIEW.md) - Full release documentation
+- [releases/README.md](releases/README.md) - Distribution guide
+
+### Deployment
+- [releases/docker/](releases/docker/) - Docker deployment guide
+
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! Please feel free to submit a Pull Request. See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
 ## License
 
