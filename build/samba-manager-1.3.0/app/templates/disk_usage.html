@@ -1,0 +1,259 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-center">
+  <h2>Disk Usage</h2>
+  <button id="refreshBtn" class="btn btn-sm btn-primary">
+    <i class="bi bi-arrow-clockwise"></i> Refresh
+  </button>
+</div>
+
+<div class="row">
+  <!-- Summary Card -->
+  <div class="col-12 mb-4">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0">Overall Storage Usage</h5>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-lg-8">
+            <canvas id="overallUsageChart" height="200"></canvas>
+          </div>
+          <div class="col-lg-4">
+            <div class="table-responsive">
+              <table class="table table-sm">
+                <thead>
+                  <tr>
+                    <th>Share</th>
+                    <th>Used</th>
+                    <th>Available</th>
+                  </tr>
+                </thead>
+                <tbody id="summaryTableBody">
+                  <tr>
+                    <td colspan="3" class="text-center">Loading data...</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Individual Share Cards -->
+  <div class="col-12">
+    <div id="shareCards" class="row">
+      <div class="col-12 text-center py-3">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-2">Loading disk usage data...</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    let overallChart = null;
+    const colors = [
+      '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', 
+      '#fd7e14', '#6f42c1', '#20c9a6', '#5a5c69', '#858796'
+    ];
+    
+    // Function to load disk usage data
+    function loadDiskUsage() {
+      fetch('/api/disk-usage')
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.json();
+        })
+        .then(data => {
+          updateOverallChart(data);
+          updateSummaryTable(data);
+          updateShareCards(data);
+        })
+        .catch(error => {
+          console.error('Error fetching disk usage:', error);
+          document.getElementById('summaryTableBody').innerHTML = `
+            <tr>
+              <td colspan="3" class="text-center text-danger">
+                Error loading disk usage: ${error.message}
+              </td>
+            </tr>
+          `;
+          document.getElementById('shareCards').innerHTML = `
+            <div class="col-12">
+              <div class="alert alert-danger">
+                Error loading disk usage: ${error.message}
+              </div>
+            </div>
+          `;
+        });
+    }
+    
+    // Update the overall usage chart
+    function updateOverallChart(data) {
+      const labels = data.map(share => share.name);
+      const usedValues = data.map(share => {
+        const percent = share.usage.use_percent.replace('%', '');
+        return parseFloat(percent);
+      });
+      const availableValues = data.map(share => {
+        const percent = share.usage.use_percent.replace('%', '');
+        return 100 - parseFloat(percent);
+      });
+      
+      const ctx = document.getElementById('overallUsageChart').getContext('2d');
+      
+      if (overallChart) {
+        overallChart.destroy();
+      }
+      
+      overallChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Used Space (%)',
+              backgroundColor: '#4e73df',
+              data: usedValues,
+              maxBarThickness: 25,
+            }
+          ]
+        },
+        options: {
+          maintainAspectRatio: false,
+          scales: {
+            y: {
+              beginAtZero: true,
+              max: 100,
+              ticks: {
+                callback: function(value) {
+                  return value + '%';
+                }
+              }
+            }
+          },
+          plugins: {
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const label = context.dataset.label || '';
+                  const value = context.parsed.y;
+                  return `${label}: ${value}%`;
+                }
+              }
+            }
+          }
+        }
+      });
+    }
+    
+    // Update the summary table
+    function updateSummaryTable(data) {
+      const tableBody = document.getElementById('summaryTableBody');
+      tableBody.innerHTML = '';
+      
+      data.forEach(item => {
+        const row = document.createElement('tr');
+        
+        // Share name
+        const nameCell = document.createElement('td');
+        nameCell.textContent = item.name;
+        row.appendChild(nameCell);
+        
+        // Used space
+        const usedCell = document.createElement('td');
+        usedCell.textContent = item.usage.used;
+        row.appendChild(usedCell);
+        
+        // Available space
+        const availableCell = document.createElement('td');
+        availableCell.textContent = item.usage.available;
+        row.appendChild(availableCell);
+        
+        tableBody.appendChild(row);
+      });
+    }
+    
+    // Update individual share cards
+    function updateShareCards(data) {
+      const container = document.getElementById('shareCards');
+      container.innerHTML = '';
+      
+      data.forEach((item, index) => {
+        const percent = parseInt(item.usage.use_percent.replace('%', ''));
+        let statusClass = 'success';
+        
+        if (percent >= 90) {
+          statusClass = 'danger';
+        } else if (percent >= 75) {
+          statusClass = 'warning';
+        }
+        
+        const card = document.createElement('div');
+        card.className = 'col-md-6 col-lg-4 mb-4';
+        card.innerHTML = `
+          <div class="card">
+            <div class="card-header">
+              <h6 class="mb-0">${item.name}</h6>
+              <div class="small text-muted">${item.path}</div>
+            </div>
+            <div class="card-body">
+              <div class="mb-3">
+                <div class="d-flex justify-content-between mb-1">
+                  <span>Disk Usage</span>
+                  <span class="text-${statusClass}">${item.usage.use_percent}</span>
+                </div>
+                <div class="progress" style="height: 10px">
+                  <div class="progress-bar bg-${statusClass}" role="progressbar" 
+                       style="width: ${item.usage.use_percent}" 
+                       aria-valuenow="${percent}" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-6">
+                  <div class="small text-muted">Total</div>
+                  <div>${item.usage.size}</div>
+                </div>
+                <div class="col-6">
+                  <div class="small text-muted">Free</div>
+                  <div>${item.usage.available}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+        
+        container.appendChild(card);
+      });
+      
+      // If no data, show a message
+      if (data.length === 0) {
+        container.innerHTML = `
+          <div class="col-12">
+            <div class="alert alert-info">
+              No share disk usage data available.
+            </div>
+          </div>
+        `;
+      }
+    }
+    
+    // Load disk usage on page load
+    loadDiskUsage();
+    
+    // Set up refresh button
+    document.getElementById('refreshBtn').addEventListener('click', function() {
+      loadDiskUsage();
+    });
+  });
+</script>
+{% endblock %} 

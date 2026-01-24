@@ -1,0 +1,256 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="page-header">
+  <h2>Dashboard</h2>
+  <div>
+    <span class="badge bg-primary">{{ now.strftime('%b %d, %Y') }}</span>
+  </div>
+</div>
+
+<div class="row">
+  <!-- Status Cards -->
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h6 class="text-muted mb-2">Samba Status</h6>
+            <h5 class="mb-0">
+              {% if installation_status.installed %}
+                <span class="text-success">Installed</span>
+              {% else %}
+                <span class="text-danger">Not Installed</span>
+              {% endif %}
+            </h5>
+          </div>
+          <div class="icon-box bg-primary bg-opacity-10 rounded-3 p-3">
+            <i class="bi bi-hdd-rack text-primary fs-4"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h6 class="text-muted mb-2">SMBD Service</h6>
+            <h5 class="mb-0">
+              {% if status.smbd == 'active' %}
+                <span class="text-success">Active</span>
+              {% else %}
+                <span class="text-danger">Inactive</span>
+              {% endif %}
+            </h5>
+          </div>
+          <div class="icon-box bg-success bg-opacity-10 rounded-3 p-3">
+            <i class="bi bi-server text-success fs-4"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <h6 class="text-muted mb-2">NMBD Service</h6>
+            <h5 class="mb-0">
+              {% if status.nmbd == 'active' %}
+                <span class="text-success">Active</span>
+              {% else %}
+                <span class="text-danger">Inactive</span>
+              {% endif %}
+            </h5>
+          </div>
+          <div class="icon-box bg-info bg-opacity-10 rounded-3 p-3">
+            <i class="bi bi-diagram-3 text-info fs-4"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row mt-4">
+  <div class="col-lg-8">
+    <!-- Quick Actions -->
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Quick Actions</h5>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          {% if not installation_status.installed %}
+            <div class="col-md-6">
+              <div class="alert alert-warning">
+                <i class="bi bi-exclamation-triangle me-2"></i>
+                <strong>Notice:</strong> Samba is not installed. Please go to the <a href="/setup" class="alert-link">Setup page</a> to install and configure Samba.
+              </div>
+            </div>
+          {% elif has_sudo %}
+            <div class="col-md-3">
+              <a href="/restart" class="btn btn-warning w-100 d-flex align-items-center justify-content-center">
+                <i class="bi bi-arrow-repeat me-2"></i>
+                Restart Service
+              </a>
+            </div>
+            <div class="col-md-3">
+              <a href="/setup" class="btn btn-primary w-100 d-flex align-items-center justify-content-center">
+                <i class="bi bi-tools me-2"></i>
+                Setup & Config
+              </a>
+            </div>
+            <div class="col-md-3">
+              <a href="/maintenance" class="btn btn-info w-100 d-flex align-items-center justify-content-center">
+                <i class="bi bi-wrench me-2"></i>
+                Maintenance
+              </a>
+            </div>
+            <div class="col-md-3">
+              <a href="#" onclick="openTerminal(); return false;" class="btn btn-secondary w-100 d-flex align-items-center justify-content-center">
+                <i class="bi bi-terminal me-2"></i>
+                Terminal
+              </a>
+            </div>
+          {% else %}
+            <div class="col-12">
+              <div class="alert alert-warning">
+                <i class="bi bi-shield-exclamation me-2"></i>
+                <strong>Warning:</strong> Sudo access is required to manage Samba service. 
+                Run this application with sudo privileges to enable full functionality.
+              </div>
+            </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    
+    <!-- Shares Overview -->
+    <div class="card mt-4">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Shares Overview</h5>
+        <a href="/shares" class="btn btn-sm btn-outline-secondary">Manage Shares</a>
+      </div>
+      <div class="card-body">
+        {% if installation_status.shares %}
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>Name</th>
+                  <th>Path</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for share in installation_status.shares[:5] %}
+                  <tr>
+                    <td>{{ share.name }}</td>
+                    <td>{{ share.path }}</td>
+                    <td>
+                      <span class="badge bg-success">Active</span>
+                    </td>
+                  </tr>
+                {% endfor %}
+                {% if installation_status.shares|length > 5 %}
+                  <tr>
+                    <td colspan="3" class="text-center">
+                      <a href="/shares" class="text-primary">View all {{ installation_status.shares|length }} shares</a>
+                    </td>
+                  </tr>
+                {% endif %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="text-center py-4">
+            <i class="bi bi-folder-x display-4 text-muted"></i>
+            <p class="mt-3">No shares configured yet.</p>
+            <a href="/shares" class="btn btn-sm btn-primary">Add Share</a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  
+  <div class="col-lg-4">
+    <!-- Configuration Management -->
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0">Configuration</h5>
+      </div>
+      <div class="card-body">
+        <div class="d-grid gap-3">
+          <div>
+            <h6 class="text-muted mb-2">Export Configuration</h6>
+            <p class="small">Download your current Samba configuration as a backup file</p>
+            <a href="/export" class="btn btn-primary w-100 d-flex align-items-center justify-content-center">
+              <i class="bi bi-download me-2"></i>
+              Export Config
+            </a>
+          </div>
+          
+          <hr>
+          
+          <div>
+            <h6 class="text-muted mb-2">Import Configuration</h6>
+            <p class="small">Upload a previously exported configuration file</p>
+            <form action="/import" method="POST" enctype="multipart/form-data">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+              <div class="input-group">
+                <input type="file" name="file" class="form-control" required>
+                <button type="submit" class="btn btn-primary">
+                  <i class="bi bi-upload"></i>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Users Overview -->
+    <div class="card mt-4">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Users Overview</h5>
+        <a href="/users" class="btn btn-sm btn-outline-secondary">Manage Users</a>
+      </div>
+      <div class="card-body">
+        {% if installation_status.users %}
+          <div class="list-group list-group-flush">
+            {% for user in installation_status.users[:5] %}
+              <div class="list-group-item bg-transparent d-flex justify-content-between align-items-center px-0 py-2 border-bottom">
+                <div class="d-flex align-items-center">
+                  <div class="avatar bg-primary bg-opacity-10 rounded-circle p-2 me-3">
+                    <i class="bi bi-person text-primary"></i>
+                  </div>
+                  <span>{{ user.username }}</span>
+                </div>
+                <span class="badge {% if user.enabled %}bg-success{% else %}bg-danger{% endif %}">
+                  {{ 'Enabled' if user.enabled else 'Disabled' }}
+                </span>
+              </div>
+            {% endfor %}
+            {% if installation_status.users|length > 5 %}
+              <div class="text-center mt-3">
+                <a href="/users" class="text-primary">View all {{ installation_status.users|length }} users</a>
+              </div>
+            {% endif %}
+          </div>
+        {% else %}
+          <div class="text-center py-4">
+            <i class="bi bi-people display-4 text-muted"></i>
+            <p class="mt-3">No Samba users detected.</p>
+            <a href="/users" class="btn btn-sm btn-primary">Add User</a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

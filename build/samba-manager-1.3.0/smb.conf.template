@@ -1,0 +1,5 @@
+[global]
+   server string = Samba Server
+   workgroup = WORKGROUP
+   log level = 1
+   include = /etc/samba/shares.conf

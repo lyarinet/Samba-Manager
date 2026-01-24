@@ -1,0 +1,2 @@
+6055d5a38cbad50da734a328503f726a436fccffeedcab057ab814ba66327eb7  samba-manager-1.3.0.tar.gz
+1b32cf319b2889747c4a7731c4ffc9f49479c1b127dae80eb2b72b45e87b67b8  samba-manager-1.3.0.zip

@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  samba-manager:
+    build:
+      context: ../..
+      dockerfile: releases/docker/Dockerfile
+    container_name: samba-manager
+    ports:
+      - "5000:5000"  # Web interface
+      - "139:139"    # NetBIOS
+      - "445:445"    # SMB
+    volumes:
+      - /etc/samba:/etc/samba:ro
+      - /var/log/samba:/var/log/samba
+      - samba-manager-logs:/var/log/samba-manager
+      - samba-manager-users:/opt/samba-manager/data
+    environment:
+      - SAMBA_MANAGER_SECRET_KEY=${SAMBA_MANAGER_SECRET_KEY:-change-me-in-production}
+      - FLASK_ENV=production
+      - TZ=UTC
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+    networks:
+      - samba-net
+    cap_add:
+      - NET_ADMIN
+      - SYS_ADMIN
+    sysctls:
+      - net.ipv4.ip_forward=1
+
+volumes:
+  samba-manager-logs:
+    driver: local
+  samba-manager-users:
+    driver: local
+
+networks:
+  samba-net:
+    driver: bridge

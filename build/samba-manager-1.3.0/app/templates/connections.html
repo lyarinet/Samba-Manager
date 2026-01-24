@@ -1,0 +1,515 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="page-header">
+  <h2>Active Connections</h2>
+</div>
+
+<div class="row">
+  <div class="col-12">
+    <div class="card mb-4">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Current Connections</h5>
+        <button id="refreshBtn" class="btn btn-sm btn-primary">
+          <i class="bi bi-arrow-clockwise"></i> Refresh
+        </button>
+      </div>
+      <div class="card-body">
+        <!-- Samba version info -->
+        <div id="versionInfo" class="mb-4"></div>
+        
+        <!-- Process List Table -->
+        <h6 class="mb-3">Connected Processes</h6>
+        <div class="table-responsive mb-4">
+          <table class="table table-sm table-hover">
+            <thead>
+              <tr>
+                <th>PID</th>
+                <th>Username</th>
+                <th>Group</th>
+                <th>Machine</th>
+                <th>Protocol</th>
+                <th>Version</th>
+                <th>Encryption</th>
+                <th>Signing</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="processesTableBody">
+              <tr>
+                <td colspan="9" class="text-center">Loading process data...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <!-- Connection List Table -->
+        <h6 class="mb-3">Active Shares</h6>
+        <div class="table-responsive">
+          <table class="table table-sm table-hover">
+            <thead>
+              <tr>
+                <th>Service</th>
+                <th>PID</th>
+                <th>Machine</th>
+                <th>Connected At</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="connectionsTableBody">
+              <tr>
+                <td colspan="5" class="text-center">Loading connection data...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="terminateModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Terminate Connection</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to terminate this connection?</p>
+        <div class="row mb-3" id="terminatePidRow">
+          <div class="col-3"><strong>PID:</strong></div>
+          <div class="col-9" id="terminatePid"></div>
+        </div>
+        <div class="row mb-3" id="terminateUserRow">
+          <div class="col-3"><strong>User:</strong></div>
+          <div class="col-9" id="terminateUser"></div>
+        </div>
+        <div class="row">
+          <div class="col-3"><strong>Machine:</strong></div>
+          <div class="col-9" id="terminateMachine"></div>
+        </div>
+        <div class="alert alert-warning mt-3" id="terminateWarning">
+          <i class="bi bi-exclamation-triangle-fill me-2"></i>
+          Terminating a connection will disconnect the user immediately and may cause data loss if they have unsaved changes.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmTerminate">Terminate Connection</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Global variable for the modal
+    let terminateModal = new bootstrap.Modal(document.getElementById('terminateModal'));
+    
+    // Current PID to terminate
+    let currentPid = '';
+    let currentUser = '';
+    let currentMachine = '';
+    let currentType = ''; // 'process', 'connection', or 'machine'
+    
+    // Set up the confirm terminate button
+    document.getElementById('confirmTerminate').addEventListener('click', function() {
+      if (currentType === 'machine' && currentMachine) {
+        terminateConnectionByMachine(currentMachine);
+      } else if (currentPid) {
+        terminateConnection(currentPid);
+      }
+    });
+    
+    // Function to terminate a connection
+    function terminateConnection(pid) {
+      // Check if PID is a valid number
+      if (!pid || isNaN(parseInt(pid))) {
+        showAlert('danger', `Invalid PID: ${pid}. Cannot terminate connection.`);
+        return;
+      }
+      
+      fetch(`/api/connections/terminate/${pid}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Close the modal
+          terminateModal.hide();
+          // Show success message
+          showAlert('success', data.message);
+          // Refresh connections after a short delay
+          setTimeout(loadConnections, 1000);
+        } else {
+          // Show error message
+          showAlert('danger', data.message);
+        }
+      })
+      .catch(error => {
+        console.error('Error terminating connection:', error);
+        showAlert('danger', 'Failed to terminate connection: ' + error.message);
+      });
+    }
+    
+    // Function to terminate all connections from a machine
+    function terminateConnectionByMachine(machine) {
+      if (!machine) {
+        showAlert('danger', 'No machine name provided');
+        return;
+      }
+      
+      fetch(`/api/connections/terminate-machine/${machine}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          // Close the modal
+          terminateModal.hide();
+          // Show success message
+          showAlert('success', data.message);
+          // Refresh connections after a short delay
+          setTimeout(loadConnections, 1000);
+        } else {
+          // Show error message
+          showAlert('danger', data.message);
+        }
+      })
+      .catch(error => {
+        console.error('Error terminating connection:', error);
+        showAlert('danger', 'Failed to terminate connection: ' + error.message);
+      });
+    }
+    
+    // Function to show an alert
+    function showAlert(type, message) {
+      const alertDiv = document.createElement('div');
+      alertDiv.className = `alert alert-${type} alert-dismissible fade show`;
+      alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      `;
+      
+      // Insert at the top of the card body
+      const cardBody = document.querySelector('.card-body');
+      cardBody.insertBefore(alertDiv, cardBody.firstChild);
+      
+      // Auto-dismiss after 5 seconds
+      setTimeout(() => {
+        const bsAlert = bootstrap.Alert.getOrCreateInstance(alertDiv);
+        bsAlert.close();
+      }, 5000);
+    }
+    
+    // Function to show the terminate confirmation modal
+    function showTerminateModal(pid, user, machine, type) {
+      // Default to process/connection termination
+      currentType = type || 'process';
+      
+      // If we're terminating by machine only
+      if (type === 'machine') {
+        if (!machine) {
+          showAlert('danger', 'No machine name provided');
+          return;
+        }
+        
+        // Store the data
+        currentPid = '';
+        currentUser = '';
+        currentMachine = machine;
+        currentType = 'machine';
+        
+        // Update modal title and content
+        document.querySelector('.modal-title').textContent = 'Disconnect Machine';
+        document.getElementById('terminatePidRow').style.display = 'none';
+        document.getElementById('terminateUserRow').style.display = 'none';
+        document.getElementById('terminateMachine').textContent = machine;
+        document.getElementById('terminateWarning').textContent = 
+          'Disconnecting a machine will terminate ALL connections from this client and may cause data loss if they have unsaved changes.';
+        document.getElementById('confirmTerminate').textContent = 'Disconnect Machine';
+      } 
+      // For process or connection termination
+      else {
+        // Validate the PID is numeric
+        if (!pid || isNaN(parseInt(pid))) {
+          showAlert('danger', `Invalid PID: ${pid}. Cannot terminate connection.`);
+          return;
+        }
+        
+        // Store the data
+        currentPid = pid;
+        currentUser = user || 'Unknown';
+        currentMachine = machine || 'Unknown';
+        
+        // Update modal title and content
+        document.querySelector('.modal-title').textContent = 'Terminate Connection';
+        document.getElementById('terminatePidRow').style.display = '';
+        document.getElementById('terminateUserRow').style.display = '';
+        document.getElementById('terminatePid').textContent = pid;
+        document.getElementById('terminateUser').textContent = currentUser;
+        document.getElementById('terminateMachine').textContent = currentMachine;
+        document.getElementById('terminateWarning').textContent = 
+          'Terminating a connection will disconnect the user immediately and may cause data loss if they have unsaved changes.';
+        document.getElementById('confirmTerminate').textContent = 'Terminate Connection';
+      }
+      
+      // Show the modal
+      terminateModal.show();
+    }
+    
+    // Function to load connections
+    function loadConnections() {
+      fetch('/api/connections')
+        .then(response => {
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+          return response.json();
+        })
+        .then(data => {
+          // Update version info
+          const versionInfoElement = document.getElementById('versionInfo');
+          if (data.version && typeof data.version === 'string') {
+            versionInfoElement.innerHTML = `<pre class="mb-0">${data.version}</pre>`;
+          } else {
+            versionInfoElement.innerHTML = '<p class="text-muted">Samba version information not available</p>';
+          }
+          
+          // Update processes table
+          updateProcessesTable(data.processes || []);
+          
+          // Update connections table
+          updateConnectionsTable(data.connections || []);
+        })
+        .catch(error => {
+          console.error('Error fetching connections:', error);
+          document.getElementById('processesTableBody').innerHTML = `
+            <tr>
+              <td colspan="9" class="text-center text-danger">
+                Error loading processes: ${error.message}
+              </td>
+            </tr>
+          `;
+          
+          document.getElementById('connectionsTableBody').innerHTML = `
+            <tr>
+              <td colspan="5" class="text-center text-danger">
+                Error loading connections: ${error.message}
+              </td>
+            </tr>
+          `;
+          
+          document.getElementById('versionInfo').innerHTML = '<p class="text-danger">Failed to load Samba version information</p>';
+        });
+    }
+    
+    // Update the processes table
+    function updateProcessesTable(processes) {
+      const tableBody = document.getElementById('processesTableBody');
+      tableBody.innerHTML = '';
+      
+      if (processes && processes.length > 0) {
+        // Track machines we've already added "Disconnect All" buttons for
+        const machinesWithButtons = new Set();
+        
+        processes.forEach(process => {
+          const row = document.createElement('tr');
+          
+          // Check if PID is valid and numeric
+          const isPidValid = process.pid && !isNaN(parseInt(process.pid));
+          
+          // PID column
+          const pidCell = document.createElement('td');
+          pidCell.textContent = process.pid || 'N/A';
+          row.appendChild(pidCell);
+          
+          // Username column
+          const usernameCell = document.createElement('td');
+          usernameCell.textContent = process.username || 'Unknown';
+          row.appendChild(usernameCell);
+          
+          // Group column
+          const groupCell = document.createElement('td');
+          groupCell.textContent = process.group || 'Unknown';
+          row.appendChild(groupCell);
+          
+          // Machine column
+          const machineCell = document.createElement('td');
+          machineCell.textContent = process.machine || 'Unknown';
+          row.appendChild(machineCell);
+          
+          // Protocol column
+          const protocolCell = document.createElement('td');
+          protocolCell.textContent = process.protocol || '';
+          row.appendChild(protocolCell);
+          
+          // Version column
+          const versionCell = document.createElement('td');
+          versionCell.textContent = process.version || '';
+          row.appendChild(versionCell);
+          
+          // Encryption column
+          const encryptionCell = document.createElement('td');
+          encryptionCell.textContent = process.encryption || '';
+          row.appendChild(encryptionCell);
+          
+          // Signing column
+          const signingCell = document.createElement('td');
+          signingCell.textContent = process.signing || '';
+          row.appendChild(signingCell);
+          
+          // Actions column
+          const actionsCell = document.createElement('td');
+          
+          // Add actions based on what's available
+          const actions = document.createElement('div');
+          actions.className = 'd-flex gap-1';
+          
+          // Only show Kick button if PID is valid
+          if (isPidValid) {
+            const kickBtn = document.createElement('button');
+            kickBtn.className = 'btn btn-sm btn-danger';
+            kickBtn.innerHTML = '<i class="bi bi-x-circle"></i> Kick';
+            kickBtn.addEventListener('click', () => showTerminateModal(process.pid, process.username, process.machine, 'process'));
+            actions.appendChild(kickBtn);
+          }
+          
+          // Add "Disconnect All" button for the machine if we haven't already
+          const machineName = process.machine_ip || process.machine;
+          if (machineName && !machinesWithButtons.has(machineName)) {
+            machinesWithButtons.add(machineName);
+            
+            const disconnectBtn = document.createElement('button');
+            disconnectBtn.className = 'btn btn-sm btn-warning';
+            disconnectBtn.innerHTML = '<i class="bi bi-x-octagon"></i> Disconnect All';
+            disconnectBtn.addEventListener('click', () => showTerminateModal(null, null, machineName, 'machine'));
+            actions.appendChild(disconnectBtn);
+          }
+          
+          // If no actions are available
+          if (actions.children.length === 0) {
+            actionsCell.textContent = 'N/A';
+          } else {
+            actionsCell.appendChild(actions);
+          }
+          
+          row.appendChild(actionsCell);
+          
+          tableBody.appendChild(row);
+        });
+      } else {
+        const row = document.createElement('tr');
+        const cell = document.createElement('td');
+        cell.colSpan = 9;
+        cell.className = 'text-center';
+        cell.textContent = 'No active processes';
+        row.appendChild(cell);
+        tableBody.appendChild(row);
+      }
+    }
+    
+    // Update the connections table
+    function updateConnectionsTable(connections) {
+      const tableBody = document.getElementById('connectionsTableBody');
+      tableBody.innerHTML = '';
+      
+      if (connections && connections.length > 0) {
+        // Track machines we've already added "Disconnect All" buttons for
+        const machinesWithButtons = new Set();
+        
+        connections.forEach(conn => {
+          const row = document.createElement('tr');
+          
+          // Check if PID is valid and numeric
+          const isPidValid = conn.pid && !isNaN(parseInt(conn.pid));
+          
+          // Service column
+          const serviceCell = document.createElement('td');
+          serviceCell.textContent = conn.service || 'Unknown';
+          row.appendChild(serviceCell);
+          
+          // PID column
+          const pidCell = document.createElement('td');
+          pidCell.textContent = conn.pid || 'N/A';
+          row.appendChild(pidCell);
+          
+          // Machine column
+          const machineCell = document.createElement('td');
+          machineCell.textContent = conn.machine || 'Unknown';
+          row.appendChild(machineCell);
+          
+          // Connected At column
+          const timeCell = document.createElement('td');
+          timeCell.textContent = conn.connected_at || '';
+          row.appendChild(timeCell);
+          
+          // Actions column
+          const actionsCell = document.createElement('td');
+          
+          // Add actions based on what's available
+          const actions = document.createElement('div');
+          actions.className = 'd-flex gap-1';
+          
+          // Only show Kick button if PID is valid
+          if (isPidValid) {
+            const kickBtn = document.createElement('button');
+            kickBtn.className = 'btn btn-sm btn-danger';
+            kickBtn.innerHTML = '<i class="bi bi-x-circle"></i> Kick';
+            kickBtn.addEventListener('click', () => showTerminateModal(conn.pid, '', conn.machine, 'connection'));
+            actions.appendChild(kickBtn);
+          }
+          
+          // Add "Disconnect All" button for the machine if we haven't already
+          const machineName = conn.machine_ip || conn.machine;
+          if (machineName && !machinesWithButtons.has(machineName)) {
+            machinesWithButtons.add(machineName);
+            
+            const disconnectBtn = document.createElement('button');
+            disconnectBtn.className = 'btn btn-sm btn-warning';
+            disconnectBtn.innerHTML = '<i class="bi bi-x-octagon"></i> Disconnect All';
+            disconnectBtn.addEventListener('click', () => showTerminateModal(null, null, machineName, 'machine'));
+            actions.appendChild(disconnectBtn);
+          }
+          
+          // If no actions are available
+          if (actions.children.length === 0) {
+            actionsCell.textContent = 'N/A';
+          } else {
+            actionsCell.appendChild(actions);
+          }
+          
+          row.appendChild(actionsCell);
+          
+          tableBody.appendChild(row);
+        });
+      } else {
+        const row = document.createElement('tr');
+        const cell = document.createElement('td');
+        cell.colSpan = 5;
+        cell.className = 'text-center';
+        cell.textContent = 'No active connections';
+        row.appendChild(cell);
+        tableBody.appendChild(row);
+      }
+    }
+    
+    // Load connections on page load
+    loadConnections();
+    
+    // Set up refresh button
+    document.getElementById('refreshBtn').addEventListener('click', function() {
+      loadConnections();
+    });
+    
+    // Auto refresh every 30 seconds
+    setInterval(loadConnections, 30000);
+  });
+</script>
+{% endblock %} 

@@ -1,0 +1,129 @@
+{% extends 'layout.html' %}
+{% block content %}
+<div class="page-header">
+  <h2>Maintenance</h2>
+</div>
+
+<div class="row">
+  <!-- Service Management -->
+  <div class="col-md-6 mb-4">
+    <div class="card h-100">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Service Management</h5>
+        <div>
+          <span class="badge {% if status.smbd == 'active' %}bg-success{% else %}bg-danger{% endif %} me-1">
+            smbd: {{ 'Running' if status.smbd == 'active' else 'Stopped' }}
+          </span>
+          <span class="badge {% if status.nmbd == 'active' %}bg-success{% else %}bg-warning{% endif %}">
+            nmbd: {{ 'Running' if status.nmbd == 'active' else 'Stopped' }}
+          </span>
+        </div>
+      </div>
+      <div class="card-body">
+        <p>Control the Samba service (smbd and nmbd)</p>
+        <div class="d-flex gap-2">
+          <a href="{{ url_for('main.service_action', action='start') }}" class="btn btn-success {% if status.smbd == 'active' %}disabled{% endif %}">
+            <i class="bi bi-play-fill me-1"></i> Start
+          </a>
+          <a href="{{ url_for('main.service_action', action='stop') }}" class="btn btn-danger {% if status.smbd != 'active' %}disabled{% endif %}">
+            <i class="bi bi-stop-fill me-1"></i> Stop
+          </a>
+          <a href="{{ url_for('main.service_action', action='restart') }}" class="btn btn-warning text-white">
+            <i class="bi bi-arrow-clockwise me-1"></i> Restart
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Log Viewing -->
+  <div class="col-md-6 mb-4">
+    <div class="card h-100">
+      <div class="card-header">
+        <h5 class="mb-0">Logs</h5>
+      </div>
+      <div class="card-body">
+        <p>View Samba service logs</p>
+        <div class="d-flex gap-2">
+          <a href="{{ url_for('main.view_logs', log_type='smbd') }}" class="btn btn-outline-primary">
+            <i class="bi bi-file-text me-1"></i> Server Logs (smbd)
+          </a>
+          <a href="{{ url_for('main.view_logs', log_type='nmbd') }}" class="btn btn-outline-secondary">
+            <i class="bi bi-file-text me-1"></i> NetBIOS Logs (nmbd)
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Configuration Export -->
+  <div class="col-md-6 mb-4">
+    <div class="card h-100">
+      <div class="card-header">
+        <h5 class="mb-0">Export Configuration</h5>
+      </div>
+      <div class="card-body">
+        <p>Download your Samba configuration as a backup</p>
+        <a href="{{ url_for('main.export') }}" class="btn btn-primary">
+          <i class="bi bi-download me-1"></i> Export Configuration
+        </a>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Configuration Import -->
+  <div class="col-md-6 mb-4">
+    <div class="card h-100">
+      <div class="card-header">
+        <h5 class="mb-0">Import Configuration</h5>
+      </div>
+      <div class="card-body">
+        <p>Restore a previously exported configuration or upload a Samba config file</p>
+        <form action="{{ url_for('main.import_conf') }}" method="post" enctype="multipart/form-data">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+          <div class="input-group">
+            <input type="file" class="form-control" name="config_file" accept=".json,.conf">
+            <button type="submit" class="btn btn-primary">
+              <i class="bi bi-upload me-1"></i> Import
+            </button>
+          </div>
+          <small class="text-muted mt-2 d-block">Supported formats: .json (exported config), .conf (Samba config)</small>
+        </form>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Fix Permissions -->
+  <div class="col-md-6 mb-4">
+    <div class="card h-100">
+      <div class="card-header">
+        <h5 class="mb-0">Fix Permissions</h5>
+      </div>
+      <div class="card-body">
+        <p>Fix permissions on share directories to ensure proper access</p>
+        <form action="{{ url_for('main.fix_permissions') }}" method="post">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+          <button type="submit" class="btn btn-warning text-white">
+            <i class="bi bi-shield-check me-1"></i> Fix Share Permissions
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Edit Config File -->
+  <div class="col-md-6 mb-4">
+    <div class="card h-100">
+      <div class="card-header">
+        <h5 class="mb-0">Edit Configuration File</h5>
+      </div>
+      <div class="card-body">
+        <p>Directly edit the Samba configuration file</p>
+        <a href="{{ url_for('main.edit_config') }}" class="btn btn-outline-primary">
+          <i class="bi bi-file-earmark-code me-1"></i> Edit Config File
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} 
