@@ -87,12 +87,6 @@ chmod +x install_with_auth.sh
 sudo ./install_with_auth.sh
 ```
 
-This script will:
-- Prompt you for GitHub credentials if needed
-- Try multiple repository names
-- Allow you to enter a custom repository URL if needed
-- Handle all installation steps automatically
-
 #### Option 2: One-line Installation
 
 If you have direct access to the repository, install Samba Manager with a single command:
