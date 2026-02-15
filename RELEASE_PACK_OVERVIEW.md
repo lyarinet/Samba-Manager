@@ -403,7 +403,7 @@ Post-Release:
 
 4. **Source Development**
    ```bash
-   git clone https://github.com/lyarinet/Samba-Manager.git
+  git clone https://github.com/lyarinet/samba-manager.git
    python run.py --dev
    ```
 

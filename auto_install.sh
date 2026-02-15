@@ -61,7 +61,7 @@ download_samba_manager() {
     echo "Downloading Samba Manager from repository..."
     
     # Clone the repository with the correct URL
-    git clone https://github.com/lyarinet/Samba-Manager.git
+    git clone https://github.com/lyarinet/samba-manager.git
     
     if [ $? -ne 0 ]; then
         echo "Failed to download Samba Manager. Please check your internet connection."

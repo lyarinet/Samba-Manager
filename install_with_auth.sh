@@ -82,8 +82,8 @@ download_samba_manager() {
     echo "Downloading Samba Manager from repository..."
     
     # Try to clone the repository
-    echo "Attempting to clone from: https://github.com/lyarinet/Samba-Manager.git"
-    git clone https://github.com/lyarinet/Samba-Manager.git
+    echo "Attempting to clone from: https://github.com/lyarinet/samba-manager.git"
+    git clone https://github.com/lyarinet/samba-manager.git
     
     # If that fails, try with the lowercase name
     if [ $? -ne 0 ]; then

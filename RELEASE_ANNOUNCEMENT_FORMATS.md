@@ -328,7 +328,7 @@ sudo ./install_with_auth.sh
 
 ### 4. Manual Installation
 ```bash
-git clone https://github.com/lyarinet/Samba-Manager.git
+git clone https://github.com/lyarinet/samba-manager.git
 cd Samba-Manager
 sudo ./install.sh
 ```

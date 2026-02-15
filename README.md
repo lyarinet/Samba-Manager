@@ -140,7 +140,7 @@ sudo apt-get update
 sudo apt-get install -y git python3 python3-pip python3-venv samba samba-common smbclient
 
 # Clone the repository
-git clone https://github.com/lyarinet/Samba-Manager.git
+git clone https://github.com/lyarinet/samba-manager.git
 cd Samba-Manager
 
 # Run the installation script
@@ -154,7 +154,7 @@ sudo dnf update -y
 sudo dnf install -y git python3 python3-pip samba samba-client
 
 # Clone the repository
-git clone https://github.com/lyarinet/Samba-Manager.git
+git clone https://github.com/lyarinet/samba-manager.git
 cd Samba-Manager
 
 # Run the installation script
@@ -168,7 +168,7 @@ sudo pacman -Syu --noconfirm
 sudo pacman -S --noconfirm git python python-pip samba
 
 # Clone the repository
-git clone https://github.com/lyarinet/Samba-Manager.git
+git clone https://github.com/lyarinet/samba-manager.git
 cd Samba-Manager
 
 # Run the installation script
@@ -181,7 +181,7 @@ For development or testing without system-wide installation:
 
 ```bash
 # Clone the repository
-git clone https://github.com/lyarinet/Samba-Manager.git
+git clone https://github.com/lyarinet/samba-manager.git
 cd Samba-Manager
 
 # Create a virtual environment
