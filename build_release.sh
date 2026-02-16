@@ -254,9 +254,9 @@ If upgrading from a previous version:
 
 ## Support
 
-- **Issues**: https://github.com/lyarinet/Samba-Manager/issues
-- **Discussions**: https://github.com/lyarinet/Samba-Manager/discussions
-- **Documentation**: https://github.com/lyarinet/Samba-Manager/wiki
+- **Issues**: https://github.com/lyarinet/samba-manager/issues
+- **Discussions**: https://github.com/lyarinet/samba-manager/discussions
+- **Documentation**: https://github.com/lyarinet/samba-manager/wiki
 
 ## License
 
@@ -268,7 +268,7 @@ This software is released under the MIT License. See the LICENSE file for detail
 
 ---
 
-**Download**: https://github.com/lyarinet/Samba-Manager/releases/tag/v${VERSION}
+**Download**: https://github.com/lyarinet/samba-manager/releases/tag/v${VERSION}
 
 EOF
 print_success "Release notes created"
@@ -453,9 +453,9 @@ After installation:
 
 ## Support Resources
 
-- **GitHub**: https://github.com/lyarinet/Samba-Manager
-- **Issues**: https://github.com/lyarinet/Samba-Manager/issues
-- **Wiki**: https://github.com/lyarinet/Samba-Manager/wiki
+- **GitHub**: https://github.com/lyarinet/samba-manager
+- **Issues**: https://github.com/lyarinet/samba-manager/issues
+- **Wiki**: https://github.com/lyarinet/samba-manager/wiki
 
 ## License
 

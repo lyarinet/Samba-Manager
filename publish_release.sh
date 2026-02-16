@@ -127,7 +127,7 @@ print_success "GitHub release created successfully"
 print_header "Release Published"
 echo -e "${GREEN}Release successfully published!${NC}"
 echo ""
-echo "Release URL: https://github.com/lyarinet/Samba-Manager/releases/tag/v${VERSION}"
+echo "Release URL: https://github.com/lyarinet/samba-manager/releases/tag/v${VERSION}"
 echo ""
 echo "Files uploaded:"
 ls -1 "$RELEASE_DIR"/*.tar.gz "$RELEASE_DIR"/*.zip 2>/dev/null | xargs -I {} basename {}

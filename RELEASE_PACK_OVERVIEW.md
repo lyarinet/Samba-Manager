@@ -386,7 +386,7 @@ Post-Release:
 
 1. **One-Line Automatic**
    ```bash
-   curl -sSL https://raw.githubusercontent.com/lyarinet/Samba-Manager/main/auto_install.sh | sudo bash
+   curl -sSL https://raw.githubusercontent.com/lyarinet/samba-manager/main/auto_install.sh | sudo bash
    ```
 
 2. **Manual from Release**
@@ -434,7 +434,7 @@ unzip -t samba-manager-1.2.0.zip | head -20
 ## 📞 Support & Maintenance
 
 ### Issues & Bug Reports
-- GitHub Issues: https://github.com/lyarinet/Samba-Manager/issues
+- GitHub Issues: https://github.com/lyarinet/samba-manager/issues
 - Include version, distribution, detailed error messages
 
 ### Documentation
