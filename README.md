@@ -277,18 +277,13 @@ Open your browser and navigate to: `http://your-server-ip:5000`
 1. **Access the Web Interface**: Open your browser and navigate to: `http://your-server-ip:5000`
 
 2. **First-Time Registration**: 
-   - You'll be redirected to the login page
-   - Click on "Register" or navigate to `/register`
-   - Create your first admin user account
-   - Check the "Admin" checkbox to grant administrator privileges
-   - The first user created will automatically become the system administrator
+   - Access `/register` to create your first admin account
+   - Check "Admin" to grant administrator privileges
 
-3. **Login**: Use your newly created credentials to log in
+3. **Login**: Use your created credentials to log in
 
 4. **Secure Your Account**: 
-   - Change your password regularly
-   - Use strong, unique passwords
-   - Consider enabling additional security measures
+   - Use strong passwords and change them regularly
 
 ### User Management
 
