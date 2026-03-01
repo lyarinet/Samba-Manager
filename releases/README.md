@@ -40,15 +40,15 @@ releases/
 ## Downloading Releases
 
 ### From GitHub Releases
-Visit: https://github.com/lyarinet/Samba-Manager/releases
+Visit: https://github.com/lyarinet/samba-manager/releases
 
 ### Direct Download
 ```bash
 # Latest stable release
-wget https://github.com/lyarinet/Samba-Manager/releases/download/v1.2.0/samba-manager-1.2.0.tar.gz
+wget https://github.com/lyarinet/samba-manager/releases/download/v1.2.0/samba-manager-1.2.0.tar.gz
 
 # Verify checksum
-wget https://github.com/lyarinet/Samba-Manager/releases/download/v1.2.0/samba-manager-1.2.0.tar.gz.sha256
+wget https://github.com/lyarinet/samba-manager/releases/download/v1.2.0/samba-manager-1.2.0.tar.gz.sha256
 sha256sum -c samba-manager-1.2.0.tar.gz.sha256
 ```
 
@@ -56,7 +56,7 @@ sha256sum -c samba-manager-1.2.0.tar.gz.sha256
 
 ### Method 1: One-Line Installation (Recommended)
 ```bash
-curl -sSL https://raw.githubusercontent.com/lyarinet/Samba-Manager/main/auto_install.sh | sudo bash
+curl -sSL https://raw.githubusercontent.com/lyarinet/samba-manager/main/auto_install.sh | sudo bash
 ```
 
 ### Method 2: Manual Installation from Release Package
@@ -149,8 +149,8 @@ All release packages include SHA-256 checksums. Verify downloads before installa
 
 ```bash
 # Download package and checksum
-wget https://github.com/lyarinet/Samba-Manager/releases/download/v1.2.0/samba-manager-1.2.0.tar.gz
-wget https://github.com/lyarinet/Samba-Manager/releases/download/v1.2.0/samba-manager-1.2.0.tar.gz.sha256
+wget https://github.com/lyarinet/samba-manager/releases/download/v1.2.0/samba-manager-1.2.0.tar.gz
+wget https://github.com/lyarinet/samba-manager/releases/download/v1.2.0/samba-manager-1.2.0.tar.gz.sha256
 
 # Verify
 sha256sum -c samba-manager-1.2.0.tar.gz.sha256
@@ -177,7 +177,7 @@ sudo systemctl restart samba-manager
 ## Reporting Issues
 
 Found a problem with a release? Report it:
-- **GitHub Issues**: https://github.com/lyarinet/Samba-Manager/issues
+- **GitHub Issues**: https://github.com/lyarinet/samba-manager/issues
 - **Security Issues**: Contact maintainers privately
 
 ## License
@@ -186,6 +186,6 @@ All releases are distributed under the MIT License. See LICENSE file in package.
 
 ## Support
 
-- **Documentation**: https://github.com/lyarinet/Samba-Manager/wiki
+- **Documentation**: https://github.com/lyarinet/samba-manager/wiki
 - **FAQ**: See TROUBLESHOOTING.md in the release package
 - **Community**: GitHub Discussions (coming soon)

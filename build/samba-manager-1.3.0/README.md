@@ -78,7 +78,7 @@ If you're encountering authentication issues with GitHub, use this installation 
 
 ```bash
 # Download the authentication-enabled installer
-wget https://raw.githubusercontent.com/lyarinet/Samba-Manager/main/install_with_auth.sh
+wget https://raw.githubusercontent.com/lyarinet/samba-manager/main/install_with_auth.sh
 
 # Make it executable
 chmod +x install_with_auth.sh
@@ -98,13 +98,13 @@ This script will:
 If you have direct access to the repository, install Samba Manager with a single command:
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/lyarinet/Samba-Manager/main/auto_install.sh | sudo bash
+curl -sSL https://raw.githubusercontent.com/lyarinet/samba-manager/main/auto_install.sh | sudo bash
 ```
 
 Or if you prefer wget:
 
 ```bash
-wget -qO- https://raw.githubusercontent.com/lyarinet/Samba-Manager/main/auto_install.sh | sudo bash
+wget -qO- https://raw.githubusercontent.com/lyarinet/samba-manager/main/auto_install.sh | sudo bash
 ```
 
 That's it! The script will automatically:
@@ -124,7 +124,7 @@ If you prefer to review the installation script before running it:
 
 1. Download the script:
    ```bash
-   wget https://raw.githubusercontent.com/lyarinet/Samba-Manager/main/auto_install.sh
+   wget https://raw.githubusercontent.com/lyarinet/samba-manager/main/auto_install.sh
    ```
 
 2. Make it executable:
@@ -147,7 +147,7 @@ sudo apt-get install -y git python3 python3-pip python3-venv samba samba-common 
 
 # Clone the repository
 git clone https://github.com/lyarinet/samba-manager.git
-cd Samba-Manager
+cd samba-manager
 
 # Run the installation script
 sudo ./install.sh
@@ -161,7 +161,7 @@ sudo dnf install -y git python3 python3-pip samba samba-client
 
 # Clone the repository
 git clone https://github.com/lyarinet/samba-manager.git
-cd Samba-Manager
+cd samba-manager
 
 # Run the installation script
 sudo ./install_all_distros.sh
@@ -175,7 +175,7 @@ sudo pacman -S --noconfirm git python python-pip samba
 
 # Clone the repository
 git clone https://github.com/lyarinet/samba-manager.git
-cd Samba-Manager
+cd samba-manager
 
 # Run the installation script
 sudo ./install_all_distros.sh
@@ -188,7 +188,7 @@ For development or testing without system-wide installation:
 ```bash
 # Clone the repository
 git clone https://github.com/lyarinet/samba-manager.git
-cd Samba-Manager
+cd samba-manager
 
 # Create a virtual environment
 python3 -m venv venv

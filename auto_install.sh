@@ -70,7 +70,7 @@ download_samba_manager() {
     fi
     
     echo "Download complete."
-    cd Samba-Manager
+    cd samba-manager
 }
 
 # Run the installation script

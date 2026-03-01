@@ -181,7 +181,7 @@ For common questions on social media:
 ```
 docker run -d -p 5000:5000 lyarinet/samba-manager:latest
 Access at http://localhost:5000
-Full docs: https://github.com/lyarinet/Samba-Manager
+Full docs: https://github.com/lyarinet/samba-manager
 ```
 
 **"Does it support [distro]?"**
@@ -193,17 +193,17 @@ See installation guide: [link]
 **"Can I contribute?"**
 ```
 Yes! We welcome contributions.
-See CONTRIBUTING.md: https://github.com/lyarinet/Samba-Manager/blob/main/CONTRIBUTING.md
+See CONTRIBUTING.md: https://github.com/lyarinet/samba-manager/blob/main/CONTRIBUTING.md
 ```
 
 ---
 
 ## 🔗 Important Links
 
-- GitHub: https://github.com/lyarinet/Samba-Manager
+- GitHub: https://github.com/lyarinet/samba-manager
 - Docker Hub: https://hub.docker.com/r/lyarinet/samba-manager
-- README: https://github.com/lyarinet/Samba-Manager#readme
-- Issues: https://github.com/lyarinet/Samba-Manager/issues
+- README: https://github.com/lyarinet/samba-manager#readme
+- Issues: https://github.com/lyarinet/samba-manager/issues
 
 ---
 

@@ -75,12 +75,12 @@ docker-compose up -d
 
 ### Method 2: One-Line Installation
 ```bash
-curl -sSL https://raw.githubusercontent.com/lyarinet/Samba-Manager/main/auto_install.sh | sudo bash
+curl -sSL https://raw.githubusercontent.com/lyarinet/samba-manager/main/auto_install.sh | sudo bash
 ```
 
 ### Method 3: Authentication-Enabled Installation
 ```bash
-wget https://raw.githubusercontent.com/lyarinet/Samba-Manager/main/install_with_auth.sh
+wget https://raw.githubusercontent.com/lyarinet/samba-manager/main/install_with_auth.sh
 chmod +x install_with_auth.sh
 sudo ./install_with_auth.sh
 ```
@@ -88,7 +88,7 @@ sudo ./install_with_auth.sh
 ### Method 4: Manual Installation
 ```bash
 git clone https://github.com/lyarinet/samba-manager.git
-cd Samba-Manager
+cd samba-manager
 sudo ./install.sh
 ```
 
@@ -126,8 +126,8 @@ sudo ./install.sh
 
 | Format | Link | Checksum |
 |--------|------|----------|
-| **Source (tar.gz)** | [Download](https://github.com/lyarinet/Samba-Manager/releases/download/v1.3.0/samba-manager-1.3.0.tar.gz) | [SHA-256](https://github.com/lyarinet/Samba-Manager/releases/download/v1.3.0/samba-manager-1.3.0.tar.gz.sha256) |
-| **Source (zip)** | [Download](https://github.com/lyarinet/Samba-Manager/releases/download/v1.3.0/samba-manager-1.3.0.zip) | [SHA-256](https://github.com/lyarinet/Samba-Manager/releases/download/v1.3.0/samba-manager-1.3.0.zip.sha256) |
+| **Source (tar.gz)** | [Download](https://github.com/lyarinet/samba-manager/releases/download/v1.3.0/samba-manager-1.3.0.tar.gz) | [SHA-256](https://github.com/lyarinet/samba-manager/releases/download/v1.3.0/samba-manager-1.3.0.tar.gz.sha256) |
+| **Source (zip)** | [Download](https://github.com/lyarinet/samba-manager/releases/download/v1.3.0/samba-manager-1.3.0.zip) | [SHA-256](https://github.com/lyarinet/samba-manager/releases/download/v1.3.0/samba-manager-1.3.0.zip.sha256) |
 | **Docker Image** | [Docker Hub](https://hub.docker.com/r/lyarinet/samba-manager) | N/A |
 
 ---
@@ -225,7 +225,7 @@ sudo systemctl restart samba-manager
 #### Option 3: Reinstall
 ```bash
 sudo ./uninstall.sh
-curl -sSL https://raw.githubusercontent.com/lyarinet/Samba-Manager/main/auto_install.sh | sudo bash
+curl -sSL https://raw.githubusercontent.com/lyarinet/samba-manager/main/auto_install.sh | sudo bash
 ```
 
 ---
@@ -297,7 +297,7 @@ We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 ### Support
 - [Troubleshooting Guide](TROUBLESHOOTING.md)
 - [Terminal Access Guide](TERMINAL.md)
-- [GitHub Issues](https://github.com/lyarinet/Samba-Manager/issues)
+- [GitHub Issues](https://github.com/lyarinet/samba-manager/issues)
 
 ---
 
@@ -311,9 +311,9 @@ We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 - 🗣️ Share feedback
 
 ### Contact
-- GitHub Issues: [lyarinet/Samba-Manager/issues](https://github.com/lyarinet/Samba-Manager/issues)
+- GitHub Issues: [lyarinet/samba-manager/issues](https://github.com/lyarinet/samba-manager/issues)
 - Docker Hub: [lyarinet/samba-manager](https://hub.docker.com/r/lyarinet/samba-manager)
-- Repository: [github.com/lyarinet/Samba-Manager](https://github.com/lyarinet/Samba-Manager)
+- Repository: [github.com/lyarinet/samba-manager](https://github.com/lyarinet/samba-manager)
 
 ---
 
@@ -431,18 +431,18 @@ docker run -d -p 5000:5000 lyarinet/samba-manager:latest
 
 ### Quick Start (Linux)
 ```bash
-curl -sSL https://raw.githubusercontent.com/lyarinet/Samba-Manager/main/auto_install.sh | sudo bash
+curl -sSL https://raw.githubusercontent.com/lyarinet/samba-manager/main/auto_install.sh | sudo bash
 # Access at http://localhost:5000
 ```
 
 ### Documentation
-Visit: [github.com/lyarinet/Samba-Manager](https://github.com/lyarinet/Samba-Manager)
+Visit: [github.com/lyarinet/samba-manager](https://github.com/lyarinet/samba-manager)
 
 ---
 
 **Thank you for using Samba Manager! 🙌**
 
-For questions, issues, or feedback, please visit our [GitHub repository](https://github.com/lyarinet/Samba-Manager).
+For questions, issues, or feedback, please visit our [GitHub repository](https://github.com/lyarinet/samba-manager).
 
 ---
 

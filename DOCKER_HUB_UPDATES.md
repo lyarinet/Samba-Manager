@@ -112,7 +112,7 @@ docker run -d \
 
 ### From Local Build
 ```bash
-cd /workspaces/Samba-Manager/releases/docker
+cd /workspaces/samba-manager/releases/docker
 docker-compose up -d
 ```
 

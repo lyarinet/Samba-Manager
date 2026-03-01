@@ -24,7 +24,7 @@ SHA-256 (tar.gz): 6055d5a38cbad50da734a328503f726a436fccffeedcab057ab814ba66327e
 SHA-256 (zip):    1b32cf319b2889747c4a7731c4ffc9f49479c1b127dae80eb2b72b45e87b67b8
 ```
 
-**Location**: `/workspaces/Samba-Manager/releases/stable/`
+**Location**: `/workspaces/samba-manager/releases/stable/`
 
 #### 🐳 Docker Images (Pushed to Docker Hub)
 | Tag | Status | Image ID | Size |
@@ -69,7 +69,7 @@ docker run -d -p 5000:5000 lyarinet/samba-manager:1.3.0
 ### Option 2: Source (tar.gz)
 ```bash
 # Download
-wget https://github.com/lyarinet/Samba-Manager/releases/download/v1.3.0/samba-manager-1.3.0.tar.gz
+wget https://github.com/lyarinet/samba-manager/releases/download/v1.3.0/samba-manager-1.3.0.tar.gz
 
 # Extract
 tar -xzf samba-manager-1.3.0.tar.gz
@@ -82,7 +82,7 @@ sudo ./install.sh
 ### Option 3: Source (zip)
 ```bash
 # Download
-wget https://github.com/lyarinet/Samba-Manager/releases/download/v1.3.0/samba-manager-1.3.0.zip
+wget https://github.com/lyarinet/samba-manager/releases/download/v1.3.0/samba-manager-1.3.0.zip
 
 # Extract
 unzip samba-manager-1.3.0.zip
@@ -94,7 +94,7 @@ sudo ./install.sh
 
 ### Option 4: One-Line Installation
 ```bash
-curl -sSL https://raw.githubusercontent.com/lyarinet/Samba-Manager/main/auto_install.sh | sudo bash
+curl -sSL https://raw.githubusercontent.com/lyarinet/samba-manager/main/auto_install.sh | sudo bash
 ```
 
 ---
@@ -152,13 +152,13 @@ docker run -d -p 5000:5000 lyarinet/samba-manager:1.3.0
 
 ## 🔗 Download Links
 
-**GitHub Release**: https://github.com/lyarinet/Samba-Manager/releases/tag/v1.3.0
+**GitHub Release**: https://github.com/lyarinet/samba-manager/releases/tag/v1.3.0
 
 **Docker Hub**: https://hub.docker.com/r/lyarinet/samba-manager
 
 **Direct Downloads**:
-- tar.gz: https://github.com/lyarinet/Samba-Manager/releases/download/v1.3.0/samba-manager-1.3.0.tar.gz
-- zip: https://github.com/lyarinet/Samba-Manager/releases/download/v1.3.0/samba-manager-1.3.0.zip
+- tar.gz: https://github.com/lyarinet/samba-manager/releases/download/v1.3.0/samba-manager-1.3.0.tar.gz
+- zip: https://github.com/lyarinet/samba-manager/releases/download/v1.3.0/samba-manager-1.3.0.zip
 
 ---
 
@@ -249,13 +249,13 @@ v1.3.0 includes:
 ## 📞 Support & Resources
 
 **Documentation**:
-- GitHub: https://github.com/lyarinet/Samba-Manager
-- README: https://github.com/lyarinet/Samba-Manager#readme
+- GitHub: https://github.com/lyarinet/samba-manager
+- README: https://github.com/lyarinet/samba-manager#readme
 - Docker Guide: https://hub.docker.com/r/lyarinet/samba-manager
 
 **Issues & Feedback**:
-- GitHub Issues: https://github.com/lyarinet/Samba-Manager/issues
-- GitHub Discussions: https://github.com/lyarinet/Samba-Manager/discussions
+- GitHub Issues: https://github.com/lyarinet/samba-manager/issues
+- GitHub Discussions: https://github.com/lyarinet/samba-manager/discussions
 
 **Docker Hub**:
 - Repository: https://hub.docker.com/r/lyarinet/samba-manager
@@ -292,7 +292,7 @@ docker run -d -p 5000:5000 lyarinet/samba-manager:latest
 ### For Developers
 ```bash
 # Verify release files
-cd /workspaces/Samba-Manager/releases/stable
+cd /workspaces/samba-manager/releases/stable
 sha256sum -c checksums.txt
 
 # Run verification script
