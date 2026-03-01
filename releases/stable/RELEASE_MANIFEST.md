@@ -78,9 +78,9 @@ After installation:
 
 ## Support Resources
 
-- **GitHub**: https://github.com/lyarinet/Samba-Manager
-- **Issues**: https://github.com/lyarinet/Samba-Manager/issues
-- **Wiki**: https://github.com/lyarinet/Samba-Manager/wiki
+- **GitHub**: https://github.com/lyarinet/samba-manager
+- **Issues**: https://github.com/lyarinet/samba-manager/issues
+- **Wiki**: https://github.com/lyarinet/samba-manager/wiki
 
 ## License
 

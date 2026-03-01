@@ -18,7 +18,7 @@
 docker run -d -p 5000:5000 lyarinet/samba-manager:latest
 
 📦 Docker Hub: https://hub.docker.com/r/lyarinet/samba-manager
-🔗 GitHub: https://github.com/lyarinet/Samba-Manager
+🔗 GitHub: https://github.com/lyarinet/samba-manager
 
 #OpenSource #Docker #Samba #Linux #FileSharing #DevOps
 ```
@@ -71,7 +71,7 @@ Features:
 Get started:
 docker run -d -p 5000:5000 lyarinet/samba-manager:latest
 
-GitHub: https://github.com/lyarinet/Samba-Manager
+GitHub: https://github.com/lyarinet/samba-manager
 ```
 
 ---
@@ -98,7 +98,7 @@ Get ready! 🚀
 🎉 IT'S HERE! Samba Manager v1.2.0
 
 Docker: https://hub.docker.com/r/lyarinet/samba-manager
-GitHub: https://github.com/lyarinet/Samba-Manager
+GitHub: https://github.com/lyarinet/samba-manager
 
 #OpenSource #Release
 ```
@@ -211,7 +211,7 @@ docker run -d -p 5000:5000 lyarinet/samba-manager:latest
 
 📦 Download:
 - Docker Hub: https://hub.docker.com/r/lyarinet/samba-manager
-- GitHub: https://github.com/lyarinet/Samba-Manager
+- GitHub: https://github.com/lyarinet/samba-manager
 - Source: [Release downloads]
 
 📚 Documentation:
@@ -254,7 +254,7 @@ Key Features:
 
 Links:
 - Docker Hub: https://hub.docker.com/r/lyarinet/samba-manager
-- GitHub: https://github.com/lyarinet/Samba-Manager
+- GitHub: https://github.com/lyarinet/samba-manager
 - Documentation: [Link]
 
 Discussion: What features would you like to see next?
@@ -280,7 +280,7 @@ Quick demo:
 docker run -d -p 5000:5000 lyarinet/samba-manager:latest
 ```
 
-GitHub: https://github.com/lyarinet/Samba-Manager
+GitHub: https://github.com/lyarinet/samba-manager
 Docker: https://hub.docker.com/r/lyarinet/samba-manager
 
 Feedback welcome!

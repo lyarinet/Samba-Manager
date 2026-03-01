@@ -251,8 +251,8 @@ Installation:
   • README.md               → Project overview and features
 
 Support:
-  • GitHub Issues: https://github.com/lyarinet/Samba-Manager/issues
-  • Wiki: https://github.com/lyarinet/Samba-Manager/wiki
+  • GitHub Issues: https://github.com/lyarinet/samba-manager/issues
+  • Wiki: https://github.com/lyarinet/samba-manager/wiki
   • Discussions: GitHub Discussions (coming soon)
 
 🎉 SUMMARY

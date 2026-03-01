@@ -9,7 +9,7 @@
 ✅ Production-ready
 
 Docker: https://hub.docker.com/r/lyarinet/samba-manager
-GitHub: https://github.com/lyarinet/Samba-Manager
+GitHub: https://github.com/lyarinet/samba-manager
 
 ---
 
@@ -50,8 +50,8 @@ We're excited to announce the release of Samba Manager v1.2.0, a major milestone
 
 🔗 Links:
 - Docker Hub: https://hub.docker.com/r/lyarinet/samba-manager
-- GitHub: https://github.com/lyarinet/Samba-Manager
-- Documentation: https://github.com/lyarinet/Samba-Manager/blob/main/README.md
+- GitHub: https://github.com/lyarinet/samba-manager
+- Documentation: https://github.com/lyarinet/samba-manager/blob/main/README.md
 
 Join our community and star us on GitHub!
 
@@ -95,12 +95,12 @@ docker run -d -p 5000:5000 lyarinet/samba-manager:latest
 
 ### One-Line Installation
 ```bash
-curl -sSL https://raw.githubusercontent.com/lyarinet/Samba-Manager/main/auto_install.sh | sudo bash
+curl -sSL https://raw.githubusercontent.com/lyarinet/samba-manager/main/auto_install.sh | sudo bash
 ```
 
 ### With Authentication
 ```bash
-wget https://raw.githubusercontent.com/lyarinet/Samba-Manager/main/install_with_auth.sh
+wget https://raw.githubusercontent.com/lyarinet/samba-manager/main/install_with_auth.sh
 chmod +x install_with_auth.sh
 sudo ./install_with_auth.sh
 ```
@@ -201,7 +201,7 @@ Professional automated build, validation, and publication system
 ### 🚀 Getting Started
 
 Visit Docker Hub: https://hub.docker.com/r/lyarinet/samba-manager
-View on GitHub: https://github.com/lyarinet/Samba-Manager
+View on GitHub: https://github.com/lyarinet/samba-manager
 
 ### 📋 Installation Options
 
@@ -238,9 +238,9 @@ We're always looking for contributions:
 
 ### 📞 Questions?
 
-- GitHub Issues: https://github.com/lyarinet/Samba-Manager/issues
+- GitHub Issues: https://github.com/lyarinet/samba-manager/issues
 - Docker Hub: https://hub.docker.com/r/lyarinet/samba-manager
-- Documentation: https://github.com/lyarinet/Samba-Manager
+- Documentation: https://github.com/lyarinet/samba-manager
 
 Thank you for using Samba Manager!
 
@@ -317,19 +317,19 @@ docker run -d -p 5000:5000 lyarinet/samba-manager:latest
 
 ### 2. One-Line Installation
 ```bash
-curl -sSL https://raw.githubusercontent.com/lyarinet/Samba-Manager/main/auto_install.sh | sudo bash
+curl -sSL https://raw.githubusercontent.com/lyarinet/samba-manager/main/auto_install.sh | sudo bash
 ```
 
 ### 3. Authentication-Aware Installer
 ```bash
-wget https://raw.githubusercontent.com/lyarinet/Samba-Manager/main/install_with_auth.sh
+wget https://raw.githubusercontent.com/lyarinet/samba-manager/main/install_with_auth.sh
 sudo ./install_with_auth.sh
 ```
 
 ### 4. Manual Installation
 ```bash
 git clone https://github.com/lyarinet/samba-manager.git
-cd Samba-Manager
+cd samba-manager
 sudo ./install.sh
 ```
 
@@ -423,9 +423,9 @@ We're grateful for the support from our community. If you'd like to contribute:
 
 ## Get Started Today
 
-- **GitHub**: https://github.com/lyarinet/Samba-Manager
+- **GitHub**: https://github.com/lyarinet/samba-manager
 - **Docker Hub**: https://hub.docker.com/r/lyarinet/samba-manager
-- **Documentation**: https://github.com/lyarinet/Samba-Manager#readme
+- **Documentation**: https://github.com/lyarinet/samba-manager#readme
 
 Thank you for using Samba Manager!
 

@@ -70,10 +70,10 @@ export SAMBA_MANAGER_SECRET_KEY="${SAMBA_MANAGER_SECRET_KEY:-$(python3 -c 'impor
 
 **Successful Build Command**:
 ```bash
-docker build -f /workspaces/Samba-Manager/releases/docker/Dockerfile \
+docker build -f /workspaces/samba-manager/releases/docker/Dockerfile \
   -t samba-manager:1.2.0 \
   -t samba-manager:latest \
-  /workspaces/Samba-Manager
+  /workspaces/samba-manager
 ```
 
 ---
@@ -170,7 +170,7 @@ docker run -d \
 
 ### Option 3: Docker Compose (Recommended for Development)
 ```bash
-cd /workspaces/Samba-Manager/releases/docker
+cd /workspaces/samba-manager/releases/docker
 docker-compose up -d
 ```
 

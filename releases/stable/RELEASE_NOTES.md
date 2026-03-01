@@ -98,9 +98,9 @@ If upgrading from a previous version:
 
 ## Support
 
-- **Issues**: https://github.com/lyarinet/Samba-Manager/issues
-- **Discussions**: https://github.com/lyarinet/Samba-Manager/discussions
-- **Documentation**: https://github.com/lyarinet/Samba-Manager/wiki
+- **Issues**: https://github.com/lyarinet/samba-manager/issues
+- **Discussions**: https://github.com/lyarinet/samba-manager/discussions
+- **Documentation**: https://github.com/lyarinet/samba-manager/wiki
 
 ## License
 
@@ -112,5 +112,5 @@ This software is released under the MIT License. See the LICENSE file for detail
 
 ---
 
-**Download**: https://github.com/lyarinet/Samba-Manager/releases/tag/v1.3.0
+**Download**: https://github.com/lyarinet/samba-manager/releases/tag/v1.3.0
 
