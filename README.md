@@ -215,6 +215,33 @@ docker-compose up
 
 For more details, see the [releases/docker/](releases/docker/) directory.
 
+### Persisting Users and Samba State
+
+The container must persist both Samba's files and the Linux account database. This is especially important for users created with **Create system user** enabled, because share access uses the Linux `smbusers` group as well as Samba's password database.
+
+Example bind mounts:
+
+```yaml
+volumes:
+   - ./data:/opt/samba-manager/data
+   - ./smb_config:/etc/samba
+   - ./backups:/var/lib/samba_manager/backups
+   - ./smb_data:/var/lib/samba
+   - ./passwd:/etc/passwd
+   - ./group:/etc/group
+   - ./shadow:/etc/shadow
+   - ./gshadow:/etc/gshadow
+```
+
+Use `/etc/group`, not `/etc/groups`. Create the host files before starting the container so Docker does not create directories at those file mount points:
+
+```bash
+touch passwd group shadow gshadow
+mkdir -p data smb_config backups smb_data
+```
+
+Do not mount `/etc/samba` read-only because Samba Manager writes its configuration there. The application currently requires a matching Unix account for `smbpasswd`; a Samba-only account cannot be created when **Create system user** is disabled unless that Linux user already exists. Persist `/var/lib/samba` for the normal `tdbsam` database, and keep `/etc/samba` persisted as well because this project may use `/etc/samba/passdb.tdb`.
+
 ## Release Management System
 
 Samba Manager includes a comprehensive release management system with automated tools:
