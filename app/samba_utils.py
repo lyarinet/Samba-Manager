@@ -1708,8 +1708,10 @@ def get_samba_users():
         return []
 
 
-def add_samba_user(username, password, create_system_user=False):
-    """Add a new Samba user"""
+
+# Fix - fails to create samba user in GUI.
+def add_samba_user(username, password, create_system_user=True):
+    """Add a new Samba user and auto-create system user if missing"""
     if DEV_MODE:
         print(f"[DEV MODE] Would add Samba user: {username}")
         return True
@@ -1721,11 +1723,11 @@ def add_samba_user(username, password, create_system_user=False):
         )
         user_exists = check_user.returncode == 0
 
-        # Create system user if requested and doesn't exist
-        if not user_exists and create_system_user:
+        # Create system user if it doesn't exist (regardless of flag)
+        if not user_exists:
             print(f"Creating system user: {username}")
             create_user = subprocess.run(
-                ["sudo", "useradd", "-m", "-s", "/bin/bash", username],
+                ["sudo", "useradd", "-M", "-s", "/sbin/nologin", username],
                 capture_output=True,
                 text=True,
                 check=False,
@@ -1742,7 +1744,7 @@ def add_samba_user(username, password, create_system_user=False):
                 stderr=subprocess.PIPE,
                 text=True,
             )
-            stdout, stderr = set_pass.communicate(input=f"{username}:{password}")
+            _, stderr = set_pass.communicate(input=f"{username}:{password}")
             if set_pass.returncode != 0:
                 print(f"Failed to set system password: {stderr}")
                 return False
@@ -1762,17 +1764,15 @@ def add_samba_user(username, password, create_system_user=False):
             if create_group.returncode != 0:
                 print(f"Failed to create smbusers group: {create_group.stderr}")
 
-        # If the user exists, add them to smbusers group
-        if user_exists or create_system_user:
-            print(f"Adding {username} to smbusers group")
-            add_to_group = subprocess.run(
-                ["sudo", "usermod", "-aG", "smbusers", username],
-                capture_output=True,
-                text=True,
-                check=False,
-            )
-            if add_to_group.returncode != 0:
-                print(f"Failed to add user to smbusers group: {add_to_group.stderr}")
+        # Add user to smbusers group
+        add_to_group = subprocess.run(
+            ["sudo", "usermod", "-aG", "smbusers", username],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        if add_to_group.returncode != 0:
+            print(f"Failed to add user to smbusers group: {add_to_group.stderr}")
 
         # Add Samba user
         print(f"Creating Samba user: {username}")
@@ -1784,7 +1784,7 @@ def add_samba_user(username, password, create_system_user=False):
             text=True,
         )
 
-        stdout, stderr = process.communicate(input=f"{password}\n{password}\n")
+        _, stderr = process.communicate(input=f"{password}\n{password}\n")
 
         if process.returncode != 0:
             print(f"Failed to create Samba user: {stderr}")
@@ -1807,7 +1807,6 @@ def add_samba_user(username, password, create_system_user=False):
     except Exception as e:
         print(f"Error adding Samba user: {e}")
         return False
-
 
 def remove_samba_user(username, delete_system_user=False):
     """Remove a Samba user"""
